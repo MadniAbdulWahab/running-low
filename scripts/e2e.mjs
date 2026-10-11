@@ -249,6 +249,8 @@ try {
   )
   await A.page.screenshot({ path: `${OUT}/home-folded.png` })
   check(await A.page.locator('section[data-list=grocery] .folded-show', { hasText: 'Show all' }).isVisible(), 'folded card says Show all')
+  check(/×\d/.test(await A.page.locator('section[data-list=grocery] .folded-names').textContent()), 'folded names include quantities')
+  check((await A.page.locator('section[aria-label="Quick add"]').count()) === 0, 'Home hides quick add once items are on the list')
   await A.page.locator('section[data-list=grocery] .folded-head').click()
   check((await A.page.locator('section[data-list=grocery] .item').count()) > 0, 'tapping again unfolds it')
 

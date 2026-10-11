@@ -307,7 +307,8 @@ export function RoomShell({ uid, household, room, setRoom, theme }: Props) {
                 })}
               </>
             )}
-            {!selecting && <QuickPicks room="home" />}
+            {/* On Home, quick add is for getting started; it goes once something is on the list. */}
+            {!selecting && counts.home === 0 && <QuickPicks room="home" />}
           </>
         ) : (
           <div data-list={room}>
@@ -394,7 +395,7 @@ function FoldedCard({
   onOpen: () => void
 }) {
   const SHOW = 3
-  const names = items.slice(0, SHOW).map((i) => (i.qty && i.qty > 1 ? `${i.name} ×${i.qty}` : i.name))
+  const names = items.slice(0, SHOW).map((i) => `${i.name} ×${i.qty ?? 1}`)
   const more = items.length - names.length
   // Same heading as an open section (keeps the list's identity), with the names as its subtitle.
   return (
