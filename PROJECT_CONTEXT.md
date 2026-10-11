@@ -96,6 +96,11 @@ Saved 2026-10-11 so work can resume after a restart. To continue, tell Claude:
     - Tapping a note opens `NoteSheet`: colour swatches, pin, auto-saving text and checklist.
     - A note left empty is discarded when the sheet closes.
   - **Bottom bar on Us:** "New note…" (`NoteComposer`).
+- **Meal planner** (done; built before countdowns at the user's request):
+  - A "Meals" section on Us with a Mon–Sun week (‹ This week ›), today highlighted.
+  - Tapping a day opens `MealSheet` (meal name plus comma-separated ingredients, autosaved).
+  - "Add ingredients to Grocery" works per meal or for the whole week, using `splitEntry`, so "2 tomatoes" becomes Tomatoes ×2 and items already needed are skipped.
+  - Data: `meals/{YYYY-MM-DD}` (one per day), with rules and a rules test. `weekDays`, `toISO` and `weekLabel` are in lib/time.ts.
 - **Code:** `src/components/us/*`, `src/data/{notes,pings}.ts` and `src/hooks/useCollection.ts` (a generic live query; `toMs` lives there).
 - **Types:** `RoomId` = `ListRoom` | 'us', with `ListRoom` = 'home' | ListId. List-only components take `ListRoom`, and `isList()` is in rooms.ts.
 - **Rules:** notes (members only, size and colour checks, can't change `createdBy`, `updatedBy` must be you) and pings (sent as yourself, never edited). Both are covered by rules tests (16 total).

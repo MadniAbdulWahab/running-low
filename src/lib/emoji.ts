@@ -40,6 +40,7 @@ const TABLE: [RegExp, string][] = [
   [/\bpasta|\bspaghetti|\bpenne|\bmacaroni/, '🍝'],
   [/\bnoodle|\bramen/, '🍜'],
   [/\bflour/, '🌾'],
+  [/\bbasil|\bherbs?\b|\bparsley|\bcoriander|\bcilantro|\bmint\b|\bthyme|\brosemary|\bdill\b|\boregano/, '🌿'],
   [/\bsalt/, '🧂'],
   [/\bolive|\boil\b/, '🫒'],
   [/\bcoffee|\bespresso/, '☕'],
