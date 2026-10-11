@@ -1,7 +1,13 @@
 /*
- * iOS-style system colours. Light by default, true-black dark mode.
- * Each list has a colour (--grocery…) and a darker text-safe version (--grocery-text…).
- * Elements with data-list="…" get --list / --list-text for that list.
+ * Colour system: each colour has one job.
+ *   Brand orange  → the app itself and every action (buttons, links, Select, ticks in select mode).
+ *   List colours  → Grocery green, Household blue, Important indigo; only ever mark that list.
+ *   Red           → destructive actions and overdue dates only.
+ * Every colour comes as a soft pastel fill plus a deeper shade of the same hue:
+ *   --x       pastel fill (dots, ticks, badges, icon tiles, filled buttons)
+ *   --x-ink   text/icons drawn ON the pastel fill
+ *   --x-text  text drawn on the page/card background (contrast-safe)
+ * Elements with data-list="…" get --list / --list-ink / --list-text for that list.
  */
 
 :root {
@@ -21,29 +27,36 @@
   --sep: #e5e5ea;
   --border: rgb(60 60 67 / 0.08);
   --ring: #a8a8b0;
-  --tint: #007aff;
-  --brand: #ff9500;
-  --brand-ink: #342200;
+  --brand: #ffb066;
+  --brand-ink: #3d1f00;
   --brand-link: #a84700;
-  --danger: #ff3b30;
+  --tint: var(--brand-link);
+  --danger: #d7372a;
   --toast: rgb(44 44 46 / 0.96);
   --backdrop: rgb(0 0 0 / 0.3);
   --alert-bg: rgb(242 242 247 / 0.98);
   --bar: #ffffff;
   --tab-off: #6c6c73;
 
-  --grocery: #ff9500;
-  --grocery-text: #c93400;
-  --household: #007aff;
-  --household-text: #0062cc;
-  --important: #ff3b30;
-  --important-text: #d70015;
+  --grocery: #8ad6a3;
+  --grocery-ink: #0f3d20;
+  --grocery-text: #1e7a40;
+  --household: #9dc3f2;
+  --household-ink: #0e2e57;
+  --household-text: #1f5faf;
+  --important: #b7b3f2;
+  --important-ink: #1f1c5c;
+  --important-text: #4d47b8;
 
-  --p0: #596789;
-  --p1: #427d83;
+  /* Members: two shades of the brand orange. */
+  --p0: #f6b27a;
+  --p1: #e3c29b;
+  --p-ink: #3d1f00;
 
-  --list: var(--tint);
-  --list-text: var(--tint);
+  /* Outside any list (Home, sheets, sign-in) the "list" colour is the brand. */
+  --list: var(--brand);
+  --list-ink: var(--brand-ink);
+  --list-text: var(--brand-link);
 }
 
 :root[data-mode='dark'] {
@@ -59,35 +72,44 @@
   --sep: #38383a;
   --border: rgb(235 235 245 / 0.09);
   --ring: #74747d;
-  --tint: #0a84ff;
-  --brand-link: #ffb340;
-  --danger: #ff453a;
+  --brand: #ffb066;
+  --brand-ink: #2b1500;
+  --brand-link: #ffb870;
+  --tint: var(--brand-link);
+  --danger: #ff7b70;
   --toast: rgb(58 58 60 / 0.97);
   --backdrop: rgb(0 0 0 / 0.55);
   --alert-bg: rgb(44 44 46 / 0.98);
   --bar: #1c1c1e;
   --tab-off: #a0a0a8;
 
-  --grocery: #ff9f0a;
-  --grocery-text: #ff9f0a;
-  --household: #0a84ff;
-  --household-text: #409cff;
-  --important: #ff453a;
-  --important-text: #ff6961;
+  --grocery: #7fd39b;
+  --grocery-ink: #0c2e18;
+  --grocery-text: #8fdca9;
+  --household: #8db8f0;
+  --household-ink: #0b2547;
+  --household-text: #a6c8f5;
+  --important: #a9a4f2;
+  --important-ink: #1a1850;
+  --important-text: #bbb7f7;
 
-  --p0: #6c7da5;
-  --p1: #508f95;
+  --p0: #f2a86a;
+  --p1: #d9b98f;
+  --p-ink: #2b1500;
 }
 
 [data-list='grocery'] {
   --list: var(--grocery);
+  --list-ink: var(--grocery-ink);
   --list-text: var(--grocery-text);
 }
 [data-list='household'] {
   --list: var(--household);
+  --list-ink: var(--household-ink);
   --list-text: var(--household-text);
 }
 [data-list='important'] {
   --list: var(--important);
+  --list-ink: var(--important-ink);
   --list-text: var(--important-text);
 }

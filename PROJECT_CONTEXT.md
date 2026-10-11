@@ -80,6 +80,14 @@ Saved 2026-10-11 so work can resume after a restart. To continue, tell Claude:
   - Every row shows its quantity as a plain number on the left (grey for 1, dark for more) ("1" when not set); tapping it opens − n + right in the row, which closes on a tap elsewhere or after 4 s. Re-adding a bought item resets it.
 - **Note:** a per-item text box at the top of the sheet (after Quantity) that autosaves. It's shown under the name; up to 500 characters (enforced by the rules).
 
+## Colour system (2026-10-11)
+- The user felt the colour identity was inconsistent: blue meant both actions and Household, red meant Important, delete and badges, and orange was only the icon and Grocery. They chose the **orange-brand** option, with **pastel** colours where possible.
+- **Brand orange** for the app and every action: pastel fill `--brand` #FFB066 with `--brand-ink` for text on it; links and text `--brand-link` (#A84700 light, #FFB870 dark); `--tint` = `--brand-link`.
+- **Lists:** Grocery green, Household blue, Important indigo. Each has a pastel fill (`--x`), `--x-ink` for text on the fill and `--x-text` for text on the page. They are never used for actions.
+- **Red** (`--danger`) only for delete and overdue dates. Tab badges use their list colour, and member avatars are two brand-orange shades.
+- **Rule:** text on a pastel fill always uses the matching ink, never white.
+- The app icon keeps the stronger iOS orange (#FF9500).
+
 ## Goal
 A shared list for two partners (**both on iPhone**) to quickly note that something is finished: groceries, household things, important items.
 - Must be **completely free**: no App Store fee, no paid backend, no credit card.

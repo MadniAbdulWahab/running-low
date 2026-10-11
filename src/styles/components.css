@@ -2057,3 +2057,56 @@ body {
 .fold-toggle[aria-expanded='false'] .fold-toggle-action svg {
   transform: rotate(90deg);
 }
+
+/* ── Colour system: pastel fills always carry their own ink (not white) ── */
+.avatar,
+.avatar[data-p='1'] {
+  color: var(--p-ink);
+}
+.list-icon {
+  color: var(--list-ink);
+}
+.quick-send,
+.btn:not(.btn--plain),
+.select-toggle[aria-pressed='true'] {
+  background: var(--brand);
+  color: var(--brand-ink);
+}
+.toast-undo {
+  color: var(--brand);
+}
+.tab-badge {
+  background: var(--list);
+  color: var(--list-ink);
+}
+.item[data-done] .tick-ring {
+  color: var(--list-ink);
+}
+/* Check/plus marks inside filled circles follow the fill's ink. */
+.select-ring svg {
+  color: var(--brand);
+}
+.select-ring svg path {
+  stroke: var(--brand-ink);
+}
+.pick svg {
+  color: var(--list);
+}
+.pick svg path,
+.quick-plus svg path {
+  stroke: var(--list-ink);
+}
+.quick-plus {
+  color: var(--list);
+}
+.item[data-selected] {
+  background: color-mix(in srgb, var(--brand) 16%, var(--card));
+}
+.section-count {
+  background: color-mix(in srgb, var(--list) 35%, var(--card));
+  color: var(--list-ink);
+}
+:root[data-mode='dark'] .section-count,
+:root[data-mode='dark'] .item-qty {
+  background: color-mix(in srgb, var(--list) 85%, var(--card));
+}
