@@ -1339,6 +1339,10 @@ label.row:active {
 .list-cards + .empty--card {
   margin-top: 20px;
 }
+/* Same gap as between the tab cards and the hearts card. */
+.hearts + .empty--card {
+  margin-top: 16px;
+}
 .list-card-peek--text {
   font-size: 12px;
   letter-spacing: 0;
