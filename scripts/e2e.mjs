@@ -245,11 +245,11 @@ try {
   check(
     (await A.page.locator('section[data-list=grocery] .folded-names').textContent()).includes('Apples') &&
       (await A.page.locator('section[data-list=grocery] .item').count()) === 0,
-    'tapping Grocery on Home folds it to one card naming its items',
+    'tapping Grocery on Home folds it to its heading plus item names',
   )
   await A.page.screenshot({ path: `${OUT}/home-folded.png` })
   check(await A.page.locator('section[data-list=grocery] .folded-show', { hasText: 'Show all' }).isVisible(), 'folded card says Show all')
-  await A.page.locator('section[data-list=grocery] .folded-card').click()
+  await A.page.locator('section[data-list=grocery] .folded-head').click()
   check((await A.page.locator('section[data-list=grocery] .item').count()) > 0, 'tapping again unfolds it')
 
   // ── The page behind a sheet stays put; the bar stays on the bottom edge ──

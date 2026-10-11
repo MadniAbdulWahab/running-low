@@ -381,7 +381,7 @@ export function RoomShell({ uid, household, room, setRoom, theme }: Props) {
   )
 }
 
-/** A folded Home section: one card with the list's heading and the first few items still needed. */
+/** A folded Home section: its heading, with the first few items still needed underneath. */
 function FoldedCard({
   label,
   items,
@@ -396,9 +396,10 @@ function FoldedCard({
   const SHOW = 3
   const names = items.slice(0, SHOW).map((i) => (i.qty && i.qty > 1 ? `${i.name} ×${i.qty}` : i.name))
   const more = items.length - names.length
+  // Same heading as an open section (keeps the list's identity), with the names as its subtitle.
   return (
-    <button className="group folded-card" aria-expanded="false" onClick={onOpen}>
-      <span className="folded-head">
+    <button className="folded-head" aria-expanded="false" onClick={onOpen}>
+      <span className="folded-row">
         <span className="folded-title">{label}</span>
         <span className="section-count">{items.length}</span>
         <span className="folded-show">
