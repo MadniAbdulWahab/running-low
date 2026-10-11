@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { initials } from '../app-context'
-import { compressAvatar } from '../data/profiles'
+import { compressAvatar, flipPhoto, isFreshSelfie } from '../data/profiles'
 import { CameraIcon } from './Icons'
 
 /**
@@ -27,9 +27,21 @@ export function PhotoPicker({
     if (!file) return
     setBusy(true)
     try {
-      onChange(await compressAvatar(file))
+      onChange(await compressAvatar(file, { mirror: await isFreshSelfie(file) }))
     } catch {
       onError('Couldn’t read that photo. Try another one.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const flip = async () => {
+    if (!photo) return
+    setBusy(true)
+    try {
+      onChange(await flipPhoto(photo))
+    } catch {
+      onError('Couldn’t flip that photo.')
     } finally {
       setBusy(false)
     }
@@ -60,9 +72,14 @@ export function PhotoPicker({
           {busy ? 'Adding…' : photo ? 'Change photo' : 'Add a photo'}
         </button>
         {photo && !busy && (
-          <button type="button" className="link link--quiet" onClick={() => onChange(null)}>
-            Remove
-          </button>
+          <>
+            <button type="button" className="link" onClick={flip} aria-label="Flip photo left to right">
+              Flip
+            </button>
+            <button type="button" className="link link--quiet" onClick={() => onChange(null)}>
+              Remove
+            </button>
+          </>
         )}
       </span>
       <input ref={input} type="file" accept="image/*" hidden onChange={onFile} />

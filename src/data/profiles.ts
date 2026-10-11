@@ -1,6 +1,7 @@
 import { collection, deleteDoc, deleteField, doc, getDoc, serverTimestamp, setDoc, type DocumentData } from 'firebase/firestore'
 import { db } from '../firebase'
 import { report } from '../lib/report'
+import { lensModel } from '../lib/exif'
 import { userRef } from './household'
 
 /**
@@ -37,8 +38,11 @@ export async function readMyPhoto(uid: string): Promise<string | null> {
   }
 }
 
-/** Crops the middle square of a photo and shrinks it to a small JPEG (usually 15–40 KB). */
-export async function compressAvatar(file: Blob): Promise<string> {
+/**
+ * Crops the middle square of a photo and shrinks it to a small JPEG (usually 15–40 KB).
+ * `mirror` flips it left to right, like the front camera's preview.
+ */
+export async function compressAvatar(file: Blob, { mirror = false } = {}): Promise<string> {
   const url = URL.createObjectURL(file)
   try {
     const img = new Image()
@@ -57,6 +61,10 @@ export async function compressAvatar(file: Blob): Promise<string> {
       // JPEG has no transparency: give see-through images a white background, not black.
       ctx.fillStyle = '#fff'
       ctx.fillRect(0, 0, canvas.width, canvas.height)
+      if (mirror) {
+        ctx.translate(canvas.width, 0)
+        ctx.scale(-1, 1)
+      }
       ctx.drawImage(img, sx, sy, side, side, 0, 0, canvas.width, canvas.height)
       out = canvas.toDataURL('image/jpeg', quality)
       if (out.length < 80_000) break
@@ -67,4 +75,20 @@ export async function compressAvatar(file: Blob): Promise<string> {
   } finally {
     URL.revokeObjectURL(url)
   }
+}
+
+/** The same photo, flipped left to right. */
+export async function flipPhoto(dataUrl: string): Promise<string> {
+  const blob = await (await fetch(dataUrl)).blob()
+  return compressAvatar(blob, { mirror: true })
+}
+
+/**
+ * A selfie taken just now with the front camera. iPhone saves those un-mirrored, so they look
+ * flipped next to the preview you saw; we mirror them back. Older selfies from the library
+ * are left as they are, since that's how they look in Photos too.
+ */
+export async function isFreshSelfie(file: File): Promise<boolean> {
+  if (Date.now() - file.lastModified > 2 * 60_000) return false
+  return /front/i.test((await lensModel(file)) ?? '')
 }

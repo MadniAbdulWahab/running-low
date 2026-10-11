@@ -72,6 +72,53 @@ async function openQuickAdd(page) {
   if ((await t.count()) && (await t.getAttribute('aria-expanded')) === 'false') await t.click()
 }
 
+/** A JPEG "selfie": red on the left, blue on the right, tagged as taken with the front camera. */
+async function frontCameraSelfie(page) {
+  const b64 = await page.evaluate(() => {
+    const c = document.createElement('canvas')
+    c.width = c.height = 400
+    const x = c.getContext('2d')
+    x.fillStyle = '#f00'
+    x.fillRect(0, 0, 200, 400)
+    x.fillStyle = '#00f'
+    x.fillRect(200, 0, 200, 400)
+    return c.toDataURL('image/jpeg', 0.95).split(',')[1]
+  })
+  const jpeg = Buffer.from(b64, 'base64')
+  const lens = Buffer.from('iPhone 15 front camera 2.69mm f/1.9\0', 'latin1')
+  const tiff = Buffer.alloc(44 + lens.length)
+  tiff.write('II', 0, 'latin1')
+  tiff.writeUInt16LE(42, 2)
+  tiff.writeUInt32LE(8, 4)
+  tiff.writeUInt16LE(1, 8) // IFD0: pointer to the EXIF IFD
+  tiff.writeUInt16LE(0x8769, 10)
+  tiff.writeUInt16LE(4, 12)
+  tiff.writeUInt32LE(1, 14)
+  tiff.writeUInt32LE(26, 18)
+  tiff.writeUInt16LE(1, 26) // EXIF IFD: LensModel
+  tiff.writeUInt16LE(0xa434, 28)
+  tiff.writeUInt16LE(2, 30)
+  tiff.writeUInt32LE(lens.length, 32)
+  tiff.writeUInt32LE(44, 36)
+  lens.copy(tiff, 44)
+  const head = Buffer.from([0xff, 0xe1, 0, 0, 0x45, 0x78, 0x69, 0x66, 0, 0])
+  head.writeUInt16BE(2 + 6 + tiff.length, 2)
+  return { name: 'selfie.jpg', mimeType: 'image/jpeg', buffer: Buffer.concat([jpeg.subarray(0, 2), head, tiff, jpeg.subarray(2)]) }
+}
+
+/** The colour at the left edge of a photo: 'red', 'blue' or something else. */
+const leftColour = (img) =>
+  img.evaluate(async (el) => {
+    await el.decode()
+    const c = document.createElement('canvas')
+    c.width = el.naturalWidth
+    c.height = el.naturalHeight
+    const x = c.getContext('2d')
+    x.drawImage(el, 0, 0)
+    const [r, , b] = x.getImageData(4, c.height >> 1, 1, 1).data
+    return r > 180 && b < 80 ? 'red' : b > 180 && r < 80 ? 'blue' : `rgb ${r},${b}`
+  })
+
 async function add(page, text) {
   const input = page.getByLabel('Add something')
   await input.fill(text)
@@ -404,8 +451,16 @@ try {
 
   // ── B adds a photo later, from the top right ──
   await B.page.locator('.members-btn').click()
-  await B.page.locator('.sheet .photo-picker input[type=file]').setInputFiles('public/maskable-icon-512x512.png')
+  await B.page.locator('.sheet .photo-picker input[type=file]').setInputFiles(await frontCameraSelfie(B.page))
   check(await B.page.locator('.sheet .photo-picker-face img').first().waitFor({ timeout: 8000 }).then(() => true).catch(() => false), 'B adds a photo in Settings')
+  const face = B.page.locator('.sheet .photo-picker-face img')
+  const shot = await leftColour(face)
+  check(shot === 'blue', `a selfie just taken with the front camera is mirrored, like the preview (left edge: ${shot})`)
+  const shotSrc = await face.getAttribute('src')
+  await B.page.getByRole('button', { name: 'Flip photo left to right' }).click()
+  await B.page.waitForFunction((src) => document.querySelector('.sheet .photo-picker-face img')?.getAttribute('src') !== src, shotSrc, { timeout: 8000 })
+  const flipped = await leftColour(face)
+  check(flipped === 'red', `Flip turns it back (left edge: ${flipped})`)
   await B.page.locator('.sheet').screenshot({ path: `${OUT}/settings-photo.png` })
   await B.page.keyboard.press('Escape')
   check(

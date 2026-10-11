@@ -71,7 +71,7 @@ npm run dev:emu     # Vite against the emulators; no Firebase project needed
 
 - **Data:** `households/{CODE}`, with `items` and `photos` subcollections. There is one item doc per name: adding something you've had before flips it back to *needed* and bumps its count, and those counts drive the Quick add suggestions.
 - **Home:** a card for each tab (what's needed, tonight's meal, the next countdown), the hearts card, and both lists in foldable sections.
-- **Profile photos:** add one on setup (optional), or later from Settings (tap the faces at the top right). It shows in place of your initial, and with every heart you send: when one arrives, a card pops up with the sender's photo, name and emoji.
+- **Profile photos:** add one on setup (optional), or later from Settings (tap the faces at the top right). A selfie just taken with the front camera is mirrored to match the camera preview, and **Flip** turns any photo around. It shows in place of your initial, and with every heart you send: when one arrives, a card pops up with the sender's photo, name and emoji.
 - **Hearts (on Home):** twelve little things to send (❤️ 🤗 😘 🥺 🌹 💭 ☕ 🍕 🚗 😴 💪 😂). The last one you received shows big, with today's count of each, plus what you sent today.
 - **Meals tab:** plan the week's meals and send their ingredients to Grocery in one tap.
 - **Us tab:** count down to things you are looking forward to, keep shared sticky notes with checklists, and let the date jar pick what to do together.
