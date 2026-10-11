@@ -1965,3 +1965,53 @@ body {
   font-size: 15px;
   color: var(--tint);
 }
+
+/* Folded section = one card: heading line + item names. */
+.folded-card {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  margin-top: 18px;
+  padding: 14px 16px 15px;
+}
+.folded-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.folded-head::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--list);
+}
+.folded-title {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--label);
+}
+.folded-show {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: auto;
+  font-size: 15px;
+  color: var(--tint);
+}
+.folded-show svg {
+  width: 14px;
+  height: 14px;
+}
+.folded-card .folded-names {
+  padding-left: 15px;
+  font-size: 15px;
+  line-height: 20px;
+  color: var(--label-2);
+}
+.folded-card .folded-more {
+  color: var(--label-3);
+}
+:root[data-mode='dark'] .folded-card .folded-more {
+  color: #6c6c70;
+}

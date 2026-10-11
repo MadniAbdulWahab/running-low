@@ -248,7 +248,8 @@ try {
     'tapping Grocery on Home folds it to one card naming its items',
   )
   await A.page.screenshot({ path: `${OUT}/home-folded.png` })
-  await A.page.locator('.section-head', { hasText: 'Grocery' }).click()
+  check(await A.page.locator('section[data-list=grocery] .folded-show', { hasText: 'Show all' }).isVisible(), 'folded card says Show all')
+  await A.page.locator('section[data-list=grocery] .folded-card').click()
   check((await A.page.locator('section[data-list=grocery] .item').count()) > 0, 'tapping again unfolds it')
 
   // ── The page behind a sheet stays put; the bar stays on the bottom edge ──

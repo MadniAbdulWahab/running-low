@@ -281,23 +281,26 @@ export function RoomShell({ uid, household, room, setRoom, theme }: Props) {
                   const isFolded = !!folded[l] && !selecting
                   return (
                     <section key={l} data-list={l}>
-                      <button
-                        className="section-head"
-                        aria-expanded={!isFolded}
-                        onClick={() => toggleFold(l)}
-                      >
-                        {LIST_INFO[l].label}
-                        <span className="section-count">{needed[l].length}</span>
-                        <ChevronRight />
-                      </button>
                       {isFolded ? (
-                        <FoldedCard items={needed[l]} ticked={rows[l].length - needed[l].length} onOpen={() => toggleFold(l)} />
+                        <FoldedCard
+                          label={LIST_INFO[l].label}
+                          items={needed[l]}
+                          ticked={rows[l].length - needed[l].length}
+                          onOpen={() => toggleFold(l)}
+                        />
                       ) : (
-                        <div className="group">
-                          {rows[l].map((i) => (
-                            <ItemRow key={i.id} item={i} />
-                          ))}
-                        </div>
+                        <>
+                          <button className="section-head" aria-expanded="true" onClick={() => toggleFold(l)}>
+                            {LIST_INFO[l].label}
+                            <span className="section-count">{needed[l].length}</span>
+                            <ChevronRight />
+                          </button>
+                          <div className="group">
+                            {rows[l].map((i) => (
+                              <ItemRow key={i.id} item={i} />
+                            ))}
+                          </div>
+                        </>
                       )}
                     </section>
                   )
@@ -378,13 +381,31 @@ export function RoomShell({ uid, household, room, setRoom, theme }: Props) {
   )
 }
 
-/** A folded Home section: one card naming the first few things still needed. */
-function FoldedCard({ items, ticked, onOpen }: { items: Item[]; ticked: number; onOpen: () => void }) {
+/** A folded Home section: one card with the list's heading and the first few items still needed. */
+function FoldedCard({
+  label,
+  items,
+  ticked,
+  onOpen,
+}: {
+  label: string
+  items: Item[]
+  ticked: number
+  onOpen: () => void
+}) {
   const SHOW = 3
   const names = items.slice(0, SHOW).map((i) => (i.qty && i.qty > 1 ? `${i.name} ×${i.qty}` : i.name))
   const more = items.length - names.length
   return (
-    <button className="group folded-card" onClick={onOpen}>
+    <button className="group folded-card" aria-expanded="false" onClick={onOpen}>
+      <span className="folded-head">
+        <span className="folded-title">{label}</span>
+        <span className="section-count">{items.length}</span>
+        <span className="folded-show">
+          Show all
+          <ChevronRight />
+        </span>
+      </span>
       <span className="folded-names">
         {names.length ? (
           <>
@@ -395,7 +416,6 @@ function FoldedCard({ items, ticked, onOpen }: { items: Item[]; ticked: number; 
           <span className="folded-more">All got · {plural(ticked)} ticked</span>
         )}
       </span>
-      <span className="folded-show">Show</span>
     </button>
   )
 }
