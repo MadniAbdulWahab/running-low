@@ -65,7 +65,8 @@ service cloud.firestore {
         return d.name is string && d.name.size() > 0 && d.name.size() <= 100
           && d.key is string && d.key.size() > 0 && d.key.size() <= 100
           && d.list in ['grocery', 'household', 'important']
-          && d.status in ['needed', 'done'];
+          && d.status in ['needed', 'done']
+          && (!('note' in d) || (d.note is string && d.note.size() <= 500));
       }
 
       match /items/{itemId} {

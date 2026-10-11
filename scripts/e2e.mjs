@@ -153,6 +153,50 @@ try {
       .waitFor({ timeout: 8000 }).then(() => true).catch(() => false),
     'due date set from the item sheet',
   )
+
+  // ── Note on an item syncs to the other phone ──
+  await tab(A.page, 'Grocery')
+  await A.page.locator('.item-body', { hasText: 'Eggs' }).first().click()
+  await A.page.locator('.sheet textarea').fill('Free range, a dozen')
+  await A.page.locator('.sheet-done').click()
+  await tab(B.page, 'Grocery')
+  check(
+    await B.page.locator('.item', { hasText: 'Eggs' }).locator('.item-note', { hasText: 'Free range' })
+      .waitFor({ timeout: 8000 }).then(() => true).catch(() => false),
+    'note added on A shows under the item on B',
+  )
+
+  // ── Press and hold opens the item menu; Delete asks first ──
+  await tab(A.page, 'Household')
+  await A.page.waitForTimeout(400) // let the slide-in finish so the row doesn't move under the pointer
+  const bulbs = A.page.locator('.item-body', { hasText: 'Light bulbs' }).first()
+  await bulbs.evaluate((el) => el.scrollIntoView({ block: 'center' }))
+  await A.page.waitForTimeout(200)
+  const box = await bulbs.boundingBox()
+  await A.page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
+  await A.page.mouse.down()
+  await A.page.waitForTimeout(700)
+  await A.page.mouse.up()
+  const menu = A.page.locator('.action-sheet')
+  check(await menu.getByText('Mark as got').isVisible().catch(() => false), 'press and hold opens the item menu')
+  await A.page.screenshot({ path: `${OUT}/hold-menu.png` })
+  await menu.getByRole('button', { name: 'Delete' }).click()
+  await A.page.locator('.action-sheet').getByRole('button', { name: 'Delete item' }).click()
+  await tab(B.page, 'Household')
+  check(await gone(B.page, 'Light bulbs'), 'delete from the hold menu removes it on B')
+
+  // ── Multi-select: tick two, Got it ──
+  await tab(A.page, 'Grocery')
+  await A.page.locator('.nav-btn', { hasText: 'Select' }).click()
+  await A.page.locator('.item-body', { hasText: 'Olive oil' }).first().click()
+  await A.page.locator('.item-body', { hasText: 'Coffee' }).first().click()
+  await A.page.screenshot({ path: `${OUT}/multi-select.png` })
+  await A.page.locator('.select-bar').getByRole('button', { name: 'Got it' }).click()
+  await tab(B.page, 'Grocery')
+  check(
+    (await gone(B.page, 'Olive oil')) && (await gone(B.page, 'Coffee')),
+    'multi-select Got it clears both items on B',
+  )
   await B.page.getByRole('button', { name: 'Got Bread' }).click().catch(() => {})
   await tab(B.page, 'Home')
 

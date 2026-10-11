@@ -19,6 +19,13 @@ export interface AppCtx {
   openItem: (id: string) => void
   goTo: (room: RoomId) => void
   toast: (message: string, undo?: () => void) => void
+  /** Multi-select mode: rows show selection circles and tapping toggles them. */
+  selecting: boolean
+  selected: Set<string>
+  toggleSelect: (id: string) => void
+  startSelect: (id?: string) => void
+  /** The press-and-hold menu for one item. */
+  openMenu: (item: Item) => void
 }
 
 export const AppContext = createContext<AppCtx | null>(null)

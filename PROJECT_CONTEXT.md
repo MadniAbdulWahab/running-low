@@ -61,6 +61,11 @@ Saved 2026-10-11 so work can resume after a restart. To continue, tell Claude:
 - Verified with the production build and Chromium/WebKit checks for sign-in, account creation, error feedback, autofill attributes, themes, and phone sizes from 320px upward. Screenshots are in ignored `output/playwright/auth/`.
 - These sign-in changes are local and have not been deployed.
 
+## Multi-select, hold menu, notes (2026-10-11)
+- **Select:** in the header (on any screen with items) → tap rows to tick them, **Select All** top left, **Done** top right. The bottom bar becomes **Got it · Move · Delete**, with Undo for Got it and a confirmation for Delete. It uses batched writes (`markDoneMany`, `moveMany`, `deleteMany` in `src/data/items.ts`).
+- **Press and hold** an item (450 ms; moving more than 10px cancels it, as does scrolling) → an action sheet with Mark as got, Details & note…, Select, Move to …, and Delete (asks first). Right-click does the same on desktop. The menu component is `src/components/ActionSheet.tsx`.
+- **Note** per item: a text box at the top of the item sheet that autosaves (700 ms debounce and on close). It's shown under the item name in lists. Stored as `note` on the item doc; the rules allow a string of up to 500 characters (with a rules test).
+
 ## Goal
 A shared list for two partners (**both on iPhone**) to quickly note that something is finished: groceries, household things, important items.
 - Must be **completely free**: no App Store fee, no paid backend, no credit card.

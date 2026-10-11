@@ -22,6 +22,7 @@ function toItem(id: string, d: DocumentData): Item {
     lastUsed: ms(d.lastUsed) ?? ms(d.addedAt) ?? Date.now(),
     photoId: d.photoId ?? null,
     due: d.due ?? null,
+    note: d.note ?? null,
   }
 }
 

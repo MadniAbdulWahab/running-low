@@ -59,6 +59,7 @@ npm run dev:emu     # Vite against the emulators; no Firebase project needed
 ## How it works
 
 - **Data:** `households/{CODE}`, with `items` and `photos` subcollections. There is one item doc per name: adding something you've had before flips it back to *needed* and bumps its count, and those counts drive the Quick add suggestions.
+- **Using it:** tap the circle to tick an item off (Undo appears); tap the item for details, a note, a photo or a due date; press and hold for a quick menu; use **Select** in the header to act on several items at once.
 - **Offline:** the Firestore persistent cache. Writes are never awaited, so they apply instantly and sync later.
 - **Photos:** compressed in the browser to roughly 640px JPEG (about 40–80 KB) and stored as data URLs in Firestore, because Firebase Storage needs the paid plan.
 - **Security:** [firestore.rules](firestore.rules). Only members can read or write. Joining is allowed only with the code and only while there is room for a second person. Each member can rename only themselves.

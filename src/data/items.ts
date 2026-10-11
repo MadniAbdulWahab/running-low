@@ -7,6 +7,7 @@ import {
   serverTimestamp,
   setDoc,
   updateDoc,
+  writeBatch,
 } from 'firebase/firestore'
 import { db } from '../firebase'
 import { report } from '../lib/report'
@@ -77,6 +78,43 @@ export function setItemPhoto(hid: string, item: Item, dataUrl: string | null) {
   const photoId = dataUrl ? newPhotoDoc(hid, item.key, dataUrl) : null
   updateDoc(itemRef(hid, item.id), { photoId }).catch(report)
   if (item.photoId) deleteDoc(photoRef(hid, item.photoId)).catch(report)
+}
+
+export function setNote(hid: string, item: Item, note: string) {
+  const v = note.trim().slice(0, 500)
+  updateDoc(itemRef(hid, item.id), { note: v || deleteField() }).catch(report)
+}
+
+// Bulk actions for multi-select: one batch each, so they apply together.
+export function markDoneMany(hid: string, uid: string, items: Item[]) {
+  const b = writeBatch(db)
+  for (const i of items) b.update(itemRef(hid, i.id), { status: 'done', doneBy: uid, doneAt: serverTimestamp() })
+  b.commit().catch(report)
+}
+
+export function undoDoneMany(hid: string, items: Item[]) {
+  const b = writeBatch(db)
+  for (const i of items) b.update(itemRef(hid, i.id), { status: 'needed', doneBy: null, doneAt: null })
+  b.commit().catch(report)
+}
+
+export function moveMany(hid: string, items: Item[], list: ListId) {
+  const b = writeBatch(db)
+  for (const i of items) {
+    const patch: Record<string, unknown> = { list }
+    if (list !== 'important' && i.due) patch.due = deleteField()
+    b.update(itemRef(hid, i.id), patch)
+  }
+  b.commit().catch(report)
+}
+
+export function deleteMany(hid: string, items: Item[]) {
+  const b = writeBatch(db)
+  for (const i of items) {
+    b.delete(itemRef(hid, i.id))
+    if (i.photoId) b.delete(photoRef(hid, i.photoId))
+  }
+  b.commit().catch(report)
 }
 
 export function deleteItem(hid: string, item: Item) {

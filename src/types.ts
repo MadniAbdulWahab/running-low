@@ -24,4 +24,5 @@ export interface Item {
   lastUsed: number
   photoId: string | null
   due: string | null
+  note: string | null
 }

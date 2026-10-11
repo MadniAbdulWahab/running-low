@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { memberOf, useApp } from '../app-context'
-import { deleteItem, moveItem, setDue, setItemPhoto } from '../data/items'
+import { deleteItem, moveItem, setDue, setItemPhoto, setNote } from '../data/items'
 import { compressImage } from '../data/photos'
 import { usePhoto } from '../hooks/usePhoto'
 import { ago } from '../lib/time'
@@ -18,6 +18,32 @@ export function ItemSheet({ item, onClose }: { item: Item; onClose: () => void }
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [busy, setBusy] = useState(false)
   const who = memberOf(household, item.addedBy, uid)
+
+  // The note saves as you type (debounced) and on leaving the field.
+  const [note, setNoteDraft] = useState(item.note ?? '')
+  const editing = useRef(false)
+  const saved = useRef(item.note ?? '')
+  useEffect(() => {
+    // Take updates from the other phone, but never while typing.
+    if (!editing.current) {
+      setNoteDraft(item.note ?? '')
+      saved.current = item.note ?? ''
+    }
+  }, [item.note])
+  const saveNote = (value: string) => {
+    if (value.trim() === saved.current.trim()) return
+    saved.current = value
+    setNote(hid, item, value)
+  }
+  useEffect(() => {
+    if (!editing.current) return
+    const t = window.setTimeout(() => saveNote(note), 700)
+    return () => window.clearTimeout(t)
+  }, [note])
+  // Closing the sheet mid-sentence still saves what was typed.
+  const latest = useRef(note)
+  latest.current = note
+  useEffect(() => () => saveNote(latest.current), [])
 
   const onFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -42,6 +68,27 @@ export function ItemSheet({ item, onClose }: { item: Item; onClose: () => void }
         Added by {who.name === 'You' ? 'you' : who.name} · {ago(item.addedAt)}
         {item.count > 1 && ` · ${item.count} times so far`}
       </p>
+
+      <h3 className="group-label">Note</h3>
+      <div className="group">
+        <label className="visually-hidden" htmlFor="item-note">
+          Note
+        </label>
+        <textarea
+          id="item-note"
+          className="note-input"
+          rows={3}
+          maxLength={500}
+          value={note}
+          placeholder="Brand, size, how many…"
+          onFocus={() => (editing.current = true)}
+          onChange={(e) => setNoteDraft(e.target.value)}
+          onBlur={() => {
+            editing.current = false
+            saveNote(note)
+          }}
+        />
+      </div>
 
       <h3 className="group-label">Photo</h3>
       <div className="group">

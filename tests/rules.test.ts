@@ -188,6 +188,9 @@ describe('items and photos', () => {
     await assertFails(setDoc(doc(as('alice'), path), { ...item, list: 'garage' }))
     await assertFails(setDoc(doc(as('alice'), path), { ...item, status: 'maybe' }))
     await assertFails(setDoc(doc(as('alice'), path), { ...item, name: '' }))
+    await assertSucceeds(setDoc(doc(as('alice'), path), { ...item, note: '2 litres, the blue one' }))
+    await assertFails(setDoc(doc(as('alice'), path), { ...item, note: 'x'.repeat(501) }))
+    await assertFails(setDoc(doc(as('alice'), path), { ...item, note: 42 }))
   })
 
   it('photos must be image data URLs under the size cap', async () => {
