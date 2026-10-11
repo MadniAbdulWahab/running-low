@@ -461,6 +461,21 @@ try {
   await B.page.waitForFunction((src) => document.querySelector('.sheet .photo-picker-face img')?.getAttribute('src') !== src, shotSrc, { timeout: 8000 })
   const flipped = await leftColour(face)
   check(flipped === 'red', `Flip turns it back (left edge: ${flipped})`)
+  // Remove asks first; Cancel keeps the photo.
+  await B.page.locator('.sheet .photo-picker').getByRole('button', { name: 'Remove' }).click()
+  const removeAlert = B.page.locator('.alert', { hasText: 'Remove your photo?' })
+  check(await removeAlert.isVisible().catch(() => false), 'removing the photo asks first')
+  await B.page.screenshot({ path: `${OUT}/remove-photo-alert.png` })
+  await removeAlert.getByRole('button', { name: 'Cancel' }).click()
+  check(await face.isVisible(), 'Cancel keeps the photo')
+  await B.page.locator('.sheet .photo-picker').getByRole('button', { name: 'Remove' }).click()
+  await B.page.locator('.alert').getByRole('button', { name: 'Remove' }).click()
+  check(
+    await B.page.locator('.sheet .photo-picker-face img').waitFor({ state: 'detached', timeout: 8000 }).then(() => true).catch(() => false),
+    'confirming Remove takes the photo away',
+  )
+  await B.page.locator('.sheet .photo-picker input[type=file]').setInputFiles(await frontCameraSelfie(B.page))
+  await face.waitFor({ timeout: 8000 })
   await B.page.locator('.sheet').screenshot({ path: `${OUT}/settings-photo.png` })
   await B.page.keyboard.press('Escape')
   check(

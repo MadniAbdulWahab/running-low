@@ -319,4 +319,5 @@ households/{CODE}/photos/{id}   { itemKey, dataUrl, createdAt }
   - PhotoPicker has a **Flip** button (`flipPhoto`) for anything else.
   - Tests: `tests/exif.test.ts` (2), and an e2e check with a synthetic red|blue JPEG tagged as a front-camera shot.
   - If iOS strips the EXIF, auto-mirroring silently doesn't happen; Flip covers that.
+- **Remove photo asks first:** PhotoPicker's Remove opens an `Alert` ("Remove your photo?", Cancel / Remove in red), on setup and in Settings. The e2e checks that it asks, that Cancel keeps the photo, and that confirming removes it.
 

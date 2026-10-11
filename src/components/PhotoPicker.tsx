@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { initials } from '../app-context'
 import { compressAvatar, flipPhoto, isFreshSelfie } from '../data/profiles'
+import { Alert } from './Alert'
 import { CameraIcon } from './Icons'
 
 /**
@@ -20,6 +21,7 @@ export function PhotoPicker({
 }) {
   const input = useRef<HTMLInputElement>(null)
   const [busy, setBusy] = useState(false)
+  const [confirmRemove, setConfirmRemove] = useState(false)
 
   const onFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -76,13 +78,24 @@ export function PhotoPicker({
             <button type="button" className="link" onClick={flip} aria-label="Flip photo left to right">
               Flip
             </button>
-            <button type="button" className="link link--quiet" onClick={() => onChange(null)}>
+            <button type="button" className="link link--quiet" onClick={() => setConfirmRemove(true)}>
               Remove
             </button>
           </>
         )}
       </span>
       <input ref={input} type="file" accept="image/*" hidden onChange={onFile} />
+      {confirmRemove && (
+        <Alert
+          title="Remove your photo?"
+          message="Your initial will show instead. You can add a photo again any time."
+          actions={[
+            { label: 'Cancel', style: 'cancel' },
+            { label: 'Remove', style: 'destructive', onSelect: () => onChange(null) },
+          ]}
+          onClose={() => setConfirmRemove(false)}
+        />
+      )}
     </div>
   )
 }
