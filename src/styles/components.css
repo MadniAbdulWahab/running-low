@@ -2170,11 +2170,11 @@ body {
 .hearts-sender {
   display: flex;
   align-items: center;
-  gap: 7px;
+  gap: 9px;
   min-width: 0;
-  font-size: 13px;
-  font-weight: 550;
-  color: var(--label-2);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--label);
 }
 .hearts-sender .avatar {
   flex: none;
@@ -2215,10 +2215,18 @@ body {
 .send-pings[data-layout='row'] {
   border-top: 1px solid var(--separator, var(--border));
 }
+.send-pings-label {
+  margin: 0;
+  padding: 11px 16px 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--label-2);
+  overflow-wrap: anywhere;
+}
 .send-pings[data-layout='row'] .send-pings-track {
   display: flex;
   gap: 8px;
-  padding: 10px 14px;
+  padding: 8px 14px 10px;
   overflow-x: auto;
   overscroll-behavior-x: contain;
   scroll-snap-type: x proximity;

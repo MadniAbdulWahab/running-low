@@ -16,6 +16,7 @@ export function SendPings({ pings, layout }: { pings: Ping[]; layout: 'row' | 'g
   const { household, uid, toast } = useApp()
   const other = household.members.find((m) => m !== uid)
   const otherName = other ? (household.memberNames[other] ?? 'Someone') : null
+  const sendLabel = otherName ? `Send something to ${firstName(otherName)}` : 'Send a little hello once your partner joins'
   const [burst, setBurst] = useState<{ id: number; emoji: string; x: number; y: number } | null>(null)
   const endBurst = useCallback(() => setBurst(null), [])
   const [atEnd, setAtEnd] = useState(false)
@@ -36,10 +37,11 @@ export function SendPings({ pings, layout }: { pings: Ping[]; layout: 'row' | 'g
 
   return (
     <div className="send-pings" data-layout={layout} data-end={atEnd || undefined}>
+      {layout === 'row' && <p className="send-pings-label">{sendLabel}</p>}
       <div
         className="send-pings-track"
         role="group"
-        aria-label="Send something"
+        aria-label={sendLabel}
         // The right edge fades to hint there's more; drop the fade once you've swiped to the end.
         onScroll={(e) => {
           const t = e.currentTarget
@@ -93,7 +95,7 @@ export function HeartsBar({ pings, days, onOpen }: { pings: Ping[]; days: PingDa
         <span className="hearts-in-text">
           {lastIn && (
             <span className="hearts-sender">
-              <Avatar uid={lastIn.from} size={24} />
+              <Avatar uid={lastIn.from} size={40} />
               <span>{fromName}</span>
             </span>
           )}
