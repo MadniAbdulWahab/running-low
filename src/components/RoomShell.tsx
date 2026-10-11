@@ -5,7 +5,7 @@ import { byBoardOrder, createNote, deleteNote, nextColor, notesCol, toNote } fro
 import { countdownsCol, toCountdown } from '../data/countdowns'
 import { ideasCol, toIdea } from '../data/ideas'
 import { mealsCol, toMeal } from '../data/meals'
-import { readPingSeen, recentPings, toPing, writePingSeen } from '../data/pings'
+import { pingDaysSince, readPingSeen, recentPings, toPing, toPingDay, writePingSeen } from '../data/pings'
 import { profilesCol, toProfile } from '../data/profiles'
 import { useCollection } from '../hooks/useCollection'
 import { useItems } from '../hooks/useItems'
@@ -14,7 +14,7 @@ import { useMyPush } from '../data/push'
 import { useRoomTheme, type ThemeState } from '../hooks/useTheme'
 import { LIST_EMOJI } from '../lib/emoji'
 import type { Entry } from '../lib/parse'
-import { WEEK, weekDays } from '../lib/time'
+import { toISO, WEEK, weekDays } from '../lib/time'
 import { isListRoom, LIST_INFO, LISTS, pingInfo } from '../rooms'
 import type { Household, Item, ListId, Note, Ping, RoomId } from '../types'
 import { ActionSheet } from './ActionSheet'
@@ -32,6 +32,7 @@ import { Toast, type ToastData } from './Toast'
 import { CountdownSheet } from './us/Countdowns'
 import { HeartRain } from './us/HeartRain'
 import { HeartsBar } from './us/HeartsBar'
+import { HeartsSheet } from './us/HeartsSheet'
 import { PingArrival } from './us/PingArrival'
 import { MealPlanner } from './us/MealPlanner'
 import { MealSheet } from './us/MealSheet'
@@ -97,6 +98,10 @@ export function RoomShell({ uid, household, room, setRoom, theme }: Props) {
   const notes = useMemo(() => (notesLive ? [...notesLive].sort(byBoardOrder) : null), [notesLive])
   const pingsLive = useCollection(`pings/${hid}`, () => recentPings(hid), toPing)
   const pings = useMemo(() => pingsLive ?? [], [pingsLive])
+  // Hearts counted per day; the last 7 days cover "today" and "this week".
+  const weekAgo = toISO(new Date(Date.now() - 6 * 86_400_000))
+  const pingDays = useCollection(`pingDays/${hid}/${weekAgo}`, () => pingDaysSince(hid, weekAgo), toPingDay)
+  const [heartsOpen, setHeartsOpen] = useState(false)
   const meals = useCollection(`meals/${hid}`, () => mealsCol(hid), toMeal)
   const profiles = useCollection(`profiles/${hid}`, () => profilesCol(hid), toProfile)
   const photos = useMemo(
@@ -371,7 +376,7 @@ export function RoomShell({ uid, household, room, setRoom, theme }: Props) {
         ) : room === 'home' ? (
           <>
             <ListCards needed={needed} meals={meals} notes={notes} countdowns={countdowns} />
-            {!selecting && <HeartsBar pings={pings} />}
+            {!selecting && <HeartsBar pings={pings} days={pingDays} onOpen={() => setHeartsOpen(true)} />}
             {loaded === null ? null : visible.length === 0 ? (
               <EmptyArt
                 emojis={['🥛', '🧻', '📌']}
@@ -509,6 +514,7 @@ export function RoomShell({ uid, household, room, setRoom, theme }: Props) {
           onClose={() => setCountdownId(null)}
         />
       )}
+      {heartsOpen && <HeartsSheet pings={pings} days={pingDays} onClose={() => setHeartsOpen(false)} />}
       {rain && <HeartRain emoji={rain} onDone={endRain} />}
       {arrival && <PingArrival key={arrival.id} ping={arrival} onDone={endArrival} />}
       {openItem && <ItemSheet key={openItem.id} item={openItem} onClose={() => setOpenId(null)} />}

@@ -1,58 +1,24 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useState } from 'react'
 import { useApp } from '../../app-context'
-import { sendPing } from '../../data/pings'
+import { countsFor, sendPing, totalOf, type PingDay } from '../../data/pings'
 import { notify } from '../../lib/push'
-import { ago } from '../../lib/time'
+import { ago, todayISO } from '../../lib/time'
 import { PINGS, pingInfo } from '../../rooms'
 import type { Ping, PingKind } from '../../types'
 import { Avatar } from '../Avatar'
+import { ChevronRight } from '../Icons'
 import { HeartBurst } from './HeartRain'
 
-const startOfToday = () => {
-  const t = new Date()
-  return new Date(t.getFullYear(), t.getMonth(), t.getDate()).getTime()
-}
+export const firstName = (name: string) => name.trim().split(/\s+/)[0] || name
 
-/** How many of each kind, most first: [['heart', 3], ['kiss', 1]]. */
-function tally(pings: Ping[]): [PingKind, number][] {
-  const n = new Map<PingKind, number>()
-  for (const p of pings) n.set(p.kind, (n.get(p.kind) ?? 0) + 1)
-  return [...n].sort((a, b) => b[1] - a[1])
-}
-
-function Tally({ counts }: { counts: [PingKind, number][] }) {
-  return (
-    <span className="hearts-tally">
-      {counts.map(([k, c]) => (
-        <span key={k} className="hearts-chip" aria-label={`${c} × ${pingInfo(k).label}`}>
-          {pingInfo(k).emoji}
-          <b>{c}</b>
-        </span>
-      ))}
-    </span>
-  )
-}
-
-/**
- * Hearts on Home: what came in (the latest, big, and today's count of each) and a grid
- * of little things to send back.
- */
-export function HeartsBar({ pings }: { pings: Ping[] }) {
-  const { household, uid, toast, photos } = useApp()
+/** The 12 things to send: a sideways-swiping row on Home, a grid in the Hearts sheet. */
+export function SendPings({ pings, layout }: { pings: Ping[]; layout: 'row' | 'grid' }) {
+  const { household, uid, toast } = useApp()
   const other = household.members.find((m) => m !== uid)
   const otherName = other ? (household.memberNames[other] ?? 'Someone') : null
-  const lastIn = pings.find((p) => p.from !== uid)
   const [burst, setBurst] = useState<{ id: number; emoji: string; x: number; y: number } | null>(null)
   const endBurst = useCallback(() => setBurst(null), [])
-
-  const { inToday, outToday } = useMemo(() => {
-    const since = startOfToday()
-    const today = pings.filter((p) => p.createdAt >= since)
-    return {
-      inToday: tally(today.filter((p) => p.from !== uid)),
-      outToday: tally(today.filter((p) => p.from === uid)),
-    }
-  }, [pings, uid])
+  const [atEnd, setAtEnd] = useState(false)
 
   const send = (kind: PingKind, e: React.MouseEvent<HTMLButtonElement>) => {
     const info = pingInfo(kind)
@@ -62,45 +28,24 @@ export function HeartsBar({ pings }: { pings: Ping[] }) {
     }
     sendPing(household.id, uid, kind, pings)
     void notify(household.id, 'hearts', `${household.memberNames[uid] ?? 'Someone'} ${info.verb} ${info.emoji}`, '', 'home')
-    const card = e.currentTarget.closest('.hearts')!.getBoundingClientRect()
+    const box = e.currentTarget.closest('.send-pings')!.getBoundingClientRect()
     const btn = e.currentTarget.getBoundingClientRect()
-    setBurst({ id: Date.now(), emoji: info.emoji, x: btn.left + btn.width / 2 - card.left, y: btn.top - card.top })
-    toast(`${info.emoji} sent to ${otherName}`)
+    setBurst({ id: Date.now(), emoji: info.emoji, x: btn.left + btn.width / 2 - box.left, y: btn.top - box.top })
+    toast(`${info.emoji} sent to ${firstName(otherName)}`)
   }
 
-  const lastInfo = lastIn ? pingInfo(lastIn.kind) : null
-
   return (
-    <section className="hearts" aria-label="Hearts">
-      <div className="hearts-in">
-        {lastIn && lastInfo && photos[lastIn.from] ? (
-          <span className="hearts-big hearts-big--photo" aria-hidden="true" key={lastIn.id}>
-            <Avatar uid={lastIn.from} size={58} />
-            <span className="hearts-badge">{lastInfo.emoji}</span>
-          </span>
-        ) : (
-          <span className="hearts-big" aria-hidden="true" key={lastIn?.id}>
-            {lastInfo?.emoji ?? '💌'}
-          </span>
-        )}
-        <span className="hearts-in-text">
-          <strong className="hearts-last">
-            {lastIn && lastInfo
-              ? `${household.memberNames[lastIn.from] ?? 'Someone'} ${lastInfo.verb}`
-              : otherName
-                ? `Nothing from ${otherName} yet`
-                : 'Waiting for someone to join'}
-          </strong>
-          {lastIn && <span className="hearts-when">{ago(lastIn.createdAt)}</span>}
-          {inToday.length > 0 && (
-            <span className="hearts-today">
-              Today <Tally counts={inToday} />
-            </span>
-          )}
-        </span>
-      </div>
-
-      <div className="hearts-grid" role="group" aria-label="Send something">
+    <div className="send-pings" data-layout={layout} data-end={atEnd || undefined}>
+      <div
+        className="send-pings-track"
+        role="group"
+        aria-label="Send something"
+        // The right edge fades to hint there's more; drop the fade once you've swiped to the end.
+        onScroll={(e) => {
+          const t = e.currentTarget
+          setAtEnd(t.scrollLeft + t.clientWidth >= t.scrollWidth - 4)
+        }}
+      >
         {PINGS.map((p) => (
           <button
             key={p.kind}
@@ -114,12 +59,54 @@ export function HeartsBar({ pings }: { pings: Ping[] }) {
           </button>
         ))}
       </div>
-      {outToday.length > 0 && (
-        <p className="hearts-sent">
-          You sent today <Tally counts={outToday} />
-        </p>
-      )}
       {burst && <HeartBurst key={burst.id} emoji={burst.emoji} x={burst.x} y={burst.y} onDone={endBurst} />}
+    </div>
+  )
+}
+
+/**
+ * Hearts on Home, kept slim: the last thing that came in (tap for the full picture) and a
+ * row of things to send back.
+ */
+export function HeartsBar({ pings, days, onOpen }: { pings: Ping[]; days: PingDay[] | null; onOpen: () => void }) {
+  const { household, uid, photos } = useApp()
+  const other = household.members.find((m) => m !== uid)
+  const otherName = other ? (household.memberNames[other] ?? 'Someone') : null
+  const lastIn = pings.find((p) => p.from !== uid)
+  const lastInfo = lastIn ? pingInfo(lastIn.kind) : null
+  const today = (days ?? []).filter((d) => d.day === todayISO())
+  const inToday = other ? totalOf(countsFor(today, other)) : 0
+  const fromName = lastIn ? firstName(household.memberNames[lastIn.from] ?? 'Someone') : ''
+
+  return (
+    <section className="hearts" aria-label="Hearts">
+      <button className="hearts-in" onClick={onOpen} aria-label="Hearts: see today and this week">
+        {lastIn && lastInfo && photos[lastIn.from] ? (
+          <span className="hearts-big hearts-big--photo" aria-hidden="true" key={lastIn.id}>
+            <Avatar uid={lastIn.from} size={44} />
+            <span className="hearts-badge">{lastInfo.emoji}</span>
+          </span>
+        ) : (
+          <span className="hearts-big" aria-hidden="true" key={lastIn?.id}>
+            {lastInfo?.emoji ?? '💌'}
+          </span>
+        )}
+        <span className="hearts-in-text">
+          <strong className="hearts-last">
+            {lastIn && lastInfo
+              ? `${fromName} ${lastInfo.verb}`
+              : otherName
+                ? `Nothing from ${firstName(otherName)} yet`
+                : 'Waiting for someone to join'}
+          </strong>
+          <span className="hearts-when">
+            {[lastIn && ago(lastIn.createdAt), inToday > 0 && `${inToday} today`].filter(Boolean).join(' · ') ||
+              'Send something below'}
+          </span>
+        </span>
+        <ChevronRight />
+      </button>
+      <SendPings pings={pings} layout="row" />
     </section>
   )
 }

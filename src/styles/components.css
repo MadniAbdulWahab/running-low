@@ -2114,31 +2114,42 @@ body {
 
 /* ══ Us tab ══════════════════════════════════════════════════ */
 
-/* Hearts card (on Home) */
+/* Hearts strip (on Home): the latest one in, and a row to send from */
 .hearts {
   position: relative;
   margin-top: 16px;
-  padding: 14px;
   border-radius: 18px;
   background: var(--card);
   border: 1px solid var(--border);
+  overflow: hidden;
 }
 .hearts-in {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 2px 2px 14px;
-  border-bottom: 1px solid var(--separator, var(--border));
+  width: 100%;
+  padding: 12px 14px;
+  text-align: left;
+  transition: background-color 120ms;
+}
+.hearts-in:active {
+  background: var(--card-pressed);
+}
+.hearts-in > svg {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  color: var(--label-3);
 }
 .hearts-big {
   flex: none;
-  width: 58px;
-  height: 58px;
+  width: 44px;
+  height: 44px;
   display: grid;
   place-items: center;
-  border-radius: 18px;
+  border-radius: 50%;
   background: color-mix(in srgb, var(--brand) 28%, var(--card));
-  font-size: 34px;
+  font-size: 24px;
   line-height: 1;
   animation: hearts-pop 420ms cubic-bezier(0.3, 1.5, 0.5, 1);
 }
@@ -2148,66 +2159,68 @@ body {
   }
 }
 .hearts-in-text {
+  flex: 1;
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 2px;
 }
 .hearts-last {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 650;
   line-height: 1.25;
   color: var(--label);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .hearts-when {
   font-size: 13px;
   color: var(--label-2);
 }
-.hearts-today,
-.hearts-sent {
+
+/* The 12 to send: one swipeable row on Home, a grid in the sheet */
+.send-pings {
+  position: relative;
+}
+.send-pings[data-layout='row'] {
+  border-top: 1px solid var(--separator, var(--border));
+}
+.send-pings[data-layout='row'] .send-pings-track {
   display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 6px;
-  font-size: 13px;
-  color: var(--label-2);
+  gap: 8px;
+  padding: 10px 14px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  scroll-padding-inline: 14px;
+  scrollbar-width: none;
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 36px), transparent);
+  mask-image: linear-gradient(to right, #000 calc(100% - 36px), transparent);
 }
-.hearts-today {
-  margin-top: 3px;
+.send-pings[data-layout='row'][data-end] .send-pings-track {
+  -webkit-mask-image: none;
+  mask-image: none;
 }
-.hearts-sent {
-  margin: 12px 2px 0;
+.send-pings-track::-webkit-scrollbar {
+  display: none;
 }
-.hearts-tally {
-  display: inline-flex;
-  flex-wrap: wrap;
-  gap: 5px;
+.send-pings[data-layout='row'] .heart-quick {
+  flex: none;
+  width: 46px;
+  height: 46px;
+  scroll-snap-align: start;
 }
-.hearts-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  padding: 2px 8px 2px 6px;
-  border-radius: 999px;
-  background: var(--fill);
-  font-size: 15px;
-  line-height: 20px;
-}
-.hearts-chip b {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--label);
-  font-variant-numeric: tabular-nums;
-}
-.hearts-grid {
+.send-pings[data-layout='grid'] .send-pings-track {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 8px;
-  margin-top: 14px;
+}
+.send-pings[data-layout='grid'] .heart-quick {
+  aspect-ratio: 1;
+  max-height: 54px;
 }
 .heart-quick {
-  aspect-ratio: 1;
-  max-height: 52px;
   border-radius: 14px;
   background: var(--fill);
   font-size: 24px;
@@ -2219,6 +2232,109 @@ body {
 }
 .heart-quick:active {
   transform: scale(0.88);
+}
+
+/* Hearts sheet */
+.hearts-period {
+  margin: 2px 0 14px;
+}
+.hearts-score {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+  gap: 10px;
+}
+.hearts-score-side {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 14px 10px 12px;
+  border-radius: 16px;
+  background: var(--card);
+  font-size: 13px;
+  color: var(--label-2);
+}
+.hearts-score-side .avatar {
+  margin-bottom: 6px;
+}
+.hearts-score-n {
+  font-size: 28px;
+  line-height: 1.1;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--label);
+}
+.hearts-score-side[data-side='theirs'] .hearts-score-n,
+.hearts-row-n b[data-side='theirs'] {
+  color: var(--brand-link);
+}
+.hearts-rows {
+  margin-top: 14px;
+}
+.hearts-row {
+  gap: 12px;
+}
+.hearts-row-emoji {
+  flex: none;
+  width: 30px;
+  font-size: 24px;
+  text-align: center;
+}
+.hearts-row-bars {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.hearts-row-label {
+  font-size: 14px;
+  color: var(--label);
+}
+.hearts-bar {
+  display: block;
+  height: 5px;
+  min-width: 3px;
+  border-radius: 3px;
+  background: var(--brand);
+}
+.hearts-bar[data-side='mine'] {
+  background: color-mix(in srgb, var(--label) 22%, transparent);
+}
+.hearts-row-n {
+  flex: none;
+  min-width: 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font-size: 14px;
+  line-height: 1.25;
+  font-variant-numeric: tabular-nums;
+}
+.hearts-empty {
+  margin: 14px 0 0;
+  padding: 18px;
+  border-radius: 16px;
+  background: var(--card);
+  text-align: center;
+  color: var(--label-2);
+  font-size: 15px;
+}
+.hearts-recent {
+  gap: 10px;
+}
+.hearts-recent-text {
+  flex: 1;
+  min-width: 0;
+  font-size: 15px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.hearts-recent-when {
+  flex: none;
+  font-size: 13px;
+  color: var(--label-2);
 }
 
 /* Little burst when you send one */
@@ -2881,16 +2997,16 @@ button.row:disabled {
 }
 .hearts-badge {
   position: absolute;
-  right: -6px;
-  bottom: -6px;
-  width: 30px;
-  height: 30px;
+  right: -5px;
+  bottom: -5px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   display: grid;
   place-items: center;
   background: var(--card);
   box-shadow: 0 1px 4px rgb(0 0 0 / 0.18);
-  font-size: 17px;
+  font-size: 14px;
 }
 
 /* When one arrives: who sent it, big, over the shower */
@@ -2971,4 +3087,7 @@ button.row:disabled {
 .ping-card-verb {
   font-size: 16px;
   color: var(--label-2);
+}
+.hearts-bar[data-zero] {
+  visibility: hidden;
 }

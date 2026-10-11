@@ -418,7 +418,14 @@ try {
   check((await A.page.locator('.hearts').count()) === 0, 'hearts are no longer on Us')
   await tab(A.page, 'Home')
   await tab(B.page, 'Groceries')
-  check((await A.page.locator('.heart-quick').count()) >= 12, 'twelve things to send')
+  check((await A.page.locator('.hearts .heart-quick').count()) === 12, 'twelve things to send, in one row')
+  {
+    const [track, last] = await Promise.all([
+      A.page.locator('.hearts .send-pings-track').boundingBox(),
+      A.page.locator('.hearts .heart-quick').last().boundingBox(),
+    ])
+    check(last.x + last.width > track.x + track.width, 'the send row runs off the edge (swipe for more)')
+  }
   await A.page.getByRole('button', { name: 'Send: Heart' }).click()
   check(
     await B.page.locator('.ping-card', { hasText: 'sent a heart' }).waitFor({ timeout: 8000 }).then(() => true).catch(() => false),
@@ -440,14 +447,44 @@ try {
     'B sees the latest one big on Home (a rose)',
   )
   check(
-    await B.page.locator('.hearts-today .hearts-chip', { hasText: '❤️2' }).waitFor({ timeout: 8000 }).then(() => true).catch(() => false),
-    "B sees today's count (❤️ 2)",
+    await B.page.locator('.hearts-when', { hasText: '3 today' }).waitFor({ timeout: 8000 }).then(() => true).catch(() => false),
+    'the strip says how many came in today (3 today)',
   )
-  check(await A.page.locator('.hearts-sent .hearts-chip', { hasText: '🌹1' }).isVisible(), 'A sees what they sent today')
   await B.page.locator('.hearts').evaluate((el) => el.scrollIntoView({ block: 'start' }))
   await B.page.waitForTimeout(300)
   await B.page.screenshot({ path: `${OUT}/hearts-card.png` })
   check(await B.page.locator('.hearts-big--photo img').isVisible(), 'the hearts card shows the sender’s photo with the emoji')
+
+  // ── The Hearts sheet: today / this week, latest, and a grid to send from ──
+  await B.page.locator('.hearts-in').click()
+  const hs = B.page.locator('.sheet')
+  check(await hs.locator('.hearts-score').waitFor({ timeout: 8000 }).then(() => true).catch(() => false), 'tapping the strip opens the Hearts sheet')
+  const nums = async () => (await hs.locator('.hearts-score-n').allTextContents()).join()
+  check((await nums()) === '3,0', `today: 3 from Sara, 0 from you (${await nums()})`)
+  const row = (kind) => hs.locator(`.hearts-row[data-kind=${kind}] .hearts-row-n`)
+  check(
+    (await row('heart').textContent()) === '20' && (await row('rose').textContent()) === '10',
+    'breakdown: ❤️ 2 · 0 and 🌹 1 · 0',
+  )
+  check((await hs.locator('.hearts-recent').first().textContent()).includes('sent a rose'), 'Latest starts with the rose')
+  await B.page.screenshot({ path: `${OUT}/hearts-sheet.png` })
+  await hs.getByRole('button', { name: 'This week' }).click()
+  check((await nums()) === '3,0', 'this week includes today')
+  await hs.getByRole('button', { name: 'Send: Hug' }).click()
+  check(
+    await A.page.locator('.ping-card', { hasText: 'sent a hug' }).waitFor({ timeout: 8000 }).then(() => true).catch(() => false),
+    'sending from the sheet’s grid reaches A',
+  )
+  check(
+    await B.page.waitForFunction(() => [...document.querySelectorAll('.sheet .hearts-score-n')].map((e) => e.textContent).join() === '3,1', null, { timeout: 8000 })
+      .then(() => true).catch(() => false),
+    'the sheet counts what you send, live (3 · 1)',
+  )
+  await B.page.locator('.sheet-done').click()
+  await A.page.waitForTimeout(3800) // let the hug pop-up on A finish
+  // The last one in the row is reachable by swiping (Playwright scrolls it into view).
+  await A.page.locator('.hearts').getByRole('button', { name: 'Send: Haha' }).click()
+  check(await B.page.locator('.ping-card', { hasText: 'is laughing' }).waitFor({ timeout: 8000 }).then(() => true).catch(() => false), 'the 12th, swiped into view, sends too')
 
   // ── B adds a photo later, from the top right ──
   await B.page.locator('.members-btn').click()

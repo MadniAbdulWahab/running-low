@@ -120,6 +120,19 @@ service cloud.firestore {
           && request.resource.data.prefs is map;
       }
 
+      // Hearts counted per day: { [uid]: { heart: 18, … } }. Each person only bumps their own counts.
+      match /pingDays/{day} {
+        allow read: if isMember(hid);
+        allow delete: if false;
+        allow create: if isMember(hid)
+          && day.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+          && request.resource.data.keys().hasOnly([me()])
+          && request.resource.data[me()] is map;
+        allow update: if isMember(hid)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly([me()])
+          && request.resource.data[me()] is map;
+      }
+
       // Profile photos: each person writes only their own; everyone on the list sees them.
       match /profiles/{uid} {
         allow read: if isMember(hid);

@@ -321,3 +321,23 @@ households/{CODE}/photos/{id}   { itemKey, dataUrl, createdAt }
   - If iOS strips the EXIF, auto-mirroring silently doesn't happen; Flip covers that.
 - **Remove photo asks first:** PhotoPicker's Remove opens an `Alert` ("Remove your photo?", Cancel / Remove in red), on setup and in Settings. The e2e checks that it asks, that Cancel keeps the photo, and that confirming removes it.
 
+## Hearts strip + Hearts sheet (2026-10-11)
+- **Feedback:** the hearts card had become one big block: the latest, an 11-chip tally on 3 lines, a 6×2 grid and "You sent today". The user wanted it nicer and chose a **slim strip with a swipeable send row** (from three options).
+- **Home (`HeartsBar.tsx`):**
+  - The top row is a button: the sender's photo with an emoji badge (44px), **first name** + verb, and "2m ago · 46 today". Tapping opens the sheet.
+  - Below it, `SendPings layout="row"`: all 12 in one horizontal scroll-snap row (46px). The right edge fades until you reach the end (`data-end`, set on scroll).
+- **Sheet (`HeartsSheet.tsx`):**
+  - A Today | This week segmented control.
+  - Two score cards: "3 from Sara" in brand-link, and "0 from you".
+  - A breakdown row per emoji used, with two thin bars (theirs: brand; yours: grey), counts stacked, sorted by total.
+  - "Send something" (`SendPings layout="grid"`, 6×2).
+  - "Latest": the last 15 pings ("Sara sent a rose 🌹 · 2m", "You sent 😴 Sleepy").
+- **Counting moved to `pingDays/{YYYY-MM-DD}` = `{ [uid]: { kind: n } }`:**
+  - `sendPing` also does `setDoc(merge)` with `increment(1)`. Pings are pruned to the newest 100, which this couple outgrows in about a day, so counts can't come from them.
+  - RoomShell listens to the last 7 days (`pingDaysSince`, `documentId() >= weekAgo`). Helpers: `countsFor`, `totalOf`.
+  - Rules: member read; create/update only touches your own uid key (plus a date-id check); never deleted.
+  - Counts started from zero at rollout; older pings weren't backfilled.
+- **Tests:**
+  - 25 unit tests (rules + EXIF), including the new pingDays test.
+  - E2E: 12 buttons in one row that runs off the edge; "3 today" on the strip; the sheet shows 3,0 and the ❤️ 2·0 / 🌹 1·0 breakdown, with the rose first in Latest; This week ≥ today; sending from the grid reaches A and updates the score live (3,1); the 12th button (swiped into view) sends.
+

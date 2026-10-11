@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs'
-import { afterAll, beforeAll, beforeEach, describe, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import {
   assertFails,
   assertSucceeds,
@@ -14,6 +14,7 @@ import {
   doc,
   getDoc,
   getDocs,
+  increment,
   collection,
   setDoc,
   updateDoc,
@@ -246,6 +247,24 @@ describe('push subscriptions', () => {
     await assertFails(getDoc(doc(as('carol'), mine)))
     await assertFails(setDoc(doc(as('alice'), mine), { ...data, subscription: 'x'.repeat(2001) }))
     await assertSucceeds(deleteDoc(doc(as('alice'), mine)))
+  })
+})
+
+describe('heart counts per day', () => {
+  it('each person bumps only their own counts; outsiders see nothing', async () => {
+    await seed(['alice', 'bob'])
+    const day = `households/${CODE}/pingDays/2026-10-11`
+    await assertSucceeds(setDoc(doc(as('alice'), day), { alice: { heart: increment(1) } }, { merge: true }))
+    await assertSucceeds(setDoc(doc(as('bob'), day), { bob: { kiss: increment(1) } }, { merge: true }))
+    await assertSucceeds(setDoc(doc(as('alice'), day), { alice: { heart: increment(1) } }, { merge: true }))
+    const snap = await getDoc(doc(as('bob'), day))
+    expect(snap.data()).toEqual({ alice: { heart: 2 }, bob: { kiss: 1 } })
+    // Not someone else's counts, not a made-up day id, not outsiders, never deleted.
+    await assertFails(setDoc(doc(as('alice'), day), { bob: { kiss: increment(5) } }, { merge: true }))
+    await assertFails(setDoc(doc(as('alice'), `households/${CODE}/pingDays/today`), { alice: { heart: 1 } }))
+    await assertFails(getDoc(doc(as('carol'), day)))
+    await assertFails(setDoc(doc(as('carol'), day), { carol: { heart: 1 } }, { merge: true }))
+    await assertFails(deleteDoc(doc(as('alice'), day)))
   })
 })
 
