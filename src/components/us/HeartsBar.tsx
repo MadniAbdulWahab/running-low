@@ -16,7 +16,7 @@ export function SendPings({ pings, layout }: { pings: Ping[]; layout: 'row' | 'g
   const { household, uid, toast } = useApp()
   const other = household.members.find((m) => m !== uid)
   const otherName = other ? (household.memberNames[other] ?? 'Someone') : null
-  const sendLabel = otherName ? `Send something to ${firstName(otherName)}` : 'Send a little hello once your partner joins'
+  const sendLabel = otherName ? `Send something to ${otherName}` : 'Send a little hello once your partner joins'
   const [burst, setBurst] = useState<{ id: number; emoji: string; x: number; y: number } | null>(null)
   const endBurst = useCallback(() => setBurst(null), [])
   const [atEnd, setAtEnd] = useState(false)
@@ -32,7 +32,7 @@ export function SendPings({ pings, layout }: { pings: Ping[]; layout: 'row' | 'g
     const box = e.currentTarget.closest('.send-pings')!.getBoundingClientRect()
     const btn = e.currentTarget.getBoundingClientRect()
     setBurst({ id: Date.now(), emoji: info.emoji, x: btn.left + btn.width / 2 - box.left, y: btn.top - box.top })
-    toast(`${info.emoji} sent to ${firstName(otherName)}`)
+    toast(`${info.emoji} sent to ${otherName}`)
   }
 
   return (
@@ -78,7 +78,7 @@ export function HeartsBar({ pings, days, onOpen }: { pings: Ping[]; days: PingDa
   const lastInfo = lastIn ? pingInfo(lastIn.kind) : null
   const today = (days ?? []).filter((d) => d.day === todayISO())
   const inToday = other ? totalOf(countsFor(today, other)) : 0
-  const fromName = lastIn ? firstName(household.memberNames[lastIn.from] ?? 'Someone') : ''
+  const fromName = lastIn ? (household.memberNames[lastIn.from] ?? 'Someone') : ''
   const message = lastInfo ? lastInfo.verb.charAt(0).toUpperCase() + lastInfo.verb.slice(1) : null
 
   return (
@@ -103,7 +103,7 @@ export function HeartsBar({ pings, days, onOpen }: { pings: Ping[]; days: PingDa
                 </span>
               </>
             ) : otherName ? (
-              `Nothing from ${firstName(otherName)} yet`
+              `Nothing from ${otherName} yet`
             ) : (
               'Waiting for someone to join'
             )}

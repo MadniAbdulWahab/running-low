@@ -2,8 +2,8 @@
 
 ## Hearts received-message polish (local, not deployed)
 - The user asked for receiving an emoji to feel more prominent, following the existing app identity.
-- Current layout, explicitly requested by the user: a 72px sender photo/initial occupies the left-hand space, with the first name above the 20px message. The received emoji follows the message inline at 40px. Time and daily count remain secondary. Longer messages wrap.
-- The user rejected the small photo next to the name. Their latest request enlarged the inline emoji from 28px to 40px and restored the quiet "Send something to [first name]" hint above the swipeable send row (a neutral join hint while waiting for a partner). Verified with the production build and Chromium/WebKit layout previews in both themes.
+- Current layout, explicitly requested by the user: a 72px sender photo/initial occupies the left-hand space, with the full name above the 20px message. Names wrap rather than being truncated. The received emoji follows the message inline at 28px. Time and daily count remain secondary. Longer messages wrap.
+- The user rejected the small photo next to the name. Their latest request restores the quiet "Send something to [full name]" hint above the swipeable send row (a neutral join hint while waiting for a partner), keeping the reverted 28px emoji. The Home card's empty state and send confirmation also use the full name. Verified with the production build and Chromium/WebKit layout previews in both themes.
 - Keeps the swipeable send row, Hearts sheet, existing arrival animation and data behaviour. Empty/waiting states stay compact; existing reduced-motion styling applies to the emoji pop.
 - Verified: production build, existing Chromium two-person end-to-end suite, and Chromium/WebKit component previews in both themes at 320, 375, 412, 430 and 768px. All twelve message kinds fit at 320px; card opens the sheet and empty states work. Preview artifacts: ignored `output/playwright/hearts-refresh/`.
 
