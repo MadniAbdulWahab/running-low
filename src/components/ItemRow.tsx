@@ -137,6 +137,7 @@ export function ItemRow({ item }: { item: Item }) {
             className="qty-value"
             aria-label={`${item.name}: quantity ${qty}. Tap to change`}
             aria-expanded={qtyOpen}
+            data-many={qty > 1 || undefined}
             disabled={ticked}
             onClick={() => setQtyOpen((o) => !o)}
           >

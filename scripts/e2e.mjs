@@ -239,6 +239,42 @@ try {
       .waitFor({ timeout: 8000 }).then(() => true).catch(() => false),
     'inline + in the row (×5) syncs to B',
   )
+  // ── Home sections fold to one line ──
+  await tab(A.page, 'Home')
+  await A.page.locator('.section-head', { hasText: 'Grocery' }).click()
+  check(
+    (await A.page.locator('section[data-list=grocery] .section-peek').isVisible()) &&
+      (await A.page.locator('section[data-list=grocery] .item').count()) === 0,
+    'tapping Grocery on Home folds it to one line',
+  )
+  await A.page.screenshot({ path: `${OUT}/home-folded.png` })
+  await A.page.locator('.section-head', { hasText: 'Grocery' }).click()
+  check((await A.page.locator('section[data-list=grocery] .item').count()) > 0, 'tapping again unfolds it')
+
+  // ── The page behind a sheet stays put; the bar stays on the bottom edge ──
+  await A.page.evaluate(() => window.scrollTo(0, 300))
+  const before = await A.page.evaluate(() => window.scrollY)
+  await A.page.locator('.item-body').first().click()
+  await A.page.locator('.sheet').waitFor()
+  check(
+    (await A.page.evaluate(() => getComputedStyle(document.body).position)) === 'fixed',
+    'page behind the sheet is locked',
+  )
+  await A.page.mouse.move(200, 60)
+  await A.page.mouse.wheel(0, 600).catch(() => {}) // mobile WebKit has no wheel
+  await A.page.locator('.sheet-done').click()
+  check(
+    (await A.page.evaluate(() => [getComputedStyle(document.body).position, window.scrollY])).join() ===
+      ['static', before].join(),
+    'closing the sheet unlocks the page at the same scroll spot',
+  )
+  await A.page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
+  await A.page.waitForTimeout(200)
+  await A.page.evaluate(() => window.scrollTo(0, 0))
+  await A.page.waitForTimeout(300)
+  const gap = await A.page.evaluate(() => innerHeight - document.querySelector('.dock').getBoundingClientRect().bottom)
+  check(Math.abs(gap) < 1, `bottom bar stays on the bottom edge after scrolling (${gap}px)`)
+
   await B.page.getByRole('button', { name: 'Got Bread' }).click().catch(() => {})
   await tab(B.page, 'Home')
 

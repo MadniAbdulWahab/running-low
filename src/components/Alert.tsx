@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
+import { useScrollLock } from '../hooks/useScrollLock'
 
 export interface AlertAction {
   label: string
@@ -19,6 +20,7 @@ export function Alert({
   actions: AlertAction[]
   onClose: () => void
 }) {
+  useScrollLock()
   const first = useRef<HTMLButtonElement>(null)
   useEffect(() => {
     first.current?.focus({ preventScroll: true })

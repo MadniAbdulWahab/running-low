@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { createPortal } from 'react-dom'
+import { useScrollLock } from '../hooks/useScrollLock'
 
 export interface SheetAction {
   label: string
@@ -19,6 +20,7 @@ export function ActionSheet({
   actions: SheetAction[]
   onClose: () => void
 }) {
+  useScrollLock()
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
     window.addEventListener('keydown', onKey)

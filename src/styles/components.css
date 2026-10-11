@@ -1859,3 +1859,76 @@ label.row:active {
 .item::after {
   left: 60px;
 }
+
+/* ── Home: foldable list sections ───────────────────────────── */
+.section-count {
+  min-width: 22px;
+  padding: 0 7px;
+  border-radius: 11px;
+  background: color-mix(in srgb, var(--list) 15%, var(--card));
+  color: var(--list-text);
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 22px;
+  text-align: center;
+}
+.section-peek {
+  margin-left: auto;
+  font-size: 16px;
+  letter-spacing: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.section-peek + svg {
+  margin-left: 8px;
+}
+.section-head svg {
+  transform: rotate(90deg);
+  transition: transform 200ms ease;
+}
+.section-head[aria-expanded='false'] svg {
+  transform: none;
+}
+
+/* ── Quantity: just the number, no pill ─────────────────────── */
+.qty,
+.qty[data-open] {
+  background: none;
+  border-radius: 0;
+}
+.qty-value {
+  min-width: 22px;
+  padding: 0 2px;
+  border-radius: 0;
+  font-size: 16px;
+  color: var(--label-2);
+}
+.qty[data-open] .qty-value {
+  padding: 0 2px;
+}
+.qty-btn {
+  width: 28px;
+  border-radius: 0;
+  font-size: 22px;
+  font-weight: 500;
+}
+.qty-btn:active:not(:disabled) {
+  background: none;
+  opacity: 0.5;
+}
+.item::after {
+  left: 52px;
+}
+
+/* ── Nothing behind a sheet moves; no rubber-band dragging the bars ── */
+html,
+body {
+  overscroll-behavior-y: none;
+}
+.sheet-backdrop,
+.alert-backdrop {
+  touch-action: none;
+}
+.qty-value[data-many] {
+  color: var(--label);
+}

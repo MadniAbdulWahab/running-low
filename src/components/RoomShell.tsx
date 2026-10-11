@@ -3,7 +3,7 @@ import { AppContext, type AddOptions, type AppCtx } from '../app-context'
 import { addItem, deleteMany, markDone, markDoneMany, moveMany, undoDone, undoDoneMany } from '../data/items'
 import { useItems } from '../hooks/useItems'
 import { useRoomTheme, type ThemeState } from '../hooks/useTheme'
-import { LIST_EMOJI } from '../lib/emoji'
+import { emojiFor, LIST_EMOJI } from '../lib/emoji'
 import type { Entry } from '../lib/parse'
 import { WEEK } from '../lib/time'
 import { LIST_INFO, LISTS } from '../rooms'
@@ -28,6 +28,15 @@ const byNewest = (a: Item, b: Item) => b.addedAt - a.addedAt
 const byDue = (a: Item, b: Item) =>
   a.due && b.due ? a.due.localeCompare(b.due) : a.due ? -1 : b.due ? 1 : byNewest(a, b)
 const byDoneNewest = (a: Item, b: Item) => (b.doneAt ?? 0) - (a.doneAt ?? 0)
+
+const FOLD_KEY = 'outof.folded'
+function readFolded(): Partial<Record<ListId, boolean>> {
+  try {
+    return JSON.parse(localStorage.getItem(FOLD_KEY) ?? '{}')
+  } catch {
+    return {}
+  }
+}
 
 const plural = (n: number) => (n === 1 ? '1 item' : `${n} items`)
 
@@ -59,6 +68,16 @@ export function RoomShell({ uid, household, room, setRoom, theme }: Props) {
   const [selected, setSelected] = useState<Set<string>>(() => new Set())
   const [minute, setMinute] = useState(() => Math.floor(Date.now() / 60_000))
   const direction = useRef<'forward' | 'back'>('forward')
+  // Home sections can be folded down to one line; remembered on this phone.
+  const [folded, setFolded] = useState(readFolded)
+  const toggleFold = (l: ListId) =>
+    setFolded((prev) => {
+      const next = { ...prev, [l]: !prev[l] }
+      try {
+        localStorage.setItem(FOLD_KEY, JSON.stringify(next))
+      } catch {}
+      return next
+    })
 
   // Keep "2m ago" labels fresh, and let ticked items age out of the lists.
   useEffect(() => {
@@ -258,19 +277,35 @@ export function RoomShell({ uid, household, room, setRoom, theme }: Props) {
             ) : (
               <>
                 {listLabel}
-                {LISTS.filter((l) => rows[l].length).map((l) => (
-                  <section key={l} data-list={l}>
-                    <button className="section-head" onClick={() => goTo(l)}>
-                      {LIST_INFO[l].label}
-                      <ChevronRight />
-                    </button>
-                    <div className="group">
-                      {rows[l].map((i) => (
-                        <ItemRow key={i.id} item={i} />
-                      ))}
-                    </div>
-                  </section>
-                ))}
+                {LISTS.filter((l) => rows[l].length).map((l) => {
+                  const isFolded = !!folded[l] && !selecting
+                  const peek = [...new Set(rows[l].map((i) => emojiFor(i.name, i.list)))].slice(0, 4)
+                  return (
+                    <section key={l} data-list={l}>
+                      <button
+                        className="section-head"
+                        aria-expanded={!isFolded}
+                        onClick={() => toggleFold(l)}
+                      >
+                        {LIST_INFO[l].label}
+                        <span className="section-count">{needed[l].length}</span>
+                        {isFolded && (
+                          <span className="section-peek" aria-hidden="true">
+                            {peek.join(' ')}
+                          </span>
+                        )}
+                        <ChevronRight />
+                      </button>
+                      {!isFolded && (
+                        <div className="group">
+                          {rows[l].map((i) => (
+                            <ItemRow key={i.id} item={i} />
+                          ))}
+                        </div>
+                      )}
+                    </section>
+                  )
+                })}
               </>
             )}
             {!selecting && <QuickPicks room="home" />}

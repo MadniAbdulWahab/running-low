@@ -70,10 +70,13 @@ Saved 2026-10-11 so work can resume after a restart. To continue, tell Claude:
   - It reads "Select", and "Unselect" while active (tapping it again cancels).
   - The bottom bar becomes **Select all · Got it · Move · Delete**. Got it has an Undo; Delete asks first.
   - It uses batched writes (`markDoneMany`, `moveMany`, `deleteMany`).
+- **Home sections fold:** tapping a list heading on Home (Grocery/Household/Important) folds it to one line showing its count and emoji; the state is remembered per phone (localStorage `outof.folded`). The tab bar opens the full lists.
+- **Sheets and pop-ups freeze the page behind them** (`useScrollLock`: body pinned with position: fixed, scroll restored on close). Sheets can be dragged down from anywhere once their content is at the top.
+- **Bottom bar:** `useKeyboard` lifts the dock only while typing and when the gap is keyboard-sized (over 120px); html/body have overscroll-behavior: none. Small visual-viewport shifts while scrolling used to make the tab bar drift.
 - **Pop-ups:** confirmations use `src/components/Alert.tsx`, an iOS-style centred alert in the app's colours. Choosing a list for Move uses `ActionSheet.tsx`.
 - **Quantity:** a `qty` field (whole number 1–99, enforced by the rules; absent means 1).
   - Set it with the − n + stepper in the item sheet, or by typing "2 milk", "milk x2", "milk ×2" or "milk (2)" (`parseQty` in `src/lib/parse.ts`).
-  - Every row shows its quantity in a pill on the left ("1" when not set); tapping it opens − n + right in the row, which closes on a tap elsewhere or after 4 s. Re-adding a bought item resets it.
+  - Every row shows its quantity as a plain number on the left (grey for 1, dark for more) ("1" when not set); tapping it opens − n + right in the row, which closes on a tap elsewhere or after 4 s. Re-adding a bought item resets it.
 - **Note:** a per-item text box at the top of the sheet (after Quantity) that autosaves. It's shown under the name; up to 500 characters (enforced by the rules).
 
 ## Goal
