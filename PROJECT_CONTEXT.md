@@ -101,6 +101,10 @@ Saved 2026-10-11 so work can resume after a restart. To continue, tell Claude:
   - Tapping a day opens `MealSheet` (meal name plus comma-separated ingredients, autosaved).
   - "Add ingredients to Grocery" works per meal or for the whole week, using `splitEntry`, so "2 tomatoes" becomes Tomatoes ×2 and items already needed are skipped.
   - Data: `meals/{YYYY-MM-DD}` (one per day), with rules and a rules test. `weekDays`, `toISO` and `weekLabel` are in lib/time.ts.
+- **Countdowns (done):** a swipeable row of pastel cards on Us (days to go, Today! 🎉, past one-offs faded at the end). They can repeat every year. Tapping one opens `CountdownSheet` (name, date, Once / Every year, emoji, delete). Data: `countdowns/{id}`.
+- **Date jar (done):** add ideas; "Pick one" shuffles for about 1.1 s and lands on an idea not yet done (never the same one twice in a row). "Let's do it" marks it done (`doneAt`); "See all ideas" lists them with Put back and remove. Data: `ideas/{id}`.
+- **Us tab order:** Hearts, Countdowns, Notes, Meals, Date jar. There are 19 rules tests.
+- **Next:** phase 2, push notifications. The user has created a Cloudflare account and run `npx wrangler login`.
 - **Code:** `src/components/us/*`, `src/data/{notes,pings}.ts` and `src/hooks/useCollection.ts` (a generic live query; `toMs` lives there).
 - **Types:** `RoomId` = `ListRoom` | 'us', with `ListRoom` = 'home' | ListId. List-only components take `ListRoom`, and `isList()` is in rooms.ts.
 - **Rules:** notes (members only, size and colour checks, can't change `createdBy`, `updatedBy` must be you) and pings (sent as yourself, never edited). Both are covered by rules tests (16 total).

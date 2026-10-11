@@ -59,7 +59,7 @@ npm run dev:emu     # Vite against the emulators; no Firebase project needed
 ## How it works
 
 - **Data:** `households/{CODE}`, with `items` and `photos` subcollections. There is one item doc per name: adding something you've had before flips it back to *needed* and bumps its count, and those counts drive the Quick add suggestions.
-- **Us tab:** send a heart (or a hug, kiss, coffee), and keep shared sticky notes with checklists. Notes sync instantly, and a heart lands on the other phone as a little shower of emoji.
+- **Us tab:** send a heart (or a hug, kiss, coffee), count down to things you are looking forward to, keep shared sticky notes with checklists, plan the week's meals (and send their ingredients to Grocery in one tap), and let the date jar pick what to do together.
 - **Using it:** tap the tick on the right to mark something as got (it stays in the list, struck through, for a day; tapping it again asks before putting it back). Tap an item for its quantity, note, photo and due date. Press and hold to delete. Tap **Select** next to "On the list" to act on several items at once. Typing "2 milk" or "milk x2" sets a quantity.
 - **Offline:** the Firestore persistent cache. Writes are never awaited, so they apply instantly and sync later.
 - **Photos:** compressed in the browser to roughly 640px JPEG (about 40–80 KB) and stored as data URLs in Firestore, because Firebase Storage needs the paid plan.

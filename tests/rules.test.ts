@@ -213,6 +213,28 @@ describe('notes and pings', () => {
   })
 })
 
+describe('countdowns and date jar', () => {
+  it('members manage countdowns; bad dates and outsiders are rejected', async () => {
+    await seed(['alice', 'bob'])
+    const path = `households/${CODE}/countdowns/c1`
+    const c = { title: 'Paris trip', date: '2026-12-01', emoji: '✈️', yearly: false, createdBy: 'alice' }
+    await assertSucceeds(setDoc(doc(as('alice'), path), c))
+    await assertSucceeds(updateDoc(doc(as('bob'), path), { yearly: true }))
+    await assertFails(setDoc(doc(as('alice'), path), { ...c, date: 'next friday' }))
+    await assertFails(setDoc(doc(as('alice'), path), { ...c, title: '' }))
+    await assertFails(getDoc(doc(as('carol'), path)))
+  })
+
+  it('members fill the date jar; outsiders cannot', async () => {
+    await seed(['alice', 'bob'])
+    const path = `households/${CODE}/ideas/i1`
+    await assertSucceeds(setDoc(doc(as('alice'), path), { text: 'Picnic', createdBy: 'alice' }))
+    await assertFails(setDoc(doc(as('alice'), path), { text: 'x'.repeat(201), createdBy: 'alice' }))
+    await assertFails(setDoc(doc(as('carol'), `households/${CODE}/ideas/i2`), { text: 'Mine', createdBy: 'carol' }))
+    await assertSucceeds(deleteDoc(doc(as('bob'), path)))
+  })
+})
+
 describe('meals', () => {
   const meal = { day: '2026-10-12', name: 'Pasta night', ingredients: ['pasta', '2 tomatoes'], updatedBy: 'alice' }
   it('members plan meals by date; outsiders and bad shapes are rejected', async () => {

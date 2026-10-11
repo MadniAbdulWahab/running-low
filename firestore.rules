@@ -101,6 +101,25 @@ service cloud.firestore {
         allow update: if false;
       }
 
+      match /countdowns/{id} {
+        allow read, delete: if isMember(hid);
+        allow create, update: if isMember(hid)
+          && request.resource.data.title is string
+          && request.resource.data.title.size() > 0 && request.resource.data.title.size() <= 60
+          && request.resource.data.date is string
+          && request.resource.data.date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+          && request.resource.data.emoji is string && request.resource.data.emoji.size() <= 8
+          && request.resource.data.yearly is bool;
+      }
+
+      // Date jar ideas.
+      match /ideas/{id} {
+        allow read, delete: if isMember(hid);
+        allow create, update: if isMember(hid)
+          && request.resource.data.text is string
+          && request.resource.data.text.size() > 0 && request.resource.data.text.size() <= 200;
+      }
+
       // One planned meal per day; the doc id is the date.
       match /meals/{day} {
         allow read, delete: if isMember(hid);

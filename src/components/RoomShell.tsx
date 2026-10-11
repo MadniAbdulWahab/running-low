@@ -2,6 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AppContext, type AddOptions, type AppCtx } from '../app-context'
 import { addItem, deleteMany, markDone, markDoneMany, moveMany, undoDone, undoDoneMany } from '../data/items'
 import { byBoardOrder, createNote, deleteNote, nextColor, notesCol, toNote } from '../data/notes'
+import { countdownsCol, toCountdown } from '../data/countdowns'
+import { ideasCol, toIdea } from '../data/ideas'
 import { mealsCol, toMeal } from '../data/meals'
 import { readPingSeen, recentPings, toPing, writePingSeen } from '../data/pings'
 import { useCollection } from '../hooks/useCollection'
@@ -24,6 +26,7 @@ import { QuickPicks } from './QuickPicks'
 import { SettingsSheet } from './SettingsSheet'
 import { TabBar } from './TabBar'
 import { Toast, type ToastData } from './Toast'
+import { CountdownSheet } from './us/Countdowns'
 import { HeartRain } from './us/HeartRain'
 import { MealSheet } from './us/MealSheet'
 import { NoteComposer } from './us/NoteComposer'
@@ -88,6 +91,9 @@ export function RoomShell({ uid, household, room, setRoom, theme }: Props) {
   const pings = useMemo(() => pingsLive ?? [], [pingsLive])
   const meals = useCollection(`meals/${hid}`, () => mealsCol(hid), toMeal)
   const [mealDay, setMealDay] = useState<string | null>(null)
+  const countdowns = useCollection(`countdowns/${hid}`, () => countdownsCol(hid), toCountdown)
+  const ideas = useCollection(`ideas/${hid}`, () => ideasCol(hid), toIdea)
+  const [countdownId, setCountdownId] = useState<string | null>(null)
   // Home sections can be folded down to one line; remembered on this phone.
   const [folded, setFolded] = useState(readFolded)
   const toggleFold = (l: ListId) =>
@@ -330,6 +336,9 @@ export function RoomShell({ uid, household, room, setRoom, theme }: Props) {
             onAskDeleteNote={askDeleteNote}
             meals={meals}
             onOpenMealDay={setMealDay}
+            countdowns={countdowns}
+            ideas={ideas}
+            onOpenCountdown={setCountdownId}
           />
         ) : room === 'home' ? (
           <>
@@ -456,6 +465,13 @@ export function RoomShell({ uid, household, room, setRoom, theme }: Props) {
           day={mealDay}
           meal={meals?.find((m) => m.day === mealDay)}
           onClose={() => setMealDay(null)}
+        />
+      )}
+      {countdownId && (
+        <CountdownSheet
+          key={countdownId}
+          countdown={countdowns?.find((c) => c.id === countdownId)}
+          onClose={() => setCountdownId(null)}
         />
       )}
       {rain && <HeartRain emoji={rain} onDone={endRain} />}

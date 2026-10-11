@@ -395,6 +395,39 @@ try {
   )
   await A.page.screenshot({ path: `${OUT}/meals.png`, fullPage: true })
 
+  // ── Countdowns ──
+  await tab(A.page, 'Us')
+  await tab(B.page, 'Us')
+  await A.page.locator('.cd-add').click()
+  await A.page.getByPlaceholder('Paris trip, anniversary…').fill('Paris trip')
+  await A.page.locator('.cd-emoji-pick button', { hasText: '✈️' }).click()
+  await A.page.locator('.sheet').screenshot({ path: `${OUT}/countdown-sheet.png` })
+  await A.page.locator('.sheet').getByRole('button', { name: 'Add countdown' }).click()
+  const cdOnB = B.page.locator('.cd-card', { hasText: 'Paris trip' })
+  check(await cdOnB.waitFor({ timeout: 8000 }).then(() => true).catch(() => false), 'countdown added on A shows on B')
+  check((await cdOnB.locator('.cd-days').textContent()) === '7', 'it counts 7 days to the default date (a week ahead)')
+
+  // ── Date jar ──
+  for (const idea of ['Picnic in the park', 'Movie night']) {
+    await A.page.getByLabel('Add a date idea').fill(idea)
+    await A.page.getByLabel('Add a date idea').press('Enter')
+  }
+  check(
+    await B.page.locator('.jar-count', { hasText: '2 ideas' }).waitFor({ timeout: 8000 }).then(() => true).catch(() => false),
+    'ideas dropped in the jar on A show on B',
+  )
+  await A.page.locator('.jar-stage').getByRole('button', { name: 'Pick one' }).click()
+  const result = A.page.locator('.jar-result')
+  check(await result.waitFor({ timeout: 4000 }).then(() => true).catch(() => false), 'Pick one lands on an idea')
+  const pickedText = (await result.textContent()) ?? ''
+  check(/Picnic in the park|Movie night/.test(pickedText), `the pick is one of the ideas (${pickedText.trim()})`)
+  await A.page.screenshot({ path: `${OUT}/date-jar.png`, fullPage: true })
+  await A.page.locator('.jar-stage').getByRole('button', { name: 'Let’s do it' }).click()
+  check(
+    await B.page.locator('.jar-count', { hasText: '1 idea' }).waitFor({ timeout: 8000 }).then(() => true).catch(() => false),
+    "Let's do it marks it done on B too",
+  )
+
   // ── Screenshots of every room, light and dark ──
   for (const scheme of ['light', 'dark']) {
     await A.page.emulateMedia({ colorScheme: scheme })
