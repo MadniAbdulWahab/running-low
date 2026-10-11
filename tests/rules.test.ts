@@ -249,6 +249,23 @@ describe('push subscriptions', () => {
   })
 })
 
+describe('profile photos', () => {
+  it('each person sets only their own photo; members see both', async () => {
+    await seed(['alice', 'bob'])
+    const mine = `households/${CODE}/profiles/alice`
+    const photo = { photo: 'data:image/jpeg;base64,/9j/4AAQ' }
+    await assertSucceeds(setDoc(doc(as('alice'), mine), photo))
+    await assertSucceeds(getDoc(doc(as('bob'), mine)))
+    await assertFails(getDoc(doc(as('carol'), mine)))
+    await assertFails(setDoc(doc(as('bob'), mine), photo))
+    await assertFails(deleteDoc(doc(as('bob'), mine)))
+    await assertFails(setDoc(doc(as('alice'), mine), { photo: 'https://example.com/me.jpg' }))
+    await assertFails(setDoc(doc(as('alice'), mine), { photo: 'data:image/jpeg;base64,' + 'A'.repeat(200_000) }))
+    await assertFails(setDoc(doc(as('alice'), mine), { ...photo, extra: true }))
+    await assertSucceeds(deleteDoc(doc(as('alice'), mine)))
+  })
+})
+
 describe('countdowns and date jar', () => {
   it('members manage countdowns; bad dates and outsiders are rejected', async () => {
     await seed(['alice', 'bob'])

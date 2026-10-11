@@ -120,6 +120,17 @@ service cloud.firestore {
           && request.resource.data.prefs is map;
       }
 
+      // Profile photos: each person writes only their own; everyone on the list sees them.
+      match /profiles/{uid} {
+        allow read: if isMember(hid);
+        allow delete: if isMember(hid) && uid == me();
+        allow create, update: if isMember(hid) && uid == me()
+          && request.resource.data.keys().hasOnly(['photo', 'updatedAt'])
+          && request.resource.data.photo is string
+          && request.resource.data.photo.matches('^data:image/(jpeg|png|webp);base64,.*')
+          && request.resource.data.photo.size() < 200000;
+      }
+
       match /countdowns/{id} {
         allow read, delete: if isMember(hid);
         allow create, update: if isMember(hid)

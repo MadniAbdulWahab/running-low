@@ -84,6 +84,8 @@ try {
   await A.page.screenshot({ path: `${OUT}/0-signin.png` })
   await signUp(A.page, `a-${run}@test.dev`)
   await A.page.getByLabel('Your name').fill('Sara')
+  await A.page.locator('.photo-picker input[type=file]').setInputFiles('public/pwa-512x512.png')
+  check(await A.page.locator('.photo-picker-face img').first().waitFor({ timeout: 8000 }).then(() => true).catch(() => false), 'A adds a profile photo on setup')
   await A.page.screenshot({ path: `${OUT}/0-setup.png` })
   await A.page.getByRole('button', { name: 'Start our list' }).click()
   await A.page.locator('.large-title').waitFor()
@@ -114,6 +116,8 @@ try {
   await B.page.getByRole('button', { name: 'Join with a code' }).click()
   await B.page.locator('.large-title').waitFor({ timeout: 15000 })
   check(true, 'B joins with the code')
+  check(await B.page.locator('.members-btn .avatar--photo img').first().waitFor({ timeout: 20000 }).then(() => true).catch(() => false), 'B sees A’s photo at the top right')
+  check((await B.page.locator('.members-btn .avatar').count()) === 2, 'both people show at the top right')
 
   // ── Live sync A → B ──
   await tab(A.page, 'Home')
@@ -370,8 +374,12 @@ try {
   check((await A.page.locator('.heart-quick').count()) >= 12, 'twelve things to send')
   await A.page.getByRole('button', { name: 'Send: Heart' }).click()
   check(
-    await B.page.locator('.toast', { hasText: 'sent a heart' }).waitFor({ timeout: 8000 }).then(() => true).catch(() => false),
-    'a heart from A shows on B',
+    await B.page.locator('.ping-card', { hasText: 'sent a heart' }).waitFor({ timeout: 8000 }).then(() => true).catch(() => false),
+    'a heart from A pops up on B',
+  )
+  check(
+    (await B.page.locator('.ping-card-name').textContent()) === 'Sara' && (await B.page.locator('.ping-card img').count()) === 1,
+    'the pop-up shows A’s name and photo',
   )
   check((await B.page.locator('.heart-rain').count()) > 0, 'B gets the heart shower')
   await B.page.screenshot({ path: `${OUT}/heart-arrives.png` })
@@ -392,6 +400,19 @@ try {
   await B.page.locator('.hearts').evaluate((el) => el.scrollIntoView({ block: 'start' }))
   await B.page.waitForTimeout(300)
   await B.page.screenshot({ path: `${OUT}/hearts-card.png` })
+  check(await B.page.locator('.hearts-big--photo img').isVisible(), 'the hearts card shows the sender’s photo with the emoji')
+
+  // ── B adds a photo later, from the top right ──
+  await B.page.locator('.members-btn').click()
+  await B.page.locator('.sheet .photo-picker input[type=file]').setInputFiles('public/maskable-icon-512x512.png')
+  check(await B.page.locator('.sheet .photo-picker-face img').first().waitFor({ timeout: 8000 }).then(() => true).catch(() => false), 'B adds a photo in Settings')
+  await B.page.locator('.sheet').screenshot({ path: `${OUT}/settings-photo.png` })
+  await B.page.keyboard.press('Escape')
+  check(
+    await A.page.waitForFunction(() => document.querySelectorAll('.members-btn .avatar--photo').length === 2, null, { timeout: 8000 })
+      .then(() => true).catch(() => false),
+    'A sees B’s new photo too',
+  )
   await tab(A.page, 'Us')
 
   // ── Delete a note by press and hold ──
@@ -532,12 +553,18 @@ try {
     'A sees B has left (waiting for someone again)',
   )
   await A.page.keyboard.press('Escape')
+  check(await B.page.locator('.photo-picker-face img').first().waitFor({ timeout: 8000 }).then(() => true).catch(() => false), 'after leaving, B’s photo is still there for the next list')
   await B.page.getByLabel('Your name').fill('Omar')
   await B.page.getByLabel('Code').fill(code)
   await B.page.getByRole('button', { name: 'Join with a code' }).click()
   await B.page.locator('.large-title').waitFor({ timeout: 15000 })
   await tab(B.page, 'Groceries')
   check(await visible(B.page, 'Oat milk'), 'B can join again with the same code and sees the list')
+  check(
+    await A.page.waitForFunction(() => document.querySelectorAll('.members-btn .avatar--photo').length === 2, null, { timeout: 10000 })
+      .then(() => true).catch(() => false),
+    'B’s photo comes back with them',
+  )
 } catch (e) {
   failed++
   console.error('ERROR', e)

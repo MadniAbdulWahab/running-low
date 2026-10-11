@@ -5,6 +5,7 @@ import { notify } from '../../lib/push'
 import { ago } from '../../lib/time'
 import { PINGS, pingInfo } from '../../rooms'
 import type { Ping, PingKind } from '../../types'
+import { Avatar } from '../Avatar'
 import { HeartBurst } from './HeartRain'
 
 const startOfToday = () => {
@@ -37,7 +38,7 @@ function Tally({ counts }: { counts: [PingKind, number][] }) {
  * of little things to send back.
  */
 export function HeartsBar({ pings }: { pings: Ping[] }) {
-  const { household, uid, toast } = useApp()
+  const { household, uid, toast, photos } = useApp()
   const other = household.members.find((m) => m !== uid)
   const otherName = other ? (household.memberNames[other] ?? 'Someone') : null
   const lastIn = pings.find((p) => p.from !== uid)
@@ -72,9 +73,16 @@ export function HeartsBar({ pings }: { pings: Ping[] }) {
   return (
     <section className="hearts" aria-label="Hearts">
       <div className="hearts-in">
-        <span className="hearts-big" aria-hidden="true" key={lastIn?.id}>
-          {lastInfo?.emoji ?? '💌'}
-        </span>
+        {lastIn && lastInfo && photos[lastIn.from] ? (
+          <span className="hearts-big hearts-big--photo" aria-hidden="true" key={lastIn.id}>
+            <Avatar uid={lastIn.from} size={58} />
+            <span className="hearts-badge">{lastInfo.emoji}</span>
+          </span>
+        ) : (
+          <span className="hearts-big" aria-hidden="true" key={lastIn?.id}>
+            {lastInfo?.emoji ?? '💌'}
+          </span>
+        )}
         <span className="hearts-in-text">
           <strong className="hearts-last">
             {lastIn && lastInfo

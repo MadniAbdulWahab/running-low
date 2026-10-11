@@ -32,7 +32,7 @@ export async function createHousehold(uid: string, myName: string, name: string)
       memberNames: { [uid]: myName },
       createdAt: serverTimestamp(),
     })
-    batch.set(userRef(uid), { householdId: code })
+    batch.set(userRef(uid), { householdId: code }, { merge: true })
     try {
       await batch.commit()
       return code
@@ -47,20 +47,21 @@ export async function createHousehold(uid: string, myName: string, name: string)
 export async function joinHousehold(uid: string, myName: string, code: string): Promise<void> {
   const batch = writeBatch(db)
   batch.update(householdRef(code), { members: arrayUnion(uid), [`memberNames.${uid}`]: myName })
-  batch.set(userRef(uid), { householdId: code })
+  batch.set(userRef(uid), { householdId: code }, { merge: true })
   await batch.commit()
 }
 
 /**
- * Leave the list: take yourself (and your name) off it, stop its notifications on
- * this phone, and forget it, so you can start or join another. Everything else stays
- * for anyone still on it, and their invite code works again for someone new.
+ * Leave the list: take yourself (your name and photo) off it, stop its notifications on
+ * this phone, and forget it, so you can start or join another. Your account keeps its photo.
+ * Everything else stays for anyone still on it, and their invite code works again.
  */
 export async function leaveHousehold(h: Household, uid: string): Promise<void> {
   const batch = writeBatch(db)
   batch.update(householdRef(h.id), { members: arrayRemove(uid), [`memberNames.${uid}`]: deleteField() })
   batch.delete(doc(db, 'households', h.id, 'push', uid))
-  batch.delete(userRef(uid))
+  batch.delete(doc(db, 'households', h.id, 'profiles', uid))
+  batch.update(userRef(uid), { householdId: deleteField() })
   await batch.commit()
 }
 

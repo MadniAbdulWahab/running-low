@@ -289,3 +289,27 @@ households/{CODE}/photos/{id}   { itemKey, dataUrl, createdAt }
 ## Later (optional, still free)
 - **Push notification when your partner adds something:** Web Push works on iOS 16.4+ for Home Screen apps, sent from a free Cloudflare Worker with VAPID keys.
 - **Reminders** for Important items with a due date.
+
+## Profile photos (2026-10-11)
+- **Request:** a selfie or profile photo, asked for on setup, changeable later from the top-right icon, and shown with the sender's name and emoji when hearts arrive, so it feels more personal.
+- **Data:**
+  - `households/{hid}/profiles/{uid}` `{ photo: data URL, updatedAt }`. Only the owner writes; members read. Rules require a `data:image/(jpeg|png|webp);base64,` URL under 200 KB, and keys `photo` and `updatedAt` only. Rules tests: 22.
+  - A copy is kept on `users/{uid}.photo`, so it survives leaving.
+  - `src/data/profiles.ts`:
+    - `setMyPhoto` writes or removes both copies.
+    - `readMyPhoto` prefills the setup screen.
+    - `compressAvatar` centre-crops a square, about 320px JPEG on a white background.
+- **Leaving changed:** `leaveHousehold` now deletes your profile doc and only removes `householdId` from `users/{uid}` (the doc is no longer deleted). Create and join write `users/{uid}` with `merge: true`, so the photo isn't wiped.
+- **Bug fixed in `useHousehold`:**
+  - After leaving, the household listener is refused, but the users doc ack snapshot may never arrive, so `hid` stays the same.
+  - Rejoining the same code then never re-subscribed, and the app stayed on the setup screen.
+  - Fix: a `refused` ref plus an `attempt` counter that re-subscribes once the users doc confirms a household again.
+- **UI:**
+  - `Avatar.tsx` (photo or initial; used at the top right and in Settings → Members).
+  - `PhotoPicker.tsx` (96px circle with a camera badge, Add a photo / Change photo / Remove; `accept="image/*"`, so iPhone offers Take Photo or the library). It is used on setup, in "About you", optional, and at the top of Settings, above Your name, which moved up.
+  - Context has `photos` (uid → data URL) from a live `profiles` query in RoomShell.
+- **Hearts:**
+  - An incoming one now shows `PingArrival` instead of a toast: a centred card over the shower with a 104px avatar, the emoji badge wiggling, the name and the verb. It closes on tap or after about 3.6 s.
+  - The hearts card on Home shows the sender's photo with an emoji badge when they have a photo; otherwise the big emoji as before.
+- **E2E:** A adds a photo at setup; B sees it at the top right; the pop-up has Sara's name and photo; the hearts card shows the photo; B adds one in Settings and A sees it; after B leaves the setup screen is prefilled with B's photo; after rejoining, both photos show.
+- **Ideas not done yet:** a tiny photo in place of the coloured dot in item rows ("Sara · 2m ago"). Web Push can't carry the photo (payload too small, and iOS uses the app icon).

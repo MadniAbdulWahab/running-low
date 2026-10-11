@@ -1,4 +1,5 @@
-import { initials, useApp } from '../app-context'
+import { useApp } from '../app-context'
+import { Avatar } from './Avatar'
 import { LIST_INFO } from '../rooms'
 import type { RoomId } from '../types'
 
@@ -12,10 +13,8 @@ export function Header({ room, count, onSettings }: { room: RoomId; count: numbe
       <div className="nav-bar">
         <span className="nav-date">{room === 'home' ? today : household.name}</span>
         <button className="members-btn" onClick={onSettings} aria-label="Settings and members">
-          {household.members.map((m, i) => (
-            <span key={m} className="avatar" data-p={i}>
-              {initials(household.memberNames[m] ?? '?')}
-            </span>
+          {household.members.map((m) => (
+            <Avatar key={m} uid={m} />
           ))}
           {household.members.length < 2 && <span className="avatar avatar--empty">+</span>}
         </button>

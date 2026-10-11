@@ -13,6 +13,8 @@ export interface AddOptions {
 export interface AppCtx {
   uid: string
   household: Household
+  /** Profile photos (data URLs) by uid; missing means none. */
+  photos: Record<string, string>
   items: Item[]
   byKey: Map<string, Item>
   /** Names, or { name, qty } from "2 milk"-style input. */

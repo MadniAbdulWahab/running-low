@@ -1,5 +1,5 @@
 import { onSnapshot } from 'firebase/firestore'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { householdRef, userRef } from '../data/household'
 import type { Household } from '../types'
 
@@ -7,6 +7,10 @@ import type { Household } from '../types'
 export function useHousehold(uid: string) {
   const [hid, setHid] = useState<string | null | undefined>(undefined)
   const [household, setHousehold] = useState<Household | null | undefined>(undefined)
+  // After leaving, reading the list is refused. Rejoining the same list keeps the same id,
+  // so this counter is what makes us listen again.
+  const [attempt, setAttempt] = useState(0)
+  const refused = useRef(false)
 
   useEffect(() => {
     setHid(undefined)
@@ -17,7 +21,12 @@ export function useHousehold(uid: string) {
         // Wait for the server to confirm a join: until then the household
         // doesn't list us as a member and reading it would be denied.
         if (snap.metadata.hasPendingWrites) return
-        setHid((snap.data()?.householdId as string | undefined) ?? null)
+        const next = (snap.data()?.householdId as string | undefined) ?? null
+        setHid(next)
+        if (next && refused.current) {
+          refused.current = false
+          setAttempt((a) => a + 1)
+        }
       },
       () => setHid(null),
     )
@@ -44,9 +53,12 @@ export function useHousehold(uid: string) {
             : null,
         )
       },
-      () => setHousehold(null),
+      () => {
+        refused.current = true
+        setHousehold(null)
+      },
     )
-  }, [hid])
+  }, [hid, attempt])
 
   return { loading: household === undefined, household: household ?? null }
 }

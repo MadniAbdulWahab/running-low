@@ -6,6 +6,7 @@ import { countdownsCol, toCountdown } from '../data/countdowns'
 import { ideasCol, toIdea } from '../data/ideas'
 import { mealsCol, toMeal } from '../data/meals'
 import { readPingSeen, recentPings, toPing, writePingSeen } from '../data/pings'
+import { profilesCol, toProfile } from '../data/profiles'
 import { useCollection } from '../hooks/useCollection'
 import { useItems } from '../hooks/useItems'
 import { notifyItemsAdded, refreshPush } from '../lib/push'
@@ -15,7 +16,7 @@ import { LIST_EMOJI } from '../lib/emoji'
 import type { Entry } from '../lib/parse'
 import { WEEK, weekDays } from '../lib/time'
 import { isListRoom, LIST_INFO, LISTS, pingInfo } from '../rooms'
-import type { Household, Item, ListId, Note, RoomId } from '../types'
+import type { Household, Item, ListId, Note, Ping, RoomId } from '../types'
 import { ActionSheet } from './ActionSheet'
 import { Alert, type AlertAction } from './Alert'
 import { Header } from './Header'
@@ -31,6 +32,7 @@ import { Toast, type ToastData } from './Toast'
 import { CountdownSheet } from './us/Countdowns'
 import { HeartRain } from './us/HeartRain'
 import { HeartsBar } from './us/HeartsBar'
+import { PingArrival } from './us/PingArrival'
 import { MealPlanner } from './us/MealPlanner'
 import { MealSheet } from './us/MealSheet'
 import { NoteComposer } from './us/NoteComposer'
@@ -87,6 +89,8 @@ export function RoomShell({ uid, household, room, setRoom, theme }: Props) {
   const [openNoteId, setOpenNoteId] = useState<string | null>(null)
   const [rain, setRain] = useState<string | null>(null)
   const endRain = useCallback(() => setRain(null), [])
+  const [arrival, setArrival] = useState<Ping | null>(null)
+  const endArrival = useCallback(() => setArrival(null), [])
 
   // Us tab: shared notes and hearts, kept live like the items.
   const notesLive = useCollection(`notes/${hid}`, () => notesCol(hid), toNote)
@@ -94,6 +98,11 @@ export function RoomShell({ uid, household, room, setRoom, theme }: Props) {
   const pingsLive = useCollection(`pings/${hid}`, () => recentPings(hid), toPing)
   const pings = useMemo(() => pingsLive ?? [], [pingsLive])
   const meals = useCollection(`meals/${hid}`, () => mealsCol(hid), toMeal)
+  const profiles = useCollection(`profiles/${hid}`, () => profilesCol(hid), toProfile)
+  const photos = useMemo(
+    () => Object.fromEntries((profiles ?? []).filter((p) => p.photo).map((p) => [p.uid, p.photo!])),
+    [profiles],
+  )
   const [mealDay, setMealDay] = useState<string | null>(null)
   const myPush = useMyPush(hid, uid)
   const pushChecked = useRef(false)
@@ -261,6 +270,7 @@ export function RoomShell({ uid, household, room, setRoom, theme }: Props) {
     return {
       uid,
       household,
+      photos,
       items,
       byKey,
       add,
@@ -274,7 +284,7 @@ export function RoomShell({ uid, household, room, setRoom, theme }: Props) {
       toggleSelect,
       askDelete: (item: Item) => confirmDelete([item]),
     }
-  }, [hid, uid, household, items, byKey, goTo, toast, selecting, selected, toggleSelect, confirmDelete])
+  }, [hid, uid, household, photos, items, byKey, goTo, toast, selecting, selected, toggleSelect, confirmDelete])
 
   // A heart from someone else that this phone hasn't celebrated yet: shower + banner, once.
   useEffect(() => {
@@ -284,10 +294,9 @@ export function RoomShell({ uid, household, room, setRoom, theme }: Props) {
     if (incoming.createdAt <= seen) return
     writePingSeen(uid, incoming.createdAt)
     if (Date.now() - incoming.createdAt > 3 * 24 * 60 * 60 * 1000) return
-    const info = pingInfo(incoming.kind)
-    setRain(info.emoji)
-    toast(`${household.memberNames[incoming.from] ?? 'Someone'} ${info.verb} ${info.emoji}`)
-  }, [pings, uid, household.memberNames, toast])
+    setRain(pingInfo(incoming.kind).emoji)
+    setArrival(incoming)
+  }, [pings, uid])
 
   const askDeleteNote = (note: Note) =>
     setAlert({
@@ -501,6 +510,7 @@ export function RoomShell({ uid, household, room, setRoom, theme }: Props) {
         />
       )}
       {rain && <HeartRain emoji={rain} onDone={endRain} />}
+      {arrival && <PingArrival key={arrival.id} ping={arrival} onDone={endArrival} />}
       {openItem && <ItemSheet key={openItem.id} item={openItem} onClose={() => setOpenId(null)} />}
       {settings && <SettingsSheet theme={theme} onClose={() => setSettings(false)} />}
     </AppContext.Provider>

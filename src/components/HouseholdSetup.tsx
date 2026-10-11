@@ -1,8 +1,10 @@
 import { FirebaseError } from 'firebase/app'
 import { signOut, type User } from 'firebase/auth'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { CODE_RE, createHousehold, formatCode, joinHousehold, parseCode } from '../data/household'
+import { readMyPhoto, setMyPhoto } from '../data/profiles'
 import { auth } from '../firebase'
+import { PhotoPicker } from './PhotoPicker'
 import { friendlyError } from './SignIn'
 
 export function HouseholdSetup({ user }: { user: User }) {
@@ -12,14 +14,25 @@ export function HouseholdSetup({ user }: { user: User }) {
   const [busy, setBusy] = useState<'create' | 'join' | null>(null)
   const [error, setError] = useState('')
   const [slow, setSlow] = useState(false)
+  const [photo, setPhoto] = useState<string | null>(null)
 
-  const run = async (kind: 'create' | 'join', fn: () => Promise<unknown>) => {
+  // Left a list before? Bring your photo along.
+  useEffect(() => {
+    let live = true
+    void readMyPhoto(user.uid).then((p) => live && p && setPhoto((cur) => cur ?? p))
+    return () => {
+      live = false
+    }
+  }, [user.uid])
+
+  const run = async (kind: 'create' | 'join', fn: () => Promise<string>) => {
     setError('')
     if (!name.trim()) return setError('Add your name first, so everyone on the list knows who added what.')
     setBusy(kind)
     const t = window.setTimeout(() => setSlow(true), 5000)
     try {
-      await fn()
+      const hid = await fn()
+      if (photo) setMyPhoto(hid, user.uid, photo)
     } catch (e) {
       if (kind === 'join' && e instanceof FirebaseError) {
         setError(
@@ -44,6 +57,7 @@ export function HouseholdSetup({ user }: { user: User }) {
       <p className="intro-lede">Start a new list, or join one with a code.</p>
 
       <h2 className="group-label">About you</h2>
+      <PhotoPicker photo={photo} name={name} onChange={setPhoto} onError={setError} />
       <div className="group">
         <label className="row">
           <span className="row-key">Your name</span>
@@ -57,7 +71,7 @@ export function HouseholdSetup({ user }: { user: User }) {
           />
         </label>
       </div>
-      <p className="group-footer">Shown next to the things you add.</p>
+      <p className="group-footer">Your photo is optional. It shows with your name, and with the hearts you send.</p>
 
       <h2 className="group-label">Start a new list</h2>
       <div className="group">
@@ -100,7 +114,7 @@ export function HouseholdSetup({ user }: { user: User }) {
       <button
         className="btn btn--plain"
         disabled={busy !== null || !CODE_RE.test(parsed)}
-        onClick={() => run('join', () => joinHousehold(user.uid, me, parsed))}
+        onClick={() => run('join', () => joinHousehold(user.uid, me, parsed).then(() => parsed))}
       >
         {busy === 'join' ? 'Joining…' : 'Join with a code'}
       </button>
