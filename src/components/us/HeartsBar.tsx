@@ -16,7 +16,7 @@ export function SendPings({ pings, layout }: { pings: Ping[]; layout: 'row' | 'g
   const { household, uid, toast } = useApp()
   const other = household.members.find((m) => m !== uid)
   const otherName = other ? (household.memberNames[other] ?? 'Someone') : null
-  const sendLabel = otherName ? `Send something to ${otherName}` : 'Send a little hello once your partner joins'
+  const sendLabel = otherName ? `Send something to ${otherName}` : 'Send a little hello once someone joins'
   const [burst, setBurst] = useState<{ id: number; emoji: string; x: number; y: number } | null>(null)
   const endBurst = useCallback(() => setBurst(null), [])
   const [atEnd, setAtEnd] = useState(false)
