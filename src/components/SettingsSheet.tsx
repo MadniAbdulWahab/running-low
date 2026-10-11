@@ -82,7 +82,7 @@ export function SettingsSheet({ onClose, theme }: { onClose: () => void; theme: 
           {waiting && (
             <li className="members-waiting">
               <span className="avatar avatar--empty">+</span>
-              Waiting for your partner
+              Waiting for someone to join
             </li>
           )}
         </ul>
@@ -98,8 +98,8 @@ export function SettingsSheet({ onClose, theme }: { onClose: () => void; theme: 
         </div>
         <p className="hint">
           {waiting
-            ? 'Your partner adds the app to their Home Screen, makes an account, then enters this code.'
-            : 'You’re both in. The code stops working once two people have joined.'}
+            ? 'Share this code. They add the app to their Home Screen, make an account, then enter it.'
+            : 'Everyone’s in. The code stops working once two people have joined.'}
         </p>
       </div>
 

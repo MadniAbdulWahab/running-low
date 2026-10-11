@@ -31,7 +31,7 @@ export function useApp(): AppCtx {
 
 export function memberOf(h: Household, uid: string, me: string) {
   const idx = Math.max(0, h.members.indexOf(uid))
-  const name = uid === me ? 'You' : (h.memberNames[uid] ?? 'Partner')
+  const name = uid === me ? 'You' : (h.memberNames[uid] ?? 'Someone')
   return { idx, name }
 }
 

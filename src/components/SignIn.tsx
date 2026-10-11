@@ -71,7 +71,7 @@ export function SignIn() {
       <h1 className="intro-title">
         Running <em>low</em>
       </h1>
-      <p className="intro-lede">Add what’s running low. You both see it straight away.</p>
+      <p className="intro-lede">Add what’s running low. It updates instantly for everyone you share it with.</p>
 
       {needsInstall() && (
         <p className="install-tip">

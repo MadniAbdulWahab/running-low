@@ -15,7 +15,7 @@ export function HouseholdSetup({ user }: { user: User }) {
 
   const run = async (kind: 'create' | 'join', fn: () => Promise<unknown>) => {
     setError('')
-    if (!name.trim()) return setError('Add your name first, so your partner knows who added what.')
+    if (!name.trim()) return setError('Add your name first, so everyone on the list knows who added what.')
     setBusy(kind)
     const t = window.setTimeout(() => setSlow(true), 5000)
     try {
@@ -61,7 +61,7 @@ export function HouseholdSetup({ user }: { user: User }) {
 
       <section className="card form">
         <h2 className="card-title">Start a new list</h2>
-        <p className="hint">You’ll get a code to send to your partner.</p>
+        <p className="hint">You’ll get a code to share with the people you want on it.</p>
         <label className="field">
           <span className="field-label">Call it</span>
           <input className="input" value={homeName} maxLength={60} onChange={(e) => setHomeName(e.target.value)} />
@@ -76,8 +76,8 @@ export function HouseholdSetup({ user }: { user: User }) {
       </section>
 
       <section className="card form">
-        <h2 className="card-title">Join your partner</h2>
-        <p className="hint">Enter the code from their Settings screen.</p>
+        <h2 className="card-title">Join a shared list</h2>
+        <p className="hint">Enter the code you were sent.</p>
         <label className="field">
           <span className="field-label">Code</span>
           <input
