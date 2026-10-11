@@ -10,24 +10,34 @@ Saved 2026-10-11 so work can resume after a restart. To continue, tell Claude:
   - Type check and build (`npm run build`).
   - All end-to-end checks (`npm run e2e`) in both WebKit and Chromium, with the iPhone 15 profile: sign-up, joining by code, live sync both ways, undo, catching duplicates, offline adding, photo sync, due dates, room guessing on Home.
 - **Testing quirk:** Windows WebKit ignores variable font weights and has no date picker. Judge the visuals with `BROWSER=chromium`.
-- **The user's next step:** create the Firebase project (README steps 1–6), then install on both phones.
+- **Live and deployed:** https://running-low.web.app (Firebase project `running-low`, linked via `.firebaserc`; config in the git-ignored `.env.local`). Repo: github.com/MadniAbdulWahab/running-low.
+- **Workflow:** after a change, run `npm run build`, then `npx firebase deploy --only hosting` (or `npm run deploy` if the rules changed), then commit and push. Commits are authored only by `MadniAbdulWahab <madniabdulwahab@gmail.com>`, with no Claude attribution.
+- **The user's next step:** test on both iPhones (Safari → Share → Add to Home Screen).
 - **Versions installed:** Firebase 13, React 19, Vite 8, TypeScript 7, Vitest 5, vite-plugin-pwa 2.
 - **Differences from the plan:**
   - Your name is entered on the setup screen, not at sign-up.
-  - First-time users see starter suggestions as magnets, jars and tabs until real history replaces them.
+  - First-time users see starter suggestions as Quick add buttons until real history replaces them.
   - Room state lives in the `SignedIn` component in App.tsx; the theme preference comes from `useThemePref`.
 
 ## Redesign (2026-10-11)
 - The user rejected the "rooms of the house" look (cream, Fraunces serif, terracotta, tiles) as looking AI-made and not nice on mobile.
 - From four mockups (Signal, Stamp, Label maker, Native), they chose **Native**: an iOS Reminders-style app with the system font, the #F2F2F7 grouped background and white cards, and true-black dark mode.
 - **List colours:** Grocery orange, Household blue, Important red.
-- **Navigation:** the home screen has three list cards and the lists grouped below; tapping one opens that list (back button "Lists"). There is no tab bar.
+- **Navigation (first version):** the home screen had three list cards with the lists grouped below, and tapping one opened that list (back button "Lists"), with no tab bar. The user found this too empty, so it was replaced (see the next section).
 - **On a list screen:** "Quick add" pills, then "On the list", then a collapsible "Recently bought".
 - **Adding:** a bottom toolbar with an iOS search-field-style input, a camera button, and a blue send button.
 - **Fonts:** the fontsource packages were removed.
 - **Icon:** a white, nearly empty glass on iOS orange.
 - **Live:** https://running-low.web.app (Firebase project 'running-low'). Repo: github.com/MadniAbdulWahab/running-low.
 - The "rooms" section below is kept for history only.
+
+## Tabs and emojis (2026-10-11)
+- The user said the native version looked too empty. They asked for the bottom tabs back and for decoration.
+- **Added:**
+  - A four-tab bar (Home, Grocery, Household, Important) with count badges; the back button was removed.
+  - Item emojis: `src/lib/emoji.ts` maps about 100 common item names to an emoji, and unknown items fall back to the list's emoji (🛒 🧺 📌). They appear on item rows, Quick add buttons, and the home card previews.
+  - Home: the date line, the card previews, a mixed Quick add row, and an empty-state card with stickers.
+- Floating background stickers and per-tab colour washes were also tried. The user later removed them (see UI polish).
 
 ## UI polish (2026-10-11)
 - The user confirmed that the existing native iOS style should be polished, and separately approved removing the floating emoji stickers and colour-wash wallpaper.
@@ -36,7 +46,7 @@ Saved 2026-10-11 so work can resume after a restart. To continue, tell Claude:
 - Retains the current four-tab navigation, quick-add workflow, and all existing data/sync behaviour. The dock is now constrained to the same 600px column as the page on larger screens.
 - Removed the unused background sticker component and its helper. Empty-state illustrations remain.
 - Verified with the production build, Chromium and WebKit two-user end-to-end checks, light/dark screenshot review, and layout checks at 320, 390, 430, 768, and 1440px. The due-date test now waits for the asynchronous label update. Visual artifacts are in ignored `output/playwright/`.
-- Changes are local; this UI polish has not been deployed.
+- Deployed and pushed as commit e9b6cf9 "UI refinements".
 
 ## Goal
 A shared list for two partners (**both on iPhone**) to quickly note that something is finished: groceries, household things, important items.
@@ -112,7 +122,15 @@ households/{CODE}/photos/{id}   { itemKey, dataUrl, createdAt }
 - **Subcollections:** only members (checked with `get()` on the household).
 - **Joining:** the partner types the code inside the installed app (an invite link would open Safari, which has separate storage). It's an update with `arrayUnion` and no read beforehand.
 
-## Planned files
+## Planned files (original plan; the current files are listed below)
+
+**Current files (after the redesigns):**
+- **Components:** `src/components/`: Header, HouseholdSetup, Icons, ItemRow, ItemSheet, ListCards, PhotoViewer, QuickAdd, QuickPicks, RoomShell, SettingsSheet, Sheet, SignIn, TabBar, Toast
+- **Styles:** `src/styles/{tokens,base,components}.css`
+- **Helpers:** `src/lib/{emoji,parse,report,theme,time}.ts`; list labels and counts in `src/rooms.ts`; starter suggestions in `src/starters.ts`
+- **Tests:** end-to-end checks in `scripts/e2e.mjs`
+
+**Original plan:**
 - **Setup:** `index.html`, `vite.config.ts` (vite-plugin-pwa: manifest, auto-update service worker), `.env.example` (`VITE_FIREBASE_*`, plus `VITE_USE_EMULATORS`)
 - **Core:** `src/main.tsx`, `src/App.tsx` (sign-in check → household check → main screen), `src/firebase.ts`, `src/types.ts`, `src/rooms.ts`
 - **Data:** `src/data/{household,items,photos}.ts`
@@ -124,7 +142,7 @@ households/{CODE}/photos/{id}   { itemKey, dataUrl, createdAt }
 - **Tests:** `tests/rules.test.ts` (vitest + `@firebase/rules-unit-testing`)
 - **Docs:** `README.md` (Firebase setup and deploy)
 
-## Dependencies
+## Dependencies (the fontsource font packages were later removed; the app uses the iPhone system font)
 - **App:** react, react-dom, firebase, @fontsource-variable/fraunces, @fontsource-variable/instrument-sans
 - **Dev:** vite, @vitejs/plugin-react, typescript, @types/react, @types/react-dom, vite-plugin-pwa, @vite-pwa/assets-generator, vitest, @firebase/rules-unit-testing, firebase-tools, and playwright (WebKit with the iPhone profile, for screenshots)
 
