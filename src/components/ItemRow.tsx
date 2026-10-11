@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { memberOf, useApp } from '../app-context'
 import { usePhoto } from '../hooks/usePhoto'
+import { emojiFor } from '../lib/emoji'
 import { ago, daysUntil, dueLabel } from '../lib/time'
 import type { Item } from '../types'
 
@@ -26,6 +27,9 @@ export function ItemRow({ item }: { item: Item }) {
         <span className="item-ring" />
       </button>
       <button className="item-body" onClick={() => openItem(item.id)}>
+        <span className="item-emoji" aria-hidden="true">
+          {emojiFor(item.name, item.list)}
+        </span>
         <span className="item-text">
           <span className="item-name">{item.name}</span>
           <span className="item-meta">
@@ -67,6 +71,9 @@ export function RecentRow({ item }: { item: Item }) {
     >
       <span className="item-ring item-ring--done" />
       <span className="item-body">
+        <span className="item-emoji" aria-hidden="true">
+          {emojiFor(item.name, item.list)}
+        </span>
         <span className="item-text">
           <span className="item-name">{item.name}</span>
           <span className="item-meta">

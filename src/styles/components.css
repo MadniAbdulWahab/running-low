@@ -1,5 +1,7 @@
 /* ── Page & navigation ──────────────────────────────────────── */
 .page {
+  position: relative;
+  z-index: 1;
   max-width: 600px;
   margin: 0 auto;
   padding: calc(env(safe-area-inset-top) + 4px) 16px
@@ -15,20 +17,6 @@
   align-items: center;
   justify-content: space-between;
   min-height: 44px;
-}
-
-.back-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  margin-left: -10px;
-  padding: 8px 10px 8px 4px;
-  color: var(--tint);
-  font-size: 17px;
-}
-.back-btn svg {
-  width: 22px;
-  height: 22px;
 }
 
 .large-title {
@@ -409,12 +397,9 @@
 }
 
 .toolbar {
-  padding: 8px 16px calc(env(safe-area-inset-bottom) + 8px);
-  background: var(--bg);
+  padding: 8px 16px;
+  background: var(--bar);
   border-top: 0.5px solid var(--sep);
-}
-:root[data-kb] .toolbar {
-  padding-bottom: 8px;
 }
 
 .toolbar-inner {
@@ -982,4 +967,190 @@ label.row:active {
 .row-key {
   flex: none;
   width: 96px;
+}
+
+/* ── Wallpaper: colour wash + die-cut emoji stickers ────────── */
+.wallpaper {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.wallpaper-wash {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--list) 15%, var(--bg)) 0%, var(--bg) 60%);
+}
+:root[data-mode='dark'] .wallpaper-wash {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--list) 22%, var(--bg)) 0%, var(--bg) 60%);
+}
+.wallpaper[data-room='home'] .wallpaper-wash {
+  background:
+    radial-gradient(70% 40% at 0% 0%, color-mix(in srgb, var(--grocery) 16%, transparent), transparent 70%),
+    radial-gradient(60% 36% at 100% 6%, color-mix(in srgb, var(--household) 13%, transparent), transparent 70%),
+    radial-gradient(70% 34% at 40% 100%, color-mix(in srgb, var(--important) 9%, transparent), transparent 70%);
+}
+
+.sticker {
+  position: absolute;
+  line-height: 1;
+  transform: rotate(var(--rot, 0deg));
+  filter: drop-shadow(2px 0 0 #fff) drop-shadow(-2px 0 0 #fff) drop-shadow(0 2px 0 #fff)
+    drop-shadow(0 -2px 0 #fff) drop-shadow(0 5px 7px var(--sticker-shadow));
+  animation: sticker-in 460ms cubic-bezier(0.3, 1.5, 0.5, 1) both;
+}
+:root[data-mode='dark'] .sticker {
+  opacity: 0.92;
+}
+@keyframes sticker-in {
+  from {
+    opacity: 0;
+    transform: rotate(var(--rot, 0deg)) scale(0.4);
+  }
+}
+
+.empty-art {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 78px;
+  margin-bottom: 12px;
+}
+.sticker--inline {
+  position: relative;
+  font-size: 48px;
+  margin: 0 -3px;
+}
+.sticker--inline:nth-child(1) {
+  --rot: -14deg;
+}
+.sticker--inline:nth-child(2) {
+  --rot: 6deg;
+  top: -10px;
+  font-size: 56px;
+  animation-delay: 60ms;
+}
+.sticker--inline:nth-child(3) {
+  --rot: 16deg;
+  animation-delay: 120ms;
+}
+
+/* ── Emoji on rows, pills and cards ─────────────────────────── */
+.item-emoji {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  font-size: 20px;
+  line-height: 1;
+  background: color-mix(in srgb, var(--list) 14%, var(--card));
+}
+.recent-row .item-emoji {
+  opacity: 0.55;
+  filter: grayscale(0.5);
+}
+
+.pick {
+  padding-left: 10px;
+}
+.pick-emoji {
+  font-size: 18px;
+  line-height: 1;
+}
+.pick svg {
+  width: 18px;
+  height: 18px;
+}
+
+.list-card-peek {
+  min-height: 20px;
+  font-size: 15px;
+  line-height: 20px;
+  letter-spacing: 1px;
+  white-space: nowrap;
+  overflow: hidden;
+  color: var(--label-2);
+}
+
+.nav-date {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: var(--label-2);
+}
+
+/* ── Tab bar ────────────────────────────────────────────────── */
+.tabbar {
+  display: flex;
+  padding: 5px 4px calc(env(safe-area-inset-bottom) + 3px);
+  background: var(--bar);
+}
+:root[data-kb] .tabbar {
+  display: none;
+}
+
+.tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 0;
+  color: var(--tab-off);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+.tab[aria-current] {
+  color: var(--list);
+}
+
+.tab-icon {
+  position: relative;
+  width: 30px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+}
+.tab-icon svg {
+  width: 25px;
+  height: 25px;
+}
+
+.tab-badge {
+  position: absolute;
+  top: -3px;
+  left: 20px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: var(--danger);
+  color: #fff;
+  font: 600 11px/18px var(--font);
+  text-align: center;
+  box-shadow: 0 0 0 2px var(--bar);
+}
+
+.empty--card {
+  margin: 0;
+  padding: 18px 20px 22px;
+  border-radius: 12px;
+  background: var(--card);
+}
+.empty--card .empty-art {
+  height: 64px;
+  margin-bottom: 6px;
+}
+.list-cards + .empty--card {
+  margin-top: 20px;
+}
+.list-card-peek--text {
+  font-size: 13px;
+  letter-spacing: 0;
 }

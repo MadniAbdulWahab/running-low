@@ -7,7 +7,7 @@
 :root {
   --font: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', system-ui, sans-serif;
   --mono: ui-monospace, 'SF Mono', Menlo, monospace;
-  --dock-h: 72px;
+  --dock-h: 116px;
 
   --bg: #f2f2f7;
   --card: #ffffff;
@@ -23,6 +23,9 @@
   --danger: #ff3b30;
   --toast: rgb(44 44 46 / 0.96);
   --backdrop: rgb(0 0 0 / 0.3);
+  --bar: rgb(249 249 249 / 0.97);
+  --tab-off: #8e8e93;
+  --sticker-shadow: rgb(0 0 0 / 0.16);
 
   --grocery: #ff9500;
   --grocery-text: #c93400;
@@ -53,6 +56,9 @@
   --danger: #ff453a;
   --toast: rgb(58 58 60 / 0.97);
   --backdrop: rgb(0 0 0 / 0.55);
+  --bar: rgb(22 22 24 / 0.97);
+  --tab-off: #8e8e93;
+  --sticker-shadow: rgb(0 0 0 / 0.7);
 
   --grocery: #ff9f0a;
   --grocery-text: #ff9f0a;

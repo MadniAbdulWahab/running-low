@@ -53,9 +53,7 @@ const gone = (page, text, timeout = 8000) =>
     .catch(() => false)
 
 async function tab(page, label) {
-  const back = page.locator('.back-btn')
-  if (await back.count()) await back.click()
-  if (label !== 'Home') await page.locator('.list-card', { hasText: label }).click()
+  await page.locator('.tab', { hasText: label }).click()
   await page.locator('.large-title').first().waitFor()
 }
 
@@ -75,6 +73,12 @@ try {
   await A.page.getByRole('button', { name: 'Start our list' }).click()
   await A.page.locator('.large-title').waitFor()
   check(true, 'A signs up and creates the household')
+  await A.page.waitForTimeout(700)
+  await A.page.screenshot({ path: `${OUT}/0-home-empty.png` })
+  await tab(A.page, 'Grocery')
+  await A.page.waitForTimeout(700)
+  await A.page.screenshot({ path: `${OUT}/0-grocery-empty.png` })
+  await tab(A.page, 'Home')
 
   await A.page.locator('.members-btn').click()
   const code = (await A.page.locator('.invite-code').textContent()).trim()

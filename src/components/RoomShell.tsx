@@ -3,6 +3,7 @@ import { AppContext, type AddOptions, type AppCtx } from '../app-context'
 import { addItem, markDone, undoDone } from '../data/items'
 import { useItems } from '../hooks/useItems'
 import { useRoomTheme, type ThemeState } from '../hooks/useTheme'
+import { LIST_EMOJI, stickersFor } from '../lib/emoji'
 import { WEEK } from '../lib/time'
 import { LIST_INFO, LISTS } from '../rooms'
 import type { Household, Item, ListId, RoomId } from '../types'
@@ -14,6 +15,8 @@ import { ListCards } from './ListCards'
 import { QuickAdd } from './QuickAdd'
 import { QuickPicks } from './QuickPicks'
 import { SettingsSheet } from './SettingsSheet'
+import { Stickers } from './Stickers'
+import { TabBar } from './TabBar'
 import { Toast, type ToastData } from './Toast'
 
 const byNewest = (a: Item, b: Item) => b.addedAt - a.addedAt
@@ -118,20 +121,23 @@ export function RoomShell({ uid, household, room, setRoom, theme }: Props) {
 
   const openItem = openId ? items.find((i) => i.id === openId) : undefined
   const roomRecent = room === 'home' ? recent : recent.filter((i) => i.list === room)
+  const stickers = useMemo(() => stickersFor(room, items), [room, items])
 
   return (
     <AppContext.Provider value={ctx}>
+      <Stickers room={room} emojis={stickers} />
       <main className="page" key={room} data-dir={direction.current}>
         <Header room={room} count={counts[room]} onSettings={() => setSettings(true)} />
 
-        {loaded === null ? null : room === 'home' ? (
+        {room === 'home' ? (
           <>
-            <ListCards counts={counts} />
-            {counts.home === 0 ? (
-              <p className="empty">
-                <strong>Nothing’s running low</strong>
-                Add something the moment it runs out.
-              </p>
+            <ListCards needed={needed} />
+            {loaded === null ? null : counts.home === 0 ? (
+              <EmptyArt
+                emojis={['🥛', '🧻', '📌']}
+                title="Nothing’s running low"
+                text="Tap something below or type it in when it runs out."
+              />
             ) : (
               LISTS.filter((l) => needed[l].length).map((l) => (
                 <section key={l} data-list={l}>
@@ -147,22 +153,24 @@ export function RoomShell({ uid, household, room, setRoom, theme }: Props) {
                 </section>
               ))
             )}
+            <QuickPicks room="home" />
           </>
         ) : (
           <div data-list={room}>
-            <QuickPicks list={room} />
+            <QuickPicks room={room} />
             <h2 className="group-label">On the list</h2>
-            {needed[room].length ? (
+            {loaded === null ? null : needed[room].length ? (
               <div className="group">
                 {needed[room].map((i) => (
                   <ItemRow key={i.id} item={i} />
                 ))}
               </div>
             ) : (
-              <p className="empty">
-                <strong>All stocked up</strong>
-                {LIST_INFO[room].empty}
-              </p>
+              <EmptyArt
+                emojis={[LIST_EMOJI[room]]}
+                title="All stocked up"
+                text={LIST_INFO[room].empty}
+              />
             )}
           </div>
         )}
@@ -177,11 +185,28 @@ export function RoomShell({ uid, household, room, setRoom, theme }: Props) {
         <div className="toolbar">
           <QuickAdd room={room} />
         </div>
+        <TabBar room={room} counts={counts} onChange={goTo} />
       </div>
 
       {openItem && <ItemSheet key={openItem.id} item={openItem} onClose={() => setOpenId(null)} />}
       {settings && <SettingsSheet theme={theme} onClose={() => setSettings(false)} />}
     </AppContext.Provider>
+  )
+}
+
+function EmptyArt({ emojis, title, text }: { emojis: string[]; title: string; text: string }) {
+  return (
+    <div className="empty empty--card">
+      <span className="empty-art" aria-hidden="true">
+        {emojis.map((e, i) => (
+          <span key={i} className="sticker sticker--inline">
+            {e}
+          </span>
+        ))}
+      </span>
+      <strong>{title}</strong>
+      {text}
+    </div>
   )
 }
 

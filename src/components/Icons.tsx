@@ -35,9 +35,12 @@ export function ListGlyph({ list }: { list: ListId }) {
   }
 }
 
-export const ChevronLeft = () => (
-  <svg {...base} strokeWidth={2.4}>
-    <path d="M15 5l-7 7 7 7" />
+export const HomeGlyph = () => (
+  <svg {...base} strokeWidth={2}>
+    <rect x="3.5" y="3.5" width="7" height="7" rx="2" />
+    <rect x="13.5" y="3.5" width="7" height="7" rx="2" />
+    <rect x="3.5" y="13.5" width="7" height="7" rx="2" />
+    <rect x="13.5" y="13.5" width="7" height="7" rx="2" />
   </svg>
 )
 

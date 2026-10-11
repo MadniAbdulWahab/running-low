@@ -1,0 +1,139 @@
+import type { Item, ListId, RoomId } from '../types'
+
+// First match wins, so specific words come before general ones. Patterns match at word starts,
+// so "foil" never matches "oil" and "steak" never matches "tea".
+const TABLE: [RegExp, string][] = [
+  // Groceries
+  [/\boat ?milk|\bmilk/, '🥛'],
+  [/\beggplant|\baubergine/, '🍆'],
+  [/\beggs?\b/, '🥚'],
+  [/\bbaguette/, '🥖'],
+  [/\bbread|\btoast|\bbuns?\b|\brolls?\b/, '🍞'],
+  [/\bbutter/, '🧈'],
+  [/\bcheese|\bfeta|\bmozzarella|\bparmesan/, '🧀'],
+  [/\byog(h)?urt|\bcereal|\boats?\b|\bmuesli|\bgranola/, '🥣'],
+  [/\bbanana/, '🍌'],
+  [/\bapple/, '🍎'],
+  [/\borange/, '🍊'],
+  [/\blemon|\blime/, '🍋'],
+  [/\bgrape/, '🍇'],
+  [/\bstrawberr|\bjam\b/, '🍓'],
+  [/\bblueberr|\bberr/, '🫐'],
+  [/\bwatermelon|\bmelon/, '🍉'],
+  [/\bpeach/, '🍑'],
+  [/\bpear/, '🍐'],
+  [/\bcherr/, '🍒'],
+  [/\bpineapple/, '🍍'],
+  [/\bavocado/, '🥑'],
+  [/\btomato/, '🍅'],
+  [/\bpotato|\bfries/, '🥔'],
+  [/\bonion/, '🧅'],
+  [/\bgarlic/, '🧄'],
+  [/\bcarrot/, '🥕'],
+  [/\bcucumber/, '🥒'],
+  [/\blettuce|\bsalad|\bspinach|\bkale/, '🥬'],
+  [/\bbroccoli/, '🥦'],
+  [/\bpepper|\bpaprika/, '🫑'],
+  [/\bcorn\b|\bsweetcorn/, '🌽'],
+  [/\bmushroom/, '🍄'],
+  [/\brice\b/, '🍚'],
+  [/\bpasta|\bspaghetti|\bpenne|\bmacaroni/, '🍝'],
+  [/\bnoodle|\bramen/, '🍜'],
+  [/\bflour/, '🌾'],
+  [/\bsalt/, '🧂'],
+  [/\bolive|\boil\b/, '🫒'],
+  [/\bcoffee|\bespresso/, '☕'],
+  [/\btea\b|\bteabag/, '🍵'],
+  [/\bwater/, '💧'],
+  [/\bjuice/, '🧃'],
+  [/\bbeer/, '🍺'],
+  [/\bwine/, '🍷'],
+  [/\bsoda|\bcola|\bcoke/, '🥤'],
+  [/\bchicken|\bturkey/, '🍗'],
+  [/\bsteak|\bbeef|\bmince|\bmeat/, '🥩'],
+  [/\bbacon|\bham\b/, '🥓'],
+  [/\bsausage|\bhot ?dog/, '🌭'],
+  [/\bfish|\bsalmon|\btuna/, '🐟'],
+  [/\bshrimp|\bprawn/, '🍤'],
+  [/\bchocolate/, '🍫'],
+  [/\bcookie|\bbiscuit/, '🍪'],
+  [/\bcake/, '🍰'],
+  [/\bice ?cream/, '🍨'],
+  [/\bhoney/, '🍯'],
+  [/\bnuts?\b|\bpeanut|\balmond/, '🥜'],
+  [/\bpopcorn/, '🍿'],
+  [/\bpizza/, '🍕'],
+  [/\bcroissant/, '🥐'],
+  [/\bsnack|\bcrisps|\bchips/, '🍿'],
+  // Household
+  [/\btoilet|\bpaper towel|\bkitchen roll|\btissue/, '🧻'],
+  [/\bsponge/, '🧽'],
+  [/\bsoap|\bhandwash/, '🧼'],
+  [/\blaundry|\bdetergent|\bsoftener/, '🧺'],
+  [/\btooth/, '🪥'],
+  [/\bshampoo|\bconditioner|\blotion|\bcleaner|\bspray|\bbleach|\bdeodorant|\bshower gel/, '🧴'],
+  [/\bbin\b|\bbin bag|\btrash|\brubbish|\bgarbage/, '🗑️'],
+  [/\bbulb|\blight\b|\blights\b|\blamp/, '💡'],
+  [/\bbatter/, '🔋'],
+  [/\bcandle/, '🕯️'],
+  [/\bbroom|\bmop/, '🧹'],
+  [/\brazor|\bblades?\b/, '🪒'],
+  [/\bplaster|\bbandage/, '🩹'],
+  [/\bfoil|\bcling|\bbaking paper|\bbags?\b/, '🛍️'],
+  [/\bplant|\bflower/, '🪴'],
+  // Important
+  [/\bpassport|\bvisa/, '🛂'],
+  [/\bmedic|\bpill|\btablet|\bvitamin|\bprescription|\bibuprofen|\bparacetamol/, '💊'],
+  [/\blens|\bglasses/, '👓'],
+  [/\bdentist|\bteeth/, '🦷'],
+  [/\bdoctor|\bappointment|\bcheck-?up/, '🩺'],
+  [/\bgift|\bpresent|\bbirthday/, '🎁'],
+  [/\bbill\b|\bbills\b|\binvoice|\btax|\brent\b/, '🧾'],
+  [/\binsurance|\bcontract|\bform\b|\bdocument/, '📄'],
+  [/\bkey/, '🔑'],
+  [/\bcard\b|\bbank/, '💳'],
+  [/\bletter|\bpost\b|\bparcel|\bpackage|\bmail/, '✉️'],
+  [/\bphone/, '📱'],
+  [/\bcar\b|\bmot\b|\bservice/, '🚗'],
+  [/\bticket/, '🎟️'],
+  [/\bflight|\btrip|\bholiday/, '✈️'],
+  [/\bid\b|\blicen[cs]e/, '🪪'],
+  [/\bvet\b|\bdog\b|\bcat\b|\bpet\b/, '🐾'],
+]
+
+export const LIST_EMOJI: Record<ListId, string> = {
+  grocery: '🛒',
+  household: '🧺',
+  important: '📌',
+}
+
+export function emojiFor(name: string, list: ListId): string {
+  const k = name.toLocaleLowerCase()
+  for (const [re, e] of TABLE) if (re.test(k)) return e
+  return LIST_EMOJI[list]
+}
+
+const DEFAULT_STICKERS: Record<RoomId, string[]> = {
+  home: ['🛒', '🥛', '🧻', '🍌', '💡', '📌', '🥚', '🧼', '🎁', '☕'],
+  grocery: ['🥛', '🍌', '🥚', '🧀', '🍞', '🥑', '🍓', '🧈', '🥕', '🍋'],
+  household: ['🧻', '🧼', '🧽', '💡', '🔋', '🧴', '🧺', '🪥', '🕯️', '🪴'],
+  important: ['📄', '💊', '🔑', '🎁', '✉️', '🛂', '🧾', '📅', '👓', '💳'],
+}
+
+/** Background stickers: emojis of what's on this tab's list first, then the tab's defaults. */
+export function stickersFor(room: RoomId, items: Item[], count = 7): string[] {
+  const relevant = items
+    .filter((i) => room === 'home' || i.list === room)
+    .sort((a, b) => Number(b.status === 'needed') - Number(a.status === 'needed') || b.count - a.count)
+  const out: string[] = []
+  for (const i of relevant) {
+    const e = emojiFor(i.name, i.list)
+    if (!out.includes(e) && !Object.values(LIST_EMOJI).includes(e)) out.push(e)
+    if (out.length >= Math.ceil(count / 2)) break
+  }
+  for (const e of DEFAULT_STICKERS[room]) {
+    if (out.length >= count) break
+    if (!out.includes(e)) out.push(e)
+  }
+  return out
+}
