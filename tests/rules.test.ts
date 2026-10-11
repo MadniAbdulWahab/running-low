@@ -213,6 +213,21 @@ describe('notes and pings', () => {
   })
 })
 
+describe('push subscriptions', () => {
+  it('each person writes only their own; members can read both', async () => {
+    await seed(['alice', 'bob'])
+    const mine = `households/${CODE}/push/alice`
+    const data = { subscription: '{"endpoint":"https://web.push.apple.com/x"}', prefs: { items: true } }
+    await assertSucceeds(setDoc(doc(as('alice'), mine), data))
+    await assertSucceeds(getDoc(doc(as('bob'), mine)))
+    await assertFails(setDoc(doc(as('bob'), mine), data))
+    await assertFails(deleteDoc(doc(as('bob'), mine)))
+    await assertFails(getDoc(doc(as('carol'), mine)))
+    await assertFails(setDoc(doc(as('alice'), mine), { ...data, subscription: 'x'.repeat(2001) }))
+    await assertSucceeds(deleteDoc(doc(as('alice'), mine)))
+  })
+})
+
 describe('countdowns and date jar', () => {
   it('members manage countdowns; bad dates and outsiders are rejected', async () => {
     await seed(['alice', 'bob'])

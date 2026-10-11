@@ -7,3 +7,8 @@ dev-dist
 test-results
 screenshots
 output/playwright
+
+# Cloudflare Worker local secrets and deps
+worker/.dev.vars
+worker/node_modules
+worker/.wrangler

@@ -5,6 +5,7 @@ import { formatCode, renameHousehold, setMyName } from '../data/household'
 import { auth } from '../firebase'
 import type { ThemeState } from '../hooks/useTheme'
 import type { ThemePref } from '../types'
+import { NotificationSettings } from './NotificationSettings'
 import { Sheet } from './Sheet'
 
 const PREFS: { id: ThemePref; label: string }[] = [
@@ -131,6 +132,8 @@ export function SettingsSheet({ onClose, theme }: { onClose: () => void; theme: 
           </div>
         </div>
       </div>
+
+      <NotificationSettings />
 
       <div className="group" style={{ marginTop: 28 }}>
         <button className="row row--danger row--center" onClick={() => signOut(auth)}>

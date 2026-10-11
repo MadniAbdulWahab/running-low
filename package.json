@@ -6,13 +6,15 @@
   "scripts": {
     "dev": "vite",
     "dev:emu": "vite --mode emulators",
-    "build": "tsc -p . && vite build",
+    "build": "tsc -p . && tsc -p tsconfig.sw.json && vite build",
     "preview": "vite preview",
     "emulators": "firebase emulators:start --only auth,firestore --project demo-outof",
     "test:rules": "firebase emulators:exec --only firestore --project demo-outof \"vitest run\"",
     "e2e": "node scripts/e2e.mjs",
     "icons": "pwa-assets-generator",
-    "deploy": "npm run build && firebase deploy --only hosting,firestore"
+    "deploy": "npm run build && firebase deploy --only hosting,firestore",
+    "test:worker": "vitest run --root worker",
+    "deploy:worker": "npm --prefix worker run deploy"
   },
   "dependencies": {
     "firebase": "^13.0.0",
@@ -30,6 +32,9 @@
     "typescript": "^7.0.2",
     "vite": "^8.3.4",
     "vite-plugin-pwa": "^2.0.0",
-    "vitest": "^5.0.3"
+    "vitest": "^5.0.3",
+    "workbox-core": "7.4.1",
+    "workbox-precaching": "7.4.1",
+    "workbox-routing": "7.4.1"
   }
 }

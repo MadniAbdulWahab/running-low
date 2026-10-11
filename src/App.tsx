@@ -1,5 +1,5 @@
 import type { User } from 'firebase/auth'
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { HouseholdSetup } from './components/HouseholdSetup'
 import { RoomShell } from './components/RoomShell'
 import { SignIn } from './components/SignIn'
@@ -14,6 +14,12 @@ import type { RoomId } from './types'
 const ROOM_KEY = 'outof.room'
 
 function readRoom(): RoomId {
+  // Opened from a notification: /?room=us
+  const fromUrl = new URLSearchParams(location.search).get('room') as RoomId | null
+  if (fromUrl && ROOM_ORDER.includes(fromUrl)) {
+    history.replaceState(null, '', location.pathname)
+    return fromUrl
+  }
   try {
     const r = localStorage.getItem(ROOM_KEY) as RoomId | null
     if (r && ROOM_ORDER.includes(r)) return r
@@ -64,6 +70,17 @@ function SignedIn({ user, theme }: { user: User; theme: ThemeState }) {
       localStorage.setItem(ROOM_KEY, r)
     } catch {}
   }, [])
+
+  // A notification tapped while the app is already open asks to switch tab.
+  useEffect(() => {
+    if (!('serviceWorker' in navigator)) return
+    const onMessage = (e: MessageEvent) => {
+      const r = e.data?.room as RoomId | undefined
+      if (e.data?.type === 'open-room' && r && ROOM_ORDER.includes(r)) setRoom(r)
+    }
+    navigator.serviceWorker.addEventListener('message', onMessage)
+    return () => navigator.serviceWorker.removeEventListener('message', onMessage)
+  }, [setRoom])
 
   if (loading) return <Plain theme={theme} />
   if (!household)

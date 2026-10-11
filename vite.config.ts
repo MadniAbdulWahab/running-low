@@ -9,6 +9,13 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      // Our own service worker (src/sw.ts) so it can also receive push notifications.
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.ts',
+      injectManifest: {
+        globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
+      },
       includeAssets: ['icon.svg', 'favicon.ico', 'apple-touch-icon-180x180.png'],
       manifest: {
         name: 'Running Low',
@@ -26,11 +33,6 @@ export default defineConfig({
           { src: 'pwa-512x512.png?v=basket', sizes: '512x512', type: 'image/png' },
           { src: 'maskable-icon-512x512.png?v=basket', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
-      },
-      workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
-        navigateFallback: 'index.html',
-        cleanupOutdatedCaches: true,
       },
     }),
   ],

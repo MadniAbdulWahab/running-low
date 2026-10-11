@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useApp } from '../../app-context'
 import { createNote, nextColor } from '../../data/notes'
+import { notify } from '../../lib/push'
 import type { Note } from '../../types'
 import { ArrowUp } from '../Icons'
 
@@ -14,6 +15,7 @@ export function NoteComposer({ notes }: { notes: Note[] }) {
     const t = text.trim()
     if (!t) return
     createNote(household.id, uid, { text: t, color: nextColor(notes) })
+    void notify(household.id, 'notes', `${household.memberNames[uid] ?? 'Someone'} left a note`, t.split('\n')[0], 'us')
     setText('')
     toast('Note added')
   }

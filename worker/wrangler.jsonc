@@ -1,0 +1,15 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  // Sends Web Push notifications between the two phones on a Running Low list.
+  "name": "running-low-push",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-11",
+  "observability": { "enabled": true },
+  "vars": {
+    "PROJECT_ID": "running-low",
+    "ALLOWED_ORIGINS": "https://running-low.web.app,https://running-low.firebaseapp.com",
+    "VAPID_PUBLIC_KEY": "BHO5QxA4Vm8y_a_gt5Zn3q93m-GvL46UwPUz7UDRWqgpCXwjMeIN9d1okrN2MGxjYLgEtMlXBCCSEMA3Jy-RrXE",
+    "VAPID_SUBJECT": "https://running-low.web.app"
+  }
+  // VAPID_PRIVATE_KEY is a secret: `wrangler secret put VAPID_PRIVATE_KEY` (locally: .dev.vars).
+}

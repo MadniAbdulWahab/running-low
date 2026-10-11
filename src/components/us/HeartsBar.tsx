@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react'
 import { useApp } from '../../app-context'
 import { sendPing } from '../../data/pings'
+import { notify } from '../../lib/push'
 import { ago } from '../../lib/time'
 import { PINGS, pingInfo } from '../../rooms'
 import type { Ping, PingKind } from '../../types'
@@ -22,6 +23,7 @@ export function HeartsBar({ pings }: { pings: Ping[] }) {
       return
     }
     sendPing(household.id, uid, kind, pings)
+    void notify(household.id, 'hearts', `${household.memberNames[uid] ?? 'Someone'} ${info.verb} ${info.emoji}`, '', 'us')
     setBurst({ id: Date.now(), emoji: info.emoji })
     toast(`${info.emoji} sent to ${otherName}`)
   }

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { memberOf, useApp } from '../../app-context'
 import { deleteNote, updateNote } from '../../data/notes'
+import { notify } from '../../lib/push'
 import { ago } from '../../lib/time'
 import { NOTE_COLORS } from '../../rooms'
 import type { ChecklistEntry, Note } from '../../types'
@@ -17,6 +18,7 @@ export function NoteSheet({ note, onClose, onAskDelete }: { note: Note; onClose:
   const [text, setText] = useState(note.text)
   const [checklist, setChecklist] = useState<ChecklistEntry[]>(note.checklist)
   const editing = useRef(false)
+  const startedEmpty = useRef(!note.text.trim() && !note.checklist.some((e) => e.t.trim()))
   const saved = useRef({ text: note.text, checklist: JSON.stringify(note.checklist) })
 
   // Take edits from the other phone, but never while typing here.
@@ -50,7 +52,13 @@ export function NoteSheet({ note, onClose, onAskDelete }: { note: Note; onClose:
     if (!t.trim() && !c.some((e) => e.t.trim())) {
       saved.current = { text: t, checklist: JSON.stringify(c) }
       deleteNote(hid, note.id)
-    } else save(t, c)
+    } else {
+      save(t, c)
+      if (startedEmpty.current) {
+        const first = t.trim().split('\n')[0] || c.find((e) => e.t.trim())?.t || ''
+        void notify(hid, 'notes', `${household.memberNames[uid] ?? 'Someone'} left a note`, first, 'us')
+      }
+    }
     onClose()
   }
 

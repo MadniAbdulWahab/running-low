@@ -104,7 +104,18 @@ Saved 2026-10-11 so work can resume after a restart. To continue, tell Claude:
 - **Countdowns (done):** a swipeable row of pastel cards on Us (days to go, Today! 🎉, past one-offs faded at the end). They can repeat every year. Tapping one opens `CountdownSheet` (name, date, Once / Every year, emoji, delete). Data: `countdowns/{id}`.
 - **Date jar (done):** add ideas; "Pick one" shuffles for about 1.1 s and lands on an idea not yet done (never the same one twice in a row). "Let's do it" marks it done (`doneAt`); "See all ideas" lists them with Put back and remove. Data: `ideas/{id}`.
 - **Us tab order:** Hearts, Countdowns, Notes, Meals, Date jar. There are 19 rules tests.
-- **Next:** phase 2, push notifications. The user has created a Cloudflare account and run `npx wrangler login`.
+- **Push notifications (phase 2, done):**
+  - **Worker:** `running-low-push` on Cloudflare (the user's account, wrangler 4.149 pinned in `worker/`), at https://running-low-push.madniabdulwahab.workers.dev.
+    - `POST /notify {hid, kind: items|notes|hearts, title, body, room}` with the Firebase ID token.
+    - It verifies the token with jose (Google securetoken JWKs), reads `households/{hid}/push` through the Firestore REST API using the caller's token (rules apply; non-members get 403), and sends Web Push with `@block65/webcrypto-web-push` to every member except the sender whose pref for that kind is on.
+  - **Keys:** VAPID public key in `wrangler.jsonc` and `.env.local`. The private key is a Worker secret, with a local copy in `worker/.dev.vars` (git-ignored). The VAPID subject is the app URL (the user's email is not sent).
+  - **App:**
+    - `vite-plugin-pwa` now uses `injectManifest` with `src/sw.ts` (precache + navigation fallback as before, plus `push` and `notificationclick` handlers that open the right tab via `?room=` or a postMessage).
+    - `src/lib/push.ts` handles enable/disable/refresh/notify. Item adds are grouped per ~6 s burst and flushed when the app is hidden.
+    - The opt-in and per-type switches are in Settings → Notifications (`NotificationSettings.tsx`), shown only in the production config and in the installed app on iOS.
+    - Subscriptions live at `push/{uid}`: the owner writes, members read.
+  - **Tests:** the worker has unit tests (`npm run test:worker`, 7), and the rules tests total 20. The live worker was checked with a throwaway account: real token accepted, non-member 403, bad input 400.
+  - **Still to check on real phones:** push delivery can't be simulated end-to-end.
 - **Code:** `src/components/us/*`, `src/data/{notes,pings}.ts` and `src/hooks/useCollection.ts` (a generic live query; `toMs` lives there).
 - **Types:** `RoomId` = `ListRoom` | 'us', with `ListRoom` = 'home' | ListId. List-only components take `ListRoom`, and `isList()` is in rooms.ts.
 - **Rules:** notes (members only, size and colour checks, can't change `createdBy`, `updatedBy` must be you) and pings (sent as yourself, never edited). Both are covered by rules tests (16 total).

@@ -8,6 +8,8 @@ import { mealsCol, toMeal } from '../data/meals'
 import { readPingSeen, recentPings, toPing, writePingSeen } from '../data/pings'
 import { useCollection } from '../hooks/useCollection'
 import { useItems } from '../hooks/useItems'
+import { notifyItemsAdded, refreshPush } from '../lib/push'
+import { useMyPush } from '../data/push'
 import { useRoomTheme, type ThemeState } from '../hooks/useTheme'
 import { LIST_EMOJI } from '../lib/emoji'
 import type { Entry } from '../lib/parse'
@@ -91,6 +93,13 @@ export function RoomShell({ uid, household, room, setRoom, theme }: Props) {
   const pings = useMemo(() => pingsLive ?? [], [pingsLive])
   const meals = useCollection(`meals/${hid}`, () => mealsCol(hid), toMeal)
   const [mealDay, setMealDay] = useState<string | null>(null)
+  const myPush = useMyPush(hid, uid)
+  const pushChecked = useRef(false)
+  useEffect(() => {
+    if (myPush === undefined || pushChecked.current) return
+    pushChecked.current = true
+    void refreshPush(hid, uid, myPush?.subscription)
+  }, [myPush, hid, uid])
   const countdowns = useCollection(`countdowns/${hid}`, () => countdownsCol(hid), toCountdown)
   const ideas = useCollection(`ideas/${hid}`, () => ideasCol(hid), toIdea)
   const [countdownId, setCountdownId] = useState<string | null>(null)
@@ -216,6 +225,7 @@ export function RoomShell({ uid, household, room, setRoom, theme }: Props) {
   const ctx = useMemo<AppCtx>(() => {
     const add = (entries: (string | Entry)[], opts: AddOptions) => {
       const added: string[] = []
+      const addedTo: ListId[] = []
       const already: string[] = []
       for (const e of entries) {
         const { name, qty } = typeof e === 'string' ? { name: e, qty: undefined } : e
@@ -226,8 +236,10 @@ export function RoomShell({ uid, household, room, setRoom, theme }: Props) {
         }
         const list = opts.list ?? existing?.list ?? opts.fallback ?? 'grocery'
         addItem(hid, uid, name, list, existing, opts.photo, qty)
+        addedTo.push(list)
         added.push((existing?.name ?? name) + (qty && qty > 1 ? ` ×${qty}` : ''))
       }
+      notifyItemsAdded(hid, household.memberNames[uid] ?? 'Someone', added, addedTo[0] ?? 'home')
       const parts: string[] = []
       if (added.length === 1) parts.push(`Added ${added[0]}`)
       else if (added.length > 1) parts.push(`Added ${added.length} items`)
