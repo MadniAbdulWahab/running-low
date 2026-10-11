@@ -2114,7 +2114,7 @@ body {
 
 /* ══ Us tab ══════════════════════════════════════════════════ */
 
-/* Hearts on Home: give the received emoji its own space above the send row. */
+/* Hearts on Home: sender photo, name above the message, and its emoji inline. */
 .hearts {
   position: relative;
   margin-top: 16px;
@@ -2152,7 +2152,15 @@ body {
   font-size: 44px;
   line-height: 1;
 }
-.hearts-in[data-received] .hearts-big {
+.hearts-big--photo {
+  background: none;
+}
+.hearts-message-emoji {
+  display: inline-block;
+  font-size: 28px;
+  font-weight: 400;
+  line-height: 1;
+  vertical-align: -3px;
   animation: hearts-pop 420ms cubic-bezier(0.3, 1.5, 0.5, 1);
 }
 @keyframes hearts-pop {
@@ -2168,18 +2176,10 @@ body {
   gap: 5px;
 }
 .hearts-sender {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  min-width: 0;
+  display: block;
   font-size: 14px;
   font-weight: 600;
   color: var(--label);
-}
-.hearts-sender .avatar {
-  flex: none;
-}
-.hearts-sender > span:last-child {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -2215,18 +2215,10 @@ body {
 .send-pings[data-layout='row'] {
   border-top: 1px solid var(--separator, var(--border));
 }
-.send-pings-label {
-  margin: 0;
-  padding: 11px 16px 0;
-  font-size: 12px;
-  line-height: 1.4;
-  color: var(--label-2);
-  overflow-wrap: anywhere;
-}
 .send-pings[data-layout='row'] .send-pings-track {
   display: flex;
   gap: 8px;
-  padding: 8px 14px 10px;
+  padding: 10px 14px;
   overflow-x: auto;
   overscroll-behavior-x: contain;
   scroll-snap-type: x proximity;

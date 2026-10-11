@@ -453,7 +453,7 @@ try {
   await B.page.locator('.hearts').evaluate((el) => el.scrollIntoView({ block: 'start' }))
   await B.page.waitForTimeout(300)
   await B.page.screenshot({ path: `${OUT}/hearts-card.png` })
-  check(await B.page.locator('.hearts-sender img').isVisible(), 'the hearts card shows the sender’s photo beside the received emoji')
+  check(await B.page.locator('.hearts-big img').isVisible(), 'the hearts card shows the sender’s large photo beside the message')
 
   // ── The Hearts sheet: today / this week, latest, and a grid to send from ──
   await B.page.locator('.hearts-in').click()
