@@ -1798,3 +1798,64 @@ label.row:active {
 .select-bar button {
   font-size: 16px;
 }
+
+/* ── Quantity pill on the left of each row; tap to show − n + ── */
+.qty {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  height: 30px;
+  border-radius: 15px;
+  background: var(--fill);
+  transition: background-color 150ms;
+}
+.qty[data-open] {
+  background: color-mix(in srgb, var(--list) 15%, var(--card));
+}
+.qty-value {
+  position: relative;
+  min-width: 30px;
+  height: 30px;
+  padding: 0 9px;
+  border-radius: 15px;
+  font-size: 15px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  color: var(--label);
+}
+.qty-value::before {
+  content: '';
+  position: absolute;
+  inset: -7px -4px;
+}
+.qty[data-open] .qty-value {
+  color: var(--list-text);
+  padding: 0 4px;
+}
+.qty-btn {
+  width: 32px;
+  height: 30px;
+  border-radius: 15px;
+  font-size: 20px;
+  line-height: 1;
+  color: var(--list-text);
+  animation: qty-in 160ms ease;
+}
+.qty-btn:active:not(:disabled) {
+  background: color-mix(in srgb, var(--list) 22%, transparent);
+}
+.qty-btn:disabled {
+  color: var(--label-3);
+}
+@keyframes qty-in {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+}
+.item[data-done] .qty {
+  opacity: 0.5;
+}
+.item::after {
+  left: 60px;
+}

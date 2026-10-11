@@ -1,5 +1,6 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { memberOf, useApp } from '../app-context'
+import { setQty } from '../data/items'
 import { usePhoto } from '../hooks/usePhoto'
 import { emojiFor } from '../lib/emoji'
 import { ago, daysUntil, dueLabel } from '../lib/time'
@@ -21,6 +22,27 @@ export function ItemRow({ item }: { item: Item }) {
   const ticked = item.status === 'done'
   const who = memberOf(household, ticked ? (item.doneBy ?? item.addedBy) : item.addedBy, uid)
   const isSelected = selected.has(item.id)
+  const qty = item.qty ?? 1
+
+  // Tapping the quantity opens − n + in place; it closes on a tap elsewhere or after a pause.
+  const [qtyOpen, setQtyOpen] = useState(false)
+  const qtyRef = useRef<HTMLSpanElement>(null)
+  useEffect(() => {
+    if (!qtyOpen) return
+    const idle = window.setTimeout(() => setQtyOpen(false), 4000)
+    const outside = (e: PointerEvent) => {
+      if (!qtyRef.current?.contains(e.target as Node)) setQtyOpen(false)
+    }
+    document.addEventListener('pointerdown', outside)
+    return () => {
+      window.clearTimeout(idle)
+      document.removeEventListener('pointerdown', outside)
+    }
+  }, [qtyOpen, qty])
+  useEffect(() => {
+    if (selecting || item.status === 'done') setQtyOpen(false)
+  }, [selecting, item.status])
+  const changeQty = (n: number) => setQty(household.id, item, Math.max(1, Math.min(99, n)))
 
   // Press and hold asks to delete; moving the finger (scrolling) cancels it.
   const press = useRef<{ timer: number; x: number; y: number } | null>(null)
@@ -98,6 +120,35 @@ export function ItemRow({ item }: { item: Item }) {
           </span>
         </button>
       )}
+      {!selecting && (
+        <span
+          className="qty"
+          ref={qtyRef}
+          data-open={qtyOpen || undefined}
+          // Keep a tap here from starting the press-and-hold timer on the row.
+          onPointerDown={(e) => e.stopPropagation()}
+        >
+          {qtyOpen && (
+            <button className="qty-btn" aria-label={`One fewer ${item.name}`} disabled={qty <= 1} onClick={() => changeQty(qty - 1)}>
+              −
+            </button>
+          )}
+          <button
+            className="qty-value"
+            aria-label={`${item.name}: quantity ${qty}. Tap to change`}
+            aria-expanded={qtyOpen}
+            disabled={ticked}
+            onClick={() => setQtyOpen((o) => !o)}
+          >
+            {qty}
+          </button>
+          {qtyOpen && (
+            <button className="qty-btn" aria-label={`One more ${item.name}`} disabled={qty >= 99} onClick={() => changeQty(qty + 1)}>
+              +
+            </button>
+          )}
+        </span>
+      )}
       <button className="item-body" onClick={open}>
         <span className="item-emoji" aria-hidden="true">
           {emojiFor(item.name, item.list)}
@@ -105,7 +156,6 @@ export function ItemRow({ item }: { item: Item }) {
         <span className="item-text">
           <span className="item-name">
             {item.name}
-            {item.qty && item.qty > 1 && <span className="item-qty">×{item.qty}</span>}
           </span>
           {item.note && <span className="item-note">{item.note}</span>}
           <span className="item-meta">

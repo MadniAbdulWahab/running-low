@@ -217,7 +217,7 @@ try {
   // ── Quantity: typed in, then changed with the stepper ──
   await add(A.page, '3 apples')
   check(
-    await A.page.locator('.item', { hasText: 'Apples' }).locator('.item-qty', { hasText: '×3' })
+    await A.page.locator('.item', { hasText: 'Apples' }).locator('.qty-value', { hasText: /^3$/ })
       .waitFor({ timeout: 8000 }).then(() => true).catch(() => false),
     '"3 apples" adds Apples ×3',
   )
@@ -226,9 +226,18 @@ try {
   await A.page.locator('.sheet').screenshot({ path: `${OUT}/sheet-qty.png` })
   await A.page.locator('.sheet-done').click()
   check(
-    await B.page.locator('.item', { hasText: 'Apples' }).locator('.item-qty', { hasText: '×4' })
+    await B.page.locator('.item', { hasText: 'Apples' }).locator('.qty-value', { hasText: /^4$/ })
       .waitFor({ timeout: 8000 }).then(() => true).catch(() => false),
     'stepper change to ×4 syncs to B',
+  )
+  // Inline: tap the number, then + in the row.
+  await A.page.locator('.item', { hasText: 'Apples' }).locator('.qty-value').click()
+  await A.page.getByRole('button', { name: 'One more Apples' }).click()
+  await A.page.locator('.item', { hasText: 'Apples' }).screenshot({ path: `${OUT}/qty-inline.png` })
+  check(
+    await B.page.locator('.item', { hasText: 'Apples' }).locator('.qty-value', { hasText: /^5$/ })
+      .waitFor({ timeout: 8000 }).then(() => true).catch(() => false),
+    'inline + in the row (×5) syncs to B',
   )
   await B.page.getByRole('button', { name: 'Got Bread' }).click().catch(() => {})
   await tab(B.page, 'Home')

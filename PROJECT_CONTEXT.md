@@ -73,7 +73,7 @@ Saved 2026-10-11 so work can resume after a restart. To continue, tell Claude:
 - **Pop-ups:** confirmations use `src/components/Alert.tsx`, an iOS-style centred alert in the app's colours. Choosing a list for Move uses `ActionSheet.tsx`.
 - **Quantity:** a `qty` field (whole number 1–99, enforced by the rules; absent means 1).
   - Set it with the − n + stepper in the item sheet, or by typing "2 milk", "milk x2", "milk ×2" or "milk (2)" (`parseQty` in `src/lib/parse.ts`).
-  - Rows show "×n". Re-adding a bought item resets it.
+  - Every row shows its quantity in a pill on the left ("1" when not set); tapping it opens − n + right in the row, which closes on a tap elsewhere or after 4 s. Re-adding a bought item resets it.
 - **Note:** a per-item text box at the top of the sheet (after Quantity) that autosaves. It's shown under the name; up to 500 characters (enforced by the rules).
 
 ## Goal
