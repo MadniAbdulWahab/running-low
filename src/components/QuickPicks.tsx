@@ -3,7 +3,7 @@ import { useApp } from '../app-context'
 import { emojiFor } from '../lib/emoji'
 import { LISTS } from '../rooms'
 import { frequentFor, type Frequent } from '../starters'
-import type { ListId, RoomId } from '../types'
+import type { ListId, ListRoom } from '../types'
 import { CheckCircle, ChevronRight } from './Icons'
 
 type Pick = Frequent & { list: ListId }
@@ -13,7 +13,7 @@ type Pick = Frequent & { list: ListId }
  * On a list tab it folds away once something is on that list (open while it's empty);
  * tapping the heading overrides that until you switch tabs.
  */
-export function QuickPicks({ room, neededCount = 0 }: { room: RoomId; neededCount?: number }) {
+export function QuickPicks({ room, neededCount = 0 }: { room: ListRoom; neededCount?: number }) {
   const { items, byKey, add, toast } = useApp()
   const foldable = room !== 'home'
   const [manual, setManual] = useState<boolean | null>(null)

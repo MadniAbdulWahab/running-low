@@ -53,7 +53,8 @@ const gone = (page, text, timeout = 8000) =>
     .catch(() => false)
 
 async function tab(page, label) {
-  await page.locator('.tab', { hasText: label }).click()
+  // Match the label exactly: "Us" is also inside "Household".
+  await page.locator('.tab', { has: page.locator('.tab-label', { hasText: new RegExp(`^${label}$`) }) }).click()
   await page.locator('.large-title').first().waitFor()
 }
 
@@ -302,14 +303,92 @@ try {
   check(chip.includes('Household'), `Home chip guesses the room from history (${chip.trim()})`)
   await B.page.getByLabel('Add something').fill('')
 
+  // ── Us tab: notes board ──
+  await tab(A.page, 'Us')
+  await tab(B.page, 'Us')
+  await A.page.getByLabel('New note').fill('Dinner at 8 🍝 bring the good plates')
+  await A.page.getByLabel('New note').press('Enter')
+  const noteOnB = B.page.locator('.note', { hasText: 'Dinner at 8' })
+  check(await noteOnB.waitFor({ timeout: 8000 }).then(() => true).catch(() => false), 'note written on A shows on B')
+  // B adds a checklist item in the note sheet
+  await noteOnB.locator('.note-open').click()
+  await B.page.locator('.sheet').getByRole('button', { name: '+ Add item' }).click()
+  await B.page.getByLabel('Checklist item 1').fill('Wine')
+  await B.page.locator('.sheet .select-toggle', { hasText: 'Pin' }).click()
+  await B.page.locator('.sheet').screenshot({ path: `${OUT}/note-sheet.png` })
+  await B.page.locator('.sheet-done').click()
+  const noteOnA = A.page.locator('.note', { hasText: 'Dinner at 8' })
+  check(
+    await noteOnA.locator('.note-check', { hasText: 'Wine' }).waitFor({ timeout: 8000 }).then(() => true).catch(() => false),
+    'checklist item added on B shows on A',
+  )
+  check(
+    await noteOnA.locator('.note-pin').waitFor({ timeout: 8000 }).then(() => true).catch(() => false),
+    'pin from B shows on A',
+  )
+  await noteOnA.locator('.note-check', { hasText: 'Wine' }).click()
+  check(
+    await noteOnB.locator('.note-check[data-done]', { hasText: 'Wine' }).waitFor({ timeout: 8000 }).then(() => true).catch(() => false),
+    'ticking a checklist item on the card syncs',
+  )
+  // A blank "New note" that is closed empty is thrown away
+  const notesBefore = await A.page.locator('.note').count()
+  await A.page.locator('section[aria-label=Notes] .select-toggle', { hasText: 'New note' }).click()
+  await A.page.locator('.sheet-done').click()
+  let notesAfter = -1
+  for (let t = 0; t < 25 && notesAfter !== notesBefore; t++) {
+    await A.page.waitForTimeout(200)
+    notesAfter = await A.page.locator('.note').count()
+  }
+  check(notesAfter === notesBefore, 'an empty new note is discarded on close')
+
+  // ── Hearts ──
+  await tab(B.page, 'Grocery')
+  await A.page.locator('.heart-main').click()
+  check(
+    await B.page.locator('.toast', { hasText: 'sent a heart' }).waitFor({ timeout: 8000 }).then(() => true).catch(() => false),
+    'a heart from A shows on B',
+  )
+  check((await B.page.locator('.heart-rain').count()) > 0, 'B gets the heart shower')
+  await B.page.screenshot({ path: `${OUT}/heart-arrives.png` })
+
+  // ── Delete a note by press and hold ──
+  await tab(B.page, 'Us')
+  const card = A.page.locator('.note', { hasText: 'Dinner at 8' }).locator('.note-open')
+  await card.evaluate((el) => el.scrollIntoView({ block: 'center' }))
+  await A.page.waitForTimeout(300)
+  const nb = await card.boundingBox()
+  await A.page.mouse.move(nb.x + nb.width / 2, nb.y + nb.height / 2)
+  await A.page.mouse.down()
+  await A.page.waitForTimeout(700)
+  await A.page.mouse.up()
+  await A.page.locator('.alert').getByRole('button', { name: 'Delete' }).click()
+  check(
+    await B.page.locator('.note', { hasText: 'Dinner at 8' }).waitFor({ state: 'detached', timeout: 8000 }).then(() => true).catch(() => false),
+    'holding a note and confirming deletes it on B too',
+  )
+
   // ── Screenshots of every room, light and dark ──
   for (const scheme of ['light', 'dark']) {
     await A.page.emulateMedia({ colorScheme: scheme })
-    for (const [i, label] of ['Home', 'Grocery', 'Household', 'Important'].entries()) {
+    for (const [i, label] of ['Home', 'Grocery', 'Household', 'Important', 'Us'].entries()) {
       await tab(A.page, label)
       await A.page.waitForTimeout(500)
       await A.page.screenshot({ path: `${OUT}/${i + 1}-${label.toLowerCase()}-${scheme}.png`, fullPage: true })
     }
+  }
+  {
+    await tab(A.page, 'Us')
+    await A.page.waitForTimeout(500)
+    const usWide = await A.page.evaluate(() => {
+      const W = innerWidth
+      const over = [...document.querySelectorAll('body *')]
+        .map((el) => [el, el.getBoundingClientRect()])
+        .filter(([, r]) => r.right > W + 0.5 && r.width > 0)
+        .map(([el]) => el.className)
+      return { extra: document.documentElement.scrollWidth - W, over: over.slice(0, 4) }
+    })
+    check(usWide.extra <= 0, `no sideways scrolling on Us (${usWide.extra}px; ${usWide.over.join(' | ')})`)
   }
   await A.page.emulateMedia({ colorScheme: 'light' })
   await tab(A.page, 'Grocery')

@@ -3,10 +3,10 @@ import { useApp, type AddOptions } from '../app-context'
 import { compressImage } from '../data/photos'
 import { cleanName, normalizeKey, parseQty, splitEntry } from '../lib/parse'
 import { LIST_INFO, LISTS } from '../rooms'
-import type { Item, ListId, RoomId } from '../types'
+import type { Item, ListId, ListRoom } from '../types'
 import { ArrowUp, CameraIcon, CloseIcon, PlusCircle } from './Icons'
 
-export function QuickAdd({ room }: { room: RoomId }) {
+export function QuickAdd({ room }: { room: ListRoom }) {
   const { items, byKey, add, toast } = useApp()
   const [text, setText] = useState('')
   const [photo, setPhoto] = useState<string | null>(null)

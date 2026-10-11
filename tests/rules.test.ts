@@ -168,6 +168,51 @@ describe('households: member edits', () => {
   })
 })
 
+describe('notes and pings', () => {
+  const note = {
+    text: 'Pick up the dry cleaning',
+    color: 'mint',
+    pinned: false,
+    checklist: [{ t: 'Shirts', done: false }],
+    createdBy: 'alice',
+    updatedBy: 'alice',
+  }
+
+  it('members can write notes; outsiders cannot read or write', async () => {
+    await seed(['alice', 'bob'])
+    const path = `households/${CODE}/notes/n1`
+    await assertSucceeds(setDoc(doc(as('alice'), path), note))
+    await assertSucceeds(getDoc(doc(as('bob'), path)))
+    await assertSucceeds(updateDoc(doc(as('bob'), path), { pinned: true, updatedBy: 'bob' }))
+    await assertFails(getDoc(doc(as('carol'), path)))
+    await assertFails(setDoc(doc(as('carol'), `households/${CODE}/notes/n2`), { ...note, createdBy: 'carol', updatedBy: 'carol' }))
+    await assertSucceeds(deleteDoc(doc(as('bob'), path)))
+  })
+
+  it('rejects malformed notes and impersonation', async () => {
+    await seed(['alice', 'bob'])
+    const path = `households/${CODE}/notes/n1`
+    await assertFails(setDoc(doc(as('alice'), path), { ...note, color: 'neon' }))
+    await assertFails(setDoc(doc(as('alice'), path), { ...note, text: 'x'.repeat(5001) }))
+    await assertFails(setDoc(doc(as('alice'), path), { ...note, checklist: Array(31).fill({ t: 'a', done: false }) }))
+    await assertFails(setDoc(doc(as('alice'), path), { ...note, createdBy: 'bob' }))
+    await assertSucceeds(setDoc(doc(as('alice'), path), note))
+    await assertFails(updateDoc(doc(as('bob'), path), { text: 'hi', updatedBy: 'alice' }))
+  })
+
+  it('pings are sent as yourself, never edited', async () => {
+    await seed(['alice', 'bob'])
+    const path = `households/${CODE}/pings/p1`
+    await assertSucceeds(setDoc(doc(as('alice'), path), { from: 'alice', kind: 'heart' }))
+    await assertFails(setDoc(doc(as('alice'), `households/${CODE}/pings/p2`), { from: 'bob', kind: 'heart' }))
+    await assertFails(setDoc(doc(as('alice'), `households/${CODE}/pings/p3`), { from: 'alice', kind: 'slap' }))
+    await assertFails(updateDoc(doc(as('alice'), path), { kind: 'hug' }))
+    await assertSucceeds(getDoc(doc(as('bob'), path)))
+    await assertFails(getDoc(doc(as('carol'), path)))
+    await assertSucceeds(deleteDoc(doc(as('bob'), path)))
+  })
+})
+
 describe('items and photos', () => {
   it('members can read and write items; outsiders cannot', async () => {
     await seed(['alice', 'bob'])

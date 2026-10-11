@@ -75,6 +75,32 @@ service cloud.firestore {
         allow create, update: if isMember(hid) && validItem();
       }
 
+      function validNote() {
+        let d = request.resource.data;
+        return d.text is string && d.text.size() <= 5000
+          && d.color in ['peach', 'mint', 'sky', 'lilac', 'lemon', 'rose']
+          && d.pinned is bool
+          && d.checklist is list && d.checklist.size() <= 30
+          && d.createdBy is string && d.updatedBy == me();
+      }
+
+      match /notes/{noteId} {
+        allow read, delete: if isMember(hid);
+        allow create: if isMember(hid) && validNote() && request.resource.data.createdBy == me();
+        allow update: if isMember(hid) && validNote()
+          && request.resource.data.createdBy == resource.data.createdBy;
+      }
+
+      // Hearts, hugs…: anyone on the list can send (as themselves) and tidy up; never edited.
+      match /pings/{pingId} {
+        allow read, delete: if isMember(hid);
+        allow create: if isMember(hid)
+          && request.resource.data.from == me()
+          && request.resource.data.kind in ['heart', 'hug', 'kiss', 'coffee']
+          && request.resource.data.keys().hasOnly(['from', 'kind', 'createdAt']);
+        allow update: if false;
+      }
+
       match /photos/{photoId} {
         allow read, delete: if isMember(hid);
         allow create, update: if isMember(hid)

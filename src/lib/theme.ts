@@ -28,7 +28,8 @@ export function resolveMode(p: ThemePref): Mode {
 export function applyTheme(room: RoomId, mode: Mode) {
   const root = document.documentElement
   root.dataset.mode = mode
-  if (room === 'home') delete root.dataset.list
+  // Only the three lists colour the page; Home and Us use the brand.
+  if (room === 'home' || room === 'us') delete root.dataset.list
   else root.dataset.list = room
   root.style.colorScheme = mode
   let meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]')

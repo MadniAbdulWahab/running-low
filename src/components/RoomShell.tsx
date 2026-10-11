@@ -1,13 +1,16 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AppContext, type AddOptions, type AppCtx } from '../app-context'
 import { addItem, deleteMany, markDone, markDoneMany, moveMany, undoDone, undoDoneMany } from '../data/items'
+import { byBoardOrder, createNote, deleteNote, nextColor, notesCol, toNote } from '../data/notes'
+import { readPingSeen, recentPings, toPing, writePingSeen } from '../data/pings'
+import { useCollection } from '../hooks/useCollection'
 import { useItems } from '../hooks/useItems'
 import { useRoomTheme, type ThemeState } from '../hooks/useTheme'
 import { LIST_EMOJI } from '../lib/emoji'
 import type { Entry } from '../lib/parse'
 import { WEEK } from '../lib/time'
-import { LIST_INFO, LISTS } from '../rooms'
-import type { Household, Item, ListId, RoomId } from '../types'
+import { LIST_INFO, LISTS, pingInfo } from '../rooms'
+import type { Household, Item, ListId, Note, RoomId } from '../types'
 import { ActionSheet } from './ActionSheet'
 import { Alert, type AlertAction } from './Alert'
 import { Header } from './Header'
@@ -20,6 +23,10 @@ import { QuickPicks } from './QuickPicks'
 import { SettingsSheet } from './SettingsSheet'
 import { TabBar } from './TabBar'
 import { Toast, type ToastData } from './Toast'
+import { HeartRain } from './us/HeartRain'
+import { NoteComposer } from './us/NoteComposer'
+import { NoteSheet } from './us/NoteSheet'
+import { UsRoom } from './us/UsRoom'
 
 /** Ticked items stay in their list (ticked) this long, then move to "Earlier this week". */
 const TICKED_FOR = 24 * 60 * 60 * 1000
@@ -68,6 +75,15 @@ export function RoomShell({ uid, household, room, setRoom, theme }: Props) {
   const [selected, setSelected] = useState<Set<string>>(() => new Set())
   const [minute, setMinute] = useState(() => Math.floor(Date.now() / 60_000))
   const direction = useRef<'forward' | 'back'>('forward')
+  const [openNoteId, setOpenNoteId] = useState<string | null>(null)
+  const [rain, setRain] = useState<string | null>(null)
+  const endRain = useCallback(() => setRain(null), [])
+
+  // Us tab: shared notes and hearts, kept live like the items.
+  const notesLive = useCollection(`notes/${hid}`, () => notesCol(hid), toNote)
+  const notes = useMemo(() => (notesLive ? [...notesLive].sort(byBoardOrder) : null), [notesLive])
+  const pingsLive = useCollection(`pings/${hid}`, () => recentPings(hid), toPing)
+  const pings = useMemo(() => pingsLive ?? [], [pingsLive])
   // Home sections can be folded down to one line; remembered on this phone.
   const [folded, setFolded] = useState(readFolded)
   const toggleFold = (l: ListId) =>
@@ -126,7 +142,10 @@ export function RoomShell({ uid, household, room, setRoom, theme }: Props) {
   }, [items, minute])
 
   // Everything shown in the list on this screen can be selected.
-  const visible = useMemo(() => (room === 'home' ? LISTS.flatMap((l) => rows[l]) : rows[room]), [room, rows])
+  const visible = useMemo(
+    () => (room === 'home' ? LISTS.flatMap((l) => rows[l]) : room === 'us' ? [] : rows[room]),
+    [room, rows],
+  )
   const selectedItems = useMemo(() => visible.filter((i) => selected.has(i.id)), [visible, selected])
 
   const stopSelect = useCallback(() => {
@@ -234,6 +253,39 @@ export function RoomShell({ uid, household, room, setRoom, theme }: Props) {
     }
   }, [hid, uid, household, items, byKey, goTo, toast, selecting, selected, toggleSelect, confirmDelete])
 
+  // A heart from someone else that this phone hasn't celebrated yet: shower + banner, once.
+  useEffect(() => {
+    const incoming = pings.find((p) => p.from !== uid)
+    if (!incoming) return
+    const seen = readPingSeen(uid)
+    if (incoming.createdAt <= seen) return
+    writePingSeen(uid, incoming.createdAt)
+    if (Date.now() - incoming.createdAt > 3 * 24 * 60 * 60 * 1000) return
+    const info = pingInfo(incoming.kind)
+    setRain(info.emoji)
+    toast(`${household.memberNames[incoming.from] ?? 'Someone'} ${info.verb} ${info.emoji}`)
+  }, [pings, uid, household.memberNames, toast])
+
+  const askDeleteNote = (note: Note) =>
+    setAlert({
+      title: 'Delete this note?',
+      message: 'It’ll be removed for everyone on the list.',
+      actions: [
+        { label: 'Cancel', style: 'cancel' },
+        {
+          label: 'Delete',
+          style: 'destructive',
+          onSelect: () => {
+            setOpenNoteId(null)
+            deleteNote(hid, note.id)
+            toast('Note deleted')
+          },
+        },
+      ],
+    })
+  const newNote = () => setOpenNoteId(createNote(hid, uid, { color: nextColor(notes ?? []) }))
+  const openNote = openNoteId && notes ? notes.find((n) => n.id === openNoteId) : undefined
+
   const gotSelected = () => {
     const sel = selectedItems.filter((i) => i.status === 'needed')
     if (sel.length) {
@@ -263,9 +315,17 @@ export function RoomShell({ uid, household, room, setRoom, theme }: Props) {
   return (
     <AppContext.Provider value={ctx}>
       <main className="page" key={room} data-dir={direction.current}>
-        <Header room={room} count={counts[room]} onSettings={() => setSettings(true)} />
+        <Header room={room} count={room === 'us' ? (notes?.length ?? 0) : counts[room]} onSettings={() => setSettings(true)} />
 
-        {room === 'home' ? (
+        {room === 'us' ? (
+          <UsRoom
+            notes={notes}
+            pings={pings}
+            onOpenNote={setOpenNoteId}
+            onNewNote={newNote}
+            onAskDeleteNote={askDeleteNote}
+          />
+        ) : room === 'home' ? (
           <>
             <ListCards needed={needed} />
             {loaded === null ? null : visible.length === 0 ? (
@@ -326,7 +386,7 @@ export function RoomShell({ uid, household, room, setRoom, theme }: Props) {
           </div>
         )}
 
-        {loaded !== null && !selecting && (
+        {loaded !== null && !selecting && room !== 'us' && (
           <Recent items={room === 'home' ? recent : recent.filter((i) => i.list === room)} />
         )}
       </main>
@@ -354,7 +414,7 @@ export function RoomShell({ uid, household, room, setRoom, theme }: Props) {
         ) : (
           <>
             <div className="toolbar">
-              <QuickAdd room={room} />
+              {room === 'us' ? <NoteComposer notes={notes ?? []} /> : <QuickAdd room={room} />}
             </div>
             <TabBar room={room} counts={counts} onChange={goTo} />
           </>
@@ -376,6 +436,15 @@ export function RoomShell({ uid, household, room, setRoom, theme }: Props) {
         />
       )}
       {alert && <Alert {...alert} onClose={closeAlert} />}
+      {openNote && (
+        <NoteSheet
+          key={openNote.id}
+          note={openNote}
+          onClose={() => setOpenNoteId(null)}
+          onAskDelete={() => askDeleteNote(openNote)}
+        />
+      )}
+      {rain && <HeartRain emoji={rain} onDone={endRain} />}
       {openItem && <ItemSheet key={openItem.id} item={openItem} onClose={() => setOpenId(null)} />}
       {settings && <SettingsSheet theme={theme} onClose={() => setSettings(false)} />}
     </AppContext.Provider>

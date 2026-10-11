@@ -1,5 +1,7 @@
 export type ListId = 'grocery' | 'household' | 'important'
-export type RoomId = 'home' | ListId
+/** Screens that show items: Home plus the three lists. */
+export type ListRoom = 'home' | ListId
+export type RoomId = ListRoom | 'us'
 export type ThemePref = 'system' | 'light' | 'dark'
 export type Mode = 'light' | 'dark'
 
@@ -27,4 +29,32 @@ export interface Item {
   note: string | null
   /** How many are needed; null means just one / not specified. */
   qty: number | null
+}
+
+export type NoteColor = 'peach' | 'mint' | 'sky' | 'lilac' | 'lemon' | 'rose'
+
+export interface ChecklistEntry {
+  t: string
+  done: boolean
+}
+
+export interface Note {
+  id: string
+  text: string
+  color: NoteColor
+  pinned: boolean
+  checklist: ChecklistEntry[]
+  createdBy: string
+  createdAt: number
+  updatedBy: string
+  updatedAt: number
+}
+
+export type PingKind = 'heart' | 'hug' | 'kiss' | 'coffee'
+
+export interface Ping {
+  id: string
+  from: string
+  kind: PingKind
+  createdAt: number
 }

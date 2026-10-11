@@ -2110,3 +2110,298 @@ body {
 :root[data-mode='dark'] .item-qty {
   background: color-mix(in srgb, var(--list) 85%, var(--card));
 }
+
+/* ══ Us tab ══════════════════════════════════════════════════ */
+
+/* Hearts row */
+.hearts {
+  position: relative;
+  margin-top: 20px;
+  padding: 14px;
+  border-radius: 16px;
+  background: var(--card);
+  border: 1px solid var(--border);
+}
+.hearts-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.heart-main {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  border-radius: 14px;
+  background: var(--brand);
+  color: var(--brand-ink);
+  font-size: 16px;
+  font-weight: 650;
+  transition: transform 120ms;
+}
+.heart-main:active,
+.heart-quick:active {
+  transform: scale(0.95);
+}
+.heart-main-emoji {
+  font-size: 20px;
+}
+.heart-quick {
+  flex: none;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: var(--fill);
+  font-size: 22px;
+  transition: transform 120ms;
+}
+.hearts-last {
+  margin: 10px 2px 0;
+  font-size: 14px;
+  color: var(--label-2);
+}
+
+/* Little burst when you send one */
+.heart-burst {
+  position: absolute;
+  left: 22%;
+  top: 14px;
+  pointer-events: none;
+}
+.heart-burst span {
+  position: absolute;
+  font-size: 22px;
+  animation: burst 1s cubic-bezier(0.2, 0.7, 0.3, 1) forwards;
+  --a: calc(var(--i) * 32deg - 64deg);
+}
+@keyframes burst {
+  from {
+    opacity: 1;
+    transform: translate(0, 0) scale(0.6);
+  }
+  to {
+    opacity: 0;
+    transform: rotate(var(--a)) translateY(-70px) scale(1.2);
+  }
+}
+
+/* Full-screen shower when one arrives */
+.heart-rain {
+  position: fixed;
+  inset: 0;
+  z-index: 95;
+  pointer-events: none;
+  overflow: hidden;
+}
+.heart-rain span {
+  position: absolute;
+  bottom: -60px;
+  opacity: 0;
+  animation: rise 2.4s cubic-bezier(0.25, 0.6, 0.35, 1) forwards;
+}
+@keyframes rise {
+  10% {
+    opacity: 1;
+  }
+  80% {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+    transform: translate(var(--drift), -105vh) rotate(12deg);
+  }
+}
+
+/* Sticky-note board: two columns, notes flow like a fridge board */
+.board {
+  columns: 2;
+  column-gap: 10px;
+}
+.note {
+  position: relative;
+  display: block;
+  break-inside: avoid;
+  margin: 0 0 10px;
+  padding: 12px 12px 10px;
+  border-radius: 14px 14px 14px 4px;
+  background: var(--paper);
+  color: var(--paper-ink);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.06);
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+:root[data-mode='dark'] .note {
+  box-shadow: none;
+}
+.note-pin {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  font-size: 14px;
+}
+.note-open {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  text-align: left;
+  color: inherit;
+}
+.note-title {
+  padding-right: 16px;
+  font-size: 16px;
+  font-weight: 650;
+  line-height: 21px;
+  overflow-wrap: anywhere;
+}
+.note-body {
+  font-size: 14px;
+  line-height: 19px;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+  opacity: 0.85;
+  display: -webkit-box;
+  -webkit-line-clamp: 8;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.note-checks {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+}
+.note-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 30px;
+  text-align: left;
+  font-size: 14px;
+  color: inherit;
+}
+.note-box {
+  flex: none;
+  width: 17px;
+  height: 17px;
+  border-radius: 5px;
+  border: 1.5px solid currentColor;
+  opacity: 0.7;
+  display: grid;
+  place-items: center;
+}
+.note-check[data-done] {
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+.note-check[data-done] .note-box {
+  background: currentColor;
+  opacity: 1;
+}
+.note-check[data-done] .note-box::after {
+  content: '';
+  width: 5px;
+  height: 9px;
+  border: solid var(--paper, var(--card));
+  border-width: 0 2px 2px 0;
+  transform: translateY(-1px) rotate(45deg);
+}
+.note-more {
+  font-size: 13px;
+  opacity: 0.7;
+  padding-left: 25px;
+}
+.note-meta {
+  display: block;
+  margin-top: 8px;
+  font-size: 12px;
+  opacity: 0.65;
+}
+
+/* Note editor */
+.note-tools {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 14px 0 12px;
+}
+.note-swatches {
+  display: flex;
+  gap: 8px;
+}
+.note-swatch {
+  position: relative;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--paper);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+.note-swatch::before {
+  content: '';
+  position: absolute;
+  inset: -6px -3px;
+}
+.note-swatch[aria-checked='true'] {
+  box-shadow:
+    inset 0 0 0 1px var(--border),
+    0 0 0 2px var(--bg),
+    0 0 0 4px var(--tint);
+}
+.note-paper {
+  border-radius: 14px;
+  background: var(--paper);
+  color: var(--paper-ink);
+}
+.note-text {
+  display: block;
+  width: 100%;
+  min-height: 150px;
+  padding: 14px 16px;
+  border: 0;
+  outline: none;
+  resize: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 17px;
+  line-height: 1.4;
+  -webkit-user-select: text;
+  user-select: text;
+}
+.note-text::placeholder {
+  color: inherit;
+  opacity: 0.55;
+}
+.note-row {
+  gap: 10px;
+}
+.note-row .note-check {
+  width: auto;
+  min-height: 44px;
+  color: var(--label-2);
+}
+.note-row .note-check[data-done] .note-box::after {
+  border-color: var(--card);
+}
+.note-row-remove {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  color: var(--label-3);
+}
+.note-row-remove svg {
+  width: 16px;
+  height: 16px;
+}
+.composer-emoji {
+  display: grid;
+  place-items: center;
+  font-size: 18px;
+}

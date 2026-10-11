@@ -20,7 +20,12 @@ export function Header({ room, count, onSettings }: { room: RoomId; count: numbe
           {household.members.length < 2 && <span className="avatar avatar--empty">+</span>}
         </button>
       </div>
-      {room === 'home' ? (
+      {room === 'us' ? (
+        <>
+          <h1 className="large-title">Us</h1>
+          <p className="subtitle">{count ? `${count} ${count === 1 ? 'note' : 'notes'} · little things, shared` : 'Little things, shared'}</p>
+        </>
+      ) : room === 'home' ? (
         <>
           <h1 className="large-title">Running Low</h1>
           <p className="subtitle">

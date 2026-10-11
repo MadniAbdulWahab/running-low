@@ -80,6 +80,26 @@ Saved 2026-10-11 so work can resume after a restart. To continue, tell Claude:
   - Every row shows its quantity as a plain number on the left (grey for 1, dark for more) ("1" when not set); tapping it opens − n + right in the row, which closes on a tap elsewhere or after 4 s. Re-adding a bought item resets it.
 - **Note:** a per-item text box at the top of the sheet (after Quantity) that autosaves. It's shown under the name; up to 500 characters (enforced by the rules).
 
+## Us tab: notes, hearts and extras (2026-10-11, in progress)
+- **Plan:** `C:UsersTRA 3 PC0032.claudeplansi-need-ideas-from-warm-zephyr.md`, built in phases:
+  1. Us tab + sticky notes + hearts
+  2. push notifications (Cloudflare Worker)
+  3. countdowns + date jar
+  4. meal planner → Grocery
+- **Phase 1 is done.** It adds a fifth tab, **Us** (heart icon, brand orange), with:
+  - **Hearts row:** "Send a heart" plus 🤗 😘 ☕.
+    - Each send creates a doc in `pings`.
+    - The receiving phone shows a full-screen emoji shower and a toast once per ping (localStorage `outof.pingSeen.<uid>`).
+  - **Sticky-note board:** two CSS columns of pastel notes (peach, mint, sky, lilac, lemon, rose; content palette `--note-*` with ink).
+    - Each note has its first line bold, an optional pin (pinned notes sort first) and a checklist you can tick right on the card.
+    - Press and hold a note to delete it (with confirmation).
+    - Tapping a note opens `NoteSheet`: colour swatches, pin, auto-saving text and checklist.
+    - A note left empty is discarded when the sheet closes.
+  - **Bottom bar on Us:** "New note…" (`NoteComposer`).
+- **Code:** `src/components/us/*`, `src/data/{notes,pings}.ts` and `src/hooks/useCollection.ts` (a generic live query; `toMs` lives there).
+- **Types:** `RoomId` = `ListRoom` | 'us', with `ListRoom` = 'home' | ListId. List-only components take `ListRoom`, and `isList()` is in rooms.ts.
+- **Rules:** notes (members only, size and colour checks, can't change `createdBy`, `updatedBy` must be you) and pings (sent as yourself, never edited). Both are covered by rules tests (16 total).
+
 ## Colour system (2026-10-11)
 - The user felt the colour identity was inconsistent: blue meant both actions and Household, red meant Important, delete and badges, and orange was only the icon and Grocery. They chose the **orange-brand** option, with **pastel** colours where possible.
 - **Brand orange** for the app and every action: pastel fill `--brand` #FFB066 with `--brand-ink` for text on it; links and text `--brand-link` (#A84700 light, #FFB870 dark); `--tint` = `--brand-link`.

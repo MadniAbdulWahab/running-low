@@ -113,3 +113,39 @@
   --list-ink: var(--important-ink);
   --list-text: var(--important-text);
 }
+
+/* Sticky-note colours: a content palette (not identity), pastel paper + its ink. */
+:root {
+  --note-peach: #ffe3cc;
+  --note-peach-ink: #5a2e0a;
+  --note-mint: #d5f0de;
+  --note-mint-ink: #1e4d2e;
+  --note-sky: #d8e8fb;
+  --note-sky-ink: #183a63;
+  --note-lilac: #e6e0fa;
+  --note-lilac-ink: #35296b;
+  --note-lemon: #fff2bd;
+  --note-lemon-ink: #5a4700;
+  --note-rose: #fbdbe2;
+  --note-rose-ink: #6b2337;
+}
+:root[data-mode='dark'] {
+  --note-peach: #4a3322;
+  --note-peach-ink: #ffdcbf;
+  --note-mint: #22392b;
+  --note-mint-ink: #cdefd8;
+  --note-sky: #213349;
+  --note-sky-ink: #d3e5fa;
+  --note-lilac: #2e2948;
+  --note-lilac-ink: #e0dafb;
+  --note-lemon: #433b1d;
+  --note-lemon-ink: #fff0b3;
+  --note-rose: #472930;
+  --note-rose-ink: #fad5de;
+}
+[data-color='peach'] { --paper: var(--note-peach); --paper-ink: var(--note-peach-ink); }
+[data-color='mint'] { --paper: var(--note-mint); --paper-ink: var(--note-mint-ink); }
+[data-color='sky'] { --paper: var(--note-sky); --paper-ink: var(--note-sky-ink); }
+[data-color='lilac'] { --paper: var(--note-lilac); --paper-ink: var(--note-lilac-ink); }
+[data-color='lemon'] { --paper: var(--note-lemon); --paper-ink: var(--note-lemon-ink); }
+[data-color='rose'] { --paper: var(--note-rose); --paper-ink: var(--note-rose-ink); }
