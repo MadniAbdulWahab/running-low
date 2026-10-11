@@ -61,10 +61,20 @@ Saved 2026-10-11 so work can resume after a restart. To continue, tell Claude:
 - Verified with the production build and Chromium/WebKit checks for sign-in, account creation, error feedback, autofill attributes, themes, and phone sizes from 320px upward. Screenshots are in ignored `output/playwright/auth/`.
 - These sign-in changes are local and have not been deployed.
 
-## Multi-select, hold menu, notes (2026-10-11)
-- **Select:** in the header (on any screen with items) → tap rows to tick them, **Select All** top left, **Done** top right. The bottom bar becomes **Got it · Move · Delete**, with Undo for Got it and a confirmation for Delete. It uses batched writes (`markDoneMany`, `moveMany`, `deleteMany` in `src/data/items.ts`).
-- **Press and hold** an item (450 ms; moving more than 10px cancels it, as does scrolling) → an action sheet with Mark as got, Details & note…, Select, Move to …, and Delete (asks first). Right-click does the same on desktop. The menu component is `src/components/ActionSheet.tsx`.
-- **Note** per item: a text box at the top of the item sheet that autosaves (700 ms debounce and on close). It's shown under the item name in lists. Stored as `note` on the item doc; the rules allow a string of up to 500 characters (with a rules test).
+## List interactions (2026-10-11, revised at the user's request)
+- **Ticking:** a tick button on the **right** of each row (no circle on the left).
+  - Tapping it ticks the item; it **stays in the list**, struck through, for 24 hours (`TICKED_FOR` in RoomShell), then moves to the collapsed "Earlier this week" section (up to 7 days).
+  - Tapping a ticked item's tick asks "Put X back on the list?" before unticking.
+- **Press and hold** (450 ms; moving more than 10px or scrolling cancels it) only asks "Delete X?". Right-click does the same on desktop.
+- **Select:** a toggle at the right end of the "On the list" row (on Home and each list).
+  - It reads "Select", and "Unselect" while active (tapping it again cancels).
+  - The bottom bar becomes **Select all · Got it · Move · Delete**. Got it has an Undo; Delete asks first.
+  - It uses batched writes (`markDoneMany`, `moveMany`, `deleteMany`).
+- **Pop-ups:** confirmations use `src/components/Alert.tsx`, an iOS-style centred alert in the app's colours. Choosing a list for Move uses `ActionSheet.tsx`.
+- **Quantity:** a `qty` field (whole number 1–99, enforced by the rules; absent means 1).
+  - Set it with the − n + stepper in the item sheet, or by typing "2 milk", "milk x2", "milk ×2" or "milk (2)" (`parseQty` in `src/lib/parse.ts`).
+  - Rows show "×n". Re-adding a bought item resets it.
+- **Note:** a per-item text box at the top of the sheet (after Quantity) that autosaves. It's shown under the name; up to 500 characters (enforced by the rules).
 
 ## Goal
 A shared list for two partners (**both on iPhone**) to quickly note that something is finished: groceries, household things, important items.

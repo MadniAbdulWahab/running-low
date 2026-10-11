@@ -25,4 +25,6 @@ export interface Item {
   photoId: string | null
   due: string | null
   note: string | null
+  /** How many are needed; null means just one / not specified. */
+  qty: number | null
 }

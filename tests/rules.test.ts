@@ -191,6 +191,10 @@ describe('items and photos', () => {
     await assertSucceeds(setDoc(doc(as('alice'), path), { ...item, note: '2 litres, the blue one' }))
     await assertFails(setDoc(doc(as('alice'), path), { ...item, note: 'x'.repeat(501) }))
     await assertFails(setDoc(doc(as('alice'), path), { ...item, note: 42 }))
+    await assertSucceeds(setDoc(doc(as('alice'), path), { ...item, qty: 12 }))
+    await assertFails(setDoc(doc(as('alice'), path), { ...item, qty: 0 }))
+    await assertFails(setDoc(doc(as('alice'), path), { ...item, qty: 100 }))
+    await assertFails(setDoc(doc(as('alice'), path), { ...item, qty: 1.5 }))
   })
 
   it('photos must be image data URLs under the size cap', async () => {

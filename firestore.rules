@@ -66,7 +66,8 @@ service cloud.firestore {
           && d.key is string && d.key.size() > 0 && d.key.size() <= 100
           && d.list in ['grocery', 'household', 'important']
           && d.status in ['needed', 'done']
-          && (!('note' in d) || (d.note is string && d.note.size() <= 500));
+          && (!('note' in d) || (d.note is string && d.note.size() <= 500))
+          && (!('qty' in d) || (d.qty is int && d.qty >= 1 && d.qty <= 99));
       }
 
       match /items/{itemId} {

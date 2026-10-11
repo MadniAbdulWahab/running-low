@@ -30,6 +30,7 @@ export function addItem(
   list: ListId,
   existing?: Item,
   photoDataUrl?: string,
+  qty?: number,
 ) {
   const key = name.toLocaleLowerCase()
   const data: Record<string, unknown> = {
@@ -45,6 +46,9 @@ export function addItem(
     lastUsed: serverTimestamp(),
   }
   if (existing?.status === 'done' && existing.due) data.due = deleteField()
+  // A fresh add starts from the quantity typed (or one), not last time's.
+  if (qty && qty > 1) data.qty = qty
+  else if (existing?.qty) data.qty = deleteField()
   if (photoDataUrl) {
     data.photoId = newPhotoDoc(hid, key, photoDataUrl)
     if (existing?.photoId) deleteDoc(photoRef(hid, existing.photoId)).catch(report)
@@ -78,6 +82,11 @@ export function setItemPhoto(hid: string, item: Item, dataUrl: string | null) {
   const photoId = dataUrl ? newPhotoDoc(hid, item.key, dataUrl) : null
   updateDoc(itemRef(hid, item.id), { photoId }).catch(report)
   if (item.photoId) deleteDoc(photoRef(hid, item.photoId)).catch(report)
+}
+
+export function setQty(hid: string, item: Item, qty: number) {
+  const q = Math.max(1, Math.min(99, Math.round(qty)))
+  updateDoc(itemRef(hid, item.id), { qty: q > 1 ? q : deleteField() }).catch(report)
 }
 
 export function setNote(hid: string, item: Item, note: string) {

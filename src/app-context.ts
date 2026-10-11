@@ -1,4 +1,5 @@
 import { createContext, useContext } from 'react'
+import type { Entry } from './lib/parse'
 import type { Household, Item, ListId, RoomId } from './types'
 
 export interface AddOptions {
@@ -14,8 +15,12 @@ export interface AppCtx {
   household: Household
   items: Item[]
   byKey: Map<string, Item>
-  add: (names: string[], opts: AddOptions) => void
+  /** Names, or { name, qty } from "2 milk"-style input. */
+  add: (entries: (string | Entry)[], opts: AddOptions) => void
+  /** Tick an item off (it stays in the list, ticked). */
   done: (item: Item) => void
+  /** Untick, after asking. */
+  askUntick: (item: Item) => void
   openItem: (id: string) => void
   goTo: (room: RoomId) => void
   toast: (message: string, undo?: () => void) => void
@@ -23,9 +28,8 @@ export interface AppCtx {
   selecting: boolean
   selected: Set<string>
   toggleSelect: (id: string) => void
-  startSelect: (id?: string) => void
-  /** The press-and-hold menu for one item. */
-  openMenu: (item: Item) => void
+  /** Press and hold: asks to delete the item. */
+  askDelete: (item: Item) => void
 }
 
 export const AppContext = createContext<AppCtx | null>(null)

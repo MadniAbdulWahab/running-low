@@ -57,6 +57,14 @@ async function tab(page, label) {
   await page.locator('.large-title').first().waitFor()
 }
 
+const ticked = (page, text, want = true, timeout = 8000) =>
+  page
+    .locator(want ? '.item[data-done]' : '.item:not([data-done])', { has: page.locator('.item-name', { hasText: text }) })
+    .first()
+    .waitFor({ timeout })
+    .then(() => true)
+    .catch(() => false)
+
 async function add(page, text) {
   const input = page.getByLabel('Add something')
   await input.fill(text)
@@ -110,9 +118,13 @@ try {
 
   // ── Tick off on B, check A ──
   await B.page.getByRole('button', { name: 'Got Milk' }).click()
-  check(await gone(A.page, 'Milk'), 'B ticks off Milk, it leaves A’s list')
-  await B.page.getByRole('button', { name: 'Undo' }).click()
-  check(await visible(A.page, 'Milk'), 'Undo puts Milk back on A’s list')
+  check(await ticked(A.page, 'Milk'), 'B ticks Milk, A sees it ticked (still in the list)')
+  await B.page.getByRole('button', { name: 'Put Milk back' }).click()
+  const alert = B.page.locator('.alert')
+  check(await alert.getByText('Put Milk back on the list?').isVisible().catch(() => false), 'unticking asks first')
+  await B.page.screenshot({ path: `${OUT}/untick-alert.png` })
+  await alert.getByRole('button', { name: 'Put back' }).click()
+  check(await ticked(A.page, 'Milk', false), 'after confirming, Milk is unticked on A')
 
   // ── Re-adding something already on the list is a no-op ──
   await add(A.page, 'milk')
@@ -143,6 +155,7 @@ try {
   await tab(A.page, 'Important')
   await add(A.page, 'Passport renewal')
   await add(A.page, 'Dentist appointment')
+  await visible(A.page, 'Dentist appointment') // let the new row settle before tapping the one below it
   await A.page.locator('.item-body', { hasText: 'Passport renewal' }).click()
   const due = new Date(Date.now() + 3 * 864e5).toISOString().slice(0, 10)
   await A.page.locator('.sheet input[type=date]').fill(due)
@@ -177,25 +190,45 @@ try {
   await A.page.mouse.down()
   await A.page.waitForTimeout(700)
   await A.page.mouse.up()
-  const menu = A.page.locator('.action-sheet')
-  check(await menu.getByText('Mark as got').isVisible().catch(() => false), 'press and hold opens the item menu')
+  const holdAlert = A.page.locator('.alert')
+  check(
+    await holdAlert.getByText('Delete Light bulbs?').isVisible().catch(() => false),
+    'press and hold asks to delete',
+  )
   await A.page.screenshot({ path: `${OUT}/hold-menu.png` })
-  await menu.getByRole('button', { name: 'Delete' }).click()
-  await A.page.locator('.action-sheet').getByRole('button', { name: 'Delete item' }).click()
+  await holdAlert.getByRole('button', { name: 'Delete' }).click()
   await tab(B.page, 'Household')
   check(await gone(B.page, 'Light bulbs'), 'delete from the hold menu removes it on B')
 
   // ── Multi-select: tick two, Got it ──
   await tab(A.page, 'Grocery')
-  await A.page.locator('.nav-btn', { hasText: 'Select' }).click()
+  await A.page.locator('.select-toggle').click()
+  check((await A.page.locator('.select-toggle').textContent()) === 'Unselect', 'Select toggles to Unselect')
   await A.page.locator('.item-body', { hasText: 'Olive oil' }).first().click()
   await A.page.locator('.item-body', { hasText: 'Coffee' }).first().click()
   await A.page.screenshot({ path: `${OUT}/multi-select.png` })
   await A.page.locator('.select-bar').getByRole('button', { name: 'Got it' }).click()
   await tab(B.page, 'Grocery')
   check(
-    (await gone(B.page, 'Olive oil')) && (await gone(B.page, 'Coffee')),
-    'multi-select Got it clears both items on B',
+    (await ticked(B.page, 'Olive oil')) && (await ticked(B.page, 'Coffee')),
+    'multi-select Got it ticks both items on B',
+  )
+
+  // ── Quantity: typed in, then changed with the stepper ──
+  await add(A.page, '3 apples')
+  check(
+    await A.page.locator('.item', { hasText: 'Apples' }).locator('.item-qty', { hasText: '×3' })
+      .waitFor({ timeout: 8000 }).then(() => true).catch(() => false),
+    '"3 apples" adds Apples ×3',
+  )
+  await A.page.locator('.item-body', { hasText: 'Apples' }).first().click()
+  await A.page.getByRole('button', { name: 'One more' }).click()
+  await A.page.locator('.sheet').screenshot({ path: `${OUT}/sheet-qty.png` })
+  await A.page.locator('.sheet-done').click()
+  check(
+    await B.page.locator('.item', { hasText: 'Apples' }).locator('.item-qty', { hasText: '×4' })
+      .waitFor({ timeout: 8000 }).then(() => true).catch(() => false),
+    'stepper change to ×4 syncs to B',
   )
   await B.page.getByRole('button', { name: 'Got Bread' }).click().catch(() => {})
   await tab(B.page, 'Home')
@@ -220,7 +253,7 @@ try {
   await A.page.waitForTimeout(400)
   const wide = await A.page.evaluate(() => document.documentElement.scrollWidth - innerWidth)
   check(wide <= 0, `no sideways scrolling on a list screen (${wide}px extra)`)
-  await A.page.locator('.recent-head').click()
+  if (await A.page.locator('.recent-head').count()) await A.page.locator('.recent-head').click()
   await A.page.screenshot({ path: `${OUT}/grocery-recent.png`, fullPage: true })
   await tab(A.page, 'Home')
   await A.page.locator('.members-btn').click()

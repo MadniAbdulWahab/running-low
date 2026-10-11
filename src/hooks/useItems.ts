@@ -23,6 +23,7 @@ function toItem(id: string, d: DocumentData): Item {
     photoId: d.photoId ?? null,
     due: d.due ?? null,
     note: d.note ?? null,
+    qty: typeof d.qty === 'number' ? d.qty : null,
   }
 }
 

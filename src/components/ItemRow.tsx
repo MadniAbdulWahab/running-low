@@ -6,18 +6,23 @@ import { ago, daysUntil, dueLabel } from '../lib/time'
 import type { Item } from '../types'
 import { CheckCircle } from './Icons'
 
-const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches
 const HOLD_MS = 450
 
+const TickIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M6 12.5l4 4 8-9" />
+  </svg>
+)
+
 export function ItemRow({ item }: { item: Item }) {
-  const { household, uid, done, openItem, selecting, selected, toggleSelect, openMenu } = useApp()
-  const [striking, setStriking] = useState(false)
+  const { household, uid, done, askUntick, openItem, selecting, selected, toggleSelect, askDelete } = useApp()
   const [holding, setHolding] = useState(false)
   const photo = usePhoto(household.id, item.photoId)
-  const who = memberOf(household, item.addedBy, uid)
+  const ticked = item.status === 'done'
+  const who = memberOf(household, ticked ? (item.doneBy ?? item.addedBy) : item.addedBy, uid)
   const isSelected = selected.has(item.id)
 
-  // Press and hold opens the item menu; moving the finger (scrolling) cancels it.
+  // Press and hold asks to delete; moving the finger (scrolling) cancels it.
   const press = useRef<{ timer: number; x: number; y: number } | null>(null)
   const held = useRef(false)
 
@@ -27,14 +32,14 @@ export function ItemRow({ item }: { item: Item }) {
     setHolding(false)
   }
   const onPointerDown = (e: React.PointerEvent) => {
-    if (selecting || striking || e.button > 0) return
+    if (selecting || e.button > 0) return
     held.current = false
     setHolding(true)
     const timer = window.setTimeout(() => {
       held.current = true
       press.current = null
       setHolding(false)
-      openMenu(item)
+      askDelete(item)
     }, HOLD_MS)
     press.current = { timer, x: e.clientX, y: e.clientY }
   }
@@ -49,11 +54,10 @@ export function ItemRow({ item }: { item: Item }) {
     return true
   }
 
-  const check = () => {
-    if (consumeHold() || striking) return
-    if (selecting) return toggleSelect(item.id)
-    setStriking(true)
-    window.setTimeout(() => done(item), reducedMotion() ? 0 : 450)
+  const tick = () => {
+    if (consumeHold()) return
+    if (ticked) askUntick(item)
+    else done(item)
   }
   const open = () => {
     if (consumeHold()) return
@@ -67,7 +71,7 @@ export function ItemRow({ item }: { item: Item }) {
     <div
       className="item"
       data-list={item.list}
-      data-striking={striking || undefined}
+      data-done={ticked || undefined}
       data-holding={holding || undefined}
       data-selected={isSelected || undefined}
       onPointerDown={onPointerDown}
@@ -79,34 +83,36 @@ export function ItemRow({ item }: { item: Item }) {
         if (selecting) return
         cancelHold()
         held.current = false
-        openMenu(item)
+        askDelete(item)
       }}
     >
-      <button
-        className="item-check"
-        onClick={check}
-        aria-label={selecting ? `Select ${item.name}` : `Got ${item.name}`}
-        aria-pressed={selecting ? isSelected : undefined}
-      >
-        {selecting ? (
+      {selecting && (
+        <button
+          className="item-check"
+          onClick={() => toggleSelect(item.id)}
+          aria-label={`Select ${item.name}`}
+          aria-pressed={isSelected}
+        >
           <span className="select-ring" data-on={isSelected || undefined}>
             {isSelected && <CheckCircle />}
           </span>
-        ) : (
-          <span className="item-ring" />
-        )}
-      </button>
+        </button>
+      )}
       <button className="item-body" onClick={open}>
         <span className="item-emoji" aria-hidden="true">
           {emojiFor(item.name, item.list)}
         </span>
         <span className="item-text">
-          <span className="item-name">{item.name}</span>
+          <span className="item-name">
+            {item.name}
+            {item.qty && item.qty > 1 && <span className="item-qty">×{item.qty}</span>}
+          </span>
           {item.note && <span className="item-note">{item.note}</span>}
           <span className="item-meta">
             <i className="who-dot" data-p={who.idx} />
-            {who.name} · {ago(item.addedAt)}
-            {item.due && (
+            {ticked ? `Got by ${who.name === 'You' ? 'you' : who.name}` : who.name} ·{' '}
+            {ago(ticked ? item.doneAt : item.addedAt)}
+            {item.due && !ticked && (
               <>
                 {' · '}
                 <span
@@ -126,6 +132,18 @@ export function ItemRow({ item }: { item: Item }) {
           </span>
         )}
       </button>
+      {!selecting && (
+        <button
+          className="item-tick"
+          onClick={tick}
+          aria-label={ticked ? `Put ${item.name} back` : `Got ${item.name}`}
+          aria-pressed={ticked}
+        >
+          <span className="tick-ring">
+            <TickIcon />
+          </span>
+        </button>
+      )}
     </div>
   )
 }
@@ -140,7 +158,6 @@ export function RecentRow({ item }: { item: Item }) {
       onClick={() => add([item.name], { list: item.list })}
       aria-label={`Add ${item.name} again`}
     >
-      <span className="item-ring item-ring--done" />
       <span className="item-body">
         <span className="item-emoji" aria-hidden="true">
           {emojiFor(item.name, item.list)}

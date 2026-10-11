@@ -28,6 +28,7 @@
   --danger: #ff3b30;
   --toast: rgb(44 44 46 / 0.96);
   --backdrop: rgb(0 0 0 / 0.3);
+  --alert-bg: rgb(242 242 247 / 0.98);
   --bar: #ffffff;
   --tab-off: #6c6c73;
 
@@ -63,6 +64,7 @@
   --danger: #ff453a;
   --toast: rgb(58 58 60 / 0.97);
   --backdrop: rgb(0 0 0 / 0.55);
+  --alert-bg: rgb(44 44 46 / 0.98);
   --bar: #1c1c1e;
   --tab-off: #a0a0a8;
 

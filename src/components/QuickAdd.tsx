@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useApp, type AddOptions } from '../app-context'
 import { compressImage } from '../data/photos'
-import { cleanName, normalizeKey, splitEntry } from '../lib/parse'
+import { cleanName, normalizeKey, parseQty, splitEntry } from '../lib/parse'
 import { LIST_INFO, LISTS } from '../rooms'
 import type { Item, ListId, RoomId } from '../types'
 import { ArrowUp, CameraIcon, CloseIcon, PlusCircle } from './Icons'
@@ -17,10 +17,10 @@ export function QuickAdd({ room }: { room: RoomId }) {
   const known = useMemo(() => new Set(byKey.keys()), [byKey])
 
   // On the home screen, guess the list from history as you type, until the chip is tapped.
-  const chip: ListId = chipTouched ? picked : (byKey.get(normalizeKey(text))?.list ?? picked)
+  const chip: ListId = chipTouched ? picked : (byKey.get(normalizeKey(parseQty(text).name))?.list ?? picked)
 
   const suggestions = useMemo(() => {
-    const q = normalizeKey(text)
+    const q = normalizeKey(parseQty(text).name)
     if (!q || photo) return []
     const starts = (i: Item) => Number(i.key.startsWith(q))
     return items
@@ -42,7 +42,8 @@ export function QuickAdd({ room }: { room: RoomId }) {
     e.preventDefault()
     if (photo) {
       const time = new Date().toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })
-      add([cleanName(text) || `Photo, ${time}`], { ...target(), photo })
+      const e = parseQty(cleanName(text))
+      add([{ name: cleanName(e.name) || `Photo, ${time}`, qty: e.qty }], { ...target(), photo })
     } else {
       const names = splitEntry(text, known)
       if (!names.length) return

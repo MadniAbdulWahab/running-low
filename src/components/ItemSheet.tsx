@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { memberOf, useApp } from '../app-context'
-import { deleteItem, moveItem, setDue, setItemPhoto, setNote } from '../data/items'
+import { moveItem, setDue, setItemPhoto, setNote, setQty } from '../data/items'
 import { compressImage } from '../data/photos'
 import { usePhoto } from '../hooks/usePhoto'
 import { ago } from '../lib/time'
@@ -11,13 +11,13 @@ import { PhotoViewer } from './PhotoViewer'
 import { Sheet } from './Sheet'
 
 export function ItemSheet({ item, onClose }: { item: Item; onClose: () => void }) {
-  const { household, uid, done, add, toast } = useApp()
+  const { household, uid, done, askUntick, askDelete, toast } = useApp()
   const hid = household.id
   const photo = usePhoto(hid, item.photoId)
   const [viewing, setViewing] = useState(false)
-  const [confirmDelete, setConfirmDelete] = useState(false)
   const [busy, setBusy] = useState(false)
   const who = memberOf(household, item.addedBy, uid)
+  const qty = item.qty ?? 1
 
   // The note saves as you type (debounced) and on leaving the field.
   const [note, setNoteDraft] = useState(item.note ?? '')
@@ -69,6 +69,24 @@ export function ItemSheet({ item, onClose }: { item: Item; onClose: () => void }
         {item.count > 1 && ` · ${item.count} times so far`}
       </p>
 
+      <h3 className="group-label">Quantity</h3>
+      <div className="group">
+        <div className="row">
+          <span className="row-label">How many</span>
+          <span className="stepper">
+            <button aria-label="One fewer" disabled={qty <= 1} onClick={() => setQty(hid, item, qty - 1)}>
+              −
+            </button>
+            <span className="stepper-value" aria-live="polite">
+              {qty}
+            </span>
+            <button aria-label="One more" disabled={qty >= 99} onClick={() => setQty(hid, item, qty + 1)}>
+              +
+            </button>
+          </span>
+        </div>
+      </div>
+
       <h3 className="group-label">Note</h3>
       <div className="group">
         <label className="visually-hidden" htmlFor="item-note">
@@ -80,7 +98,7 @@ export function ItemSheet({ item, onClose }: { item: Item; onClose: () => void }
           rows={3}
           maxLength={500}
           value={note}
-          placeholder="Brand, size, how many…"
+          placeholder="Brand, size, anything to remember…"
           onFocus={() => (editing.current = true)}
           onChange={(e) => setNoteDraft(e.target.value)}
           onBlur={() => {
@@ -160,26 +178,12 @@ export function ItemSheet({ item, onClose }: { item: Item; onClose: () => void }
             Mark as got
           </button>
         ) : (
-          <button
-            className="row row--action"
-            onClick={() => {
-              add([item.name], { list: item.list })
-              onClose()
-            }}
-          >
-            Add to the list again
+          <button className="row row--action" onClick={() => askUntick(item)}>
+            Put back on the list
           </button>
         )}
-        <button
-          className="row row--danger"
-          onClick={() => {
-            if (!confirmDelete) return setConfirmDelete(true)
-            deleteItem(hid, item)
-            toast(`Deleted ${item.name}`)
-            onClose()
-          }}
-        >
-          {confirmDelete ? 'Tap again to delete for good' : 'Delete'}
+        <button className="row row--danger" onClick={() => askDelete(item)}>
+          Delete
         </button>
       </div>
 
