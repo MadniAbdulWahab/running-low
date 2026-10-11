@@ -13,9 +13,9 @@ import type { RoomId } from './types'
 
 const ROOM_KEY = 'outof.room'
 
-/** A known tab, or null. Grocery and Household were once tabs of their own; they live in Shopping now. */
+/** A known tab, or null. Older versions had Household and Shopping tabs; both are Groceries now. */
 function asRoom(r: unknown): RoomId | null {
-  if (r === 'grocery' || r === 'household') return 'shopping'
+  if (r === 'household' || r === 'shopping') return 'grocery'
   return ROOM_ORDER.includes(r as RoomId) ? (r as RoomId) : null
 }
 

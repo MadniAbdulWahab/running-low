@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useApp } from '../app-context'
 import { emojiFor } from '../lib/emoji'
-import { ROOM_LISTS, singleList } from '../rooms'
+import { LISTS } from '../rooms'
 import { frequentFor, type Frequent } from '../starters'
 import type { ListId, ListRoom } from '../types'
 import { CheckCircle, ChevronRight } from './Icons'
@@ -21,15 +21,13 @@ export function QuickPicks({ room, neededCount = 0 }: { room: ListRoom; neededCo
   const picks = useMemo<Pick[]>(
     () =>
       room === 'home'
-        ? ROOM_LISTS.home.flatMap((l) =>
-            frequentFor(l, items, byKey, 6)
+        ? LISTS.flatMap((l) =>
+            frequentFor(l, items, byKey, 8)
               .filter((f) => f.item?.status !== 'needed')
-              .slice(0, 3)
+              .slice(0, l === 'grocery' ? 5 : 3)
               .map((f) => ({ ...f, list: l })),
           )
-        : singleList(room)
-          ? frequentFor(singleList(room)!, items, byKey, 8).map((f) => ({ ...f, list: singleList(room)! }))
-          : ROOM_LISTS[room].flatMap((l) => frequentFor(l, items, byKey, 5).map((f) => ({ ...f, list: l }))),
+        : frequentFor(room, items, byKey, 8).map((f) => ({ ...f, list: room })),
     [room, items, byKey],
   )
   const [popping, setPopping] = useState<string | null>(null)

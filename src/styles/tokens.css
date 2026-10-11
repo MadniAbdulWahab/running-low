@@ -41,9 +41,9 @@
   --grocery: #8ad6a3;
   --grocery-ink: #0f3d20;
   --grocery-text: #1e7a40;
-  --household: #9dc3f2;
-  --household-ink: #0e2e57;
-  --household-text: #1f5faf;
+  --meals: #9dc3f2;
+  --meals-ink: #0e2e57;
+  --meals-text: #1f5faf;
   --important: #b7b3f2;
   --important-ink: #1f1c5c;
   --important-text: #4d47b8;
@@ -86,9 +86,9 @@
   --grocery: #7fd39b;
   --grocery-ink: #0c2e18;
   --grocery-text: #8fdca9;
-  --household: #8db8f0;
-  --household-ink: #0b2547;
-  --household-text: #a6c8f5;
+  --meals: #8db8f0;
+  --meals-ink: #0b2547;
+  --meals-text: #a6c8f5;
   --important: #a9a4f2;
   --important-ink: #1a1850;
   --important-text: #bbb7f7;
@@ -103,10 +103,16 @@
   --list-ink: var(--grocery-ink);
   --list-text: var(--grocery-text);
 }
-[data-list='household'] {
-  --list: var(--household);
-  --list-ink: var(--household-ink);
-  --list-text: var(--household-text);
+/* Home cards for tabs that aren't lists */
+[data-tone='meals'] {
+  --list: var(--meals);
+  --list-ink: var(--meals-ink);
+  --list-text: var(--meals-text);
+}
+[data-tone='us'] {
+  --list: var(--brand);
+  --list-ink: var(--brand-ink);
+  --list-text: var(--brand-link);
 }
 [data-list='important'] {
   --list: var(--important);

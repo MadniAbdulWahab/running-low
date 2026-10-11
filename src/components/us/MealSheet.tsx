@@ -104,7 +104,7 @@ export function MealSheet({ day, meal, onClose }: { day: string; meal?: Meal; on
           disabled={!list.length}
           onClick={() => add(ingredientEntries(list, new Set(byKey.keys())), { list: 'grocery' })}
         >
-          Add ingredients to Grocery
+          Add ingredients to Groceries
         </button>
         {meal && (
           <button

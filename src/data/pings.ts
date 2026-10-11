@@ -14,7 +14,7 @@ import { toMs } from '../hooks/useCollection'
 import { report } from '../lib/report'
 import type { Ping, PingKind } from '../types'
 
-const KEEP = 50
+const KEEP = 100
 const pingsCol = (hid: string) => collection(db, 'households', hid, 'pings')
 
 /** The latest hearts/hugs, newest first. */

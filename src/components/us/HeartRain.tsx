@@ -42,13 +42,13 @@ export function HeartRain({ emoji, onDone }: { emoji: string; onDone: () => void
 }
 
 /** A small burst from the button when you send one. */
-export function HeartBurst({ emoji, onDone }: { emoji: string; onDone: () => void }) {
+export function HeartBurst({ emoji, x, y, onDone }: { emoji: string; x: number; y: number; onDone: () => void }) {
   useEffect(() => {
     const t = window.setTimeout(onDone, 1100)
     return () => window.clearTimeout(t)
   }, [onDone])
   return (
-    <span className="heart-burst" aria-hidden="true">
+    <span className="heart-burst" aria-hidden="true" style={{ left: x - 11, top: y }}>
       {[0, 1, 2, 3, 4].map((i) => (
         <span key={i} style={{ '--i': i } as React.CSSProperties}>
           {emoji}

@@ -103,7 +103,8 @@ service cloud.firestore {
         allow read, delete: if isMember(hid);
         allow create: if isMember(hid)
           && request.resource.data.from == me()
-          && request.resource.data.kind in ['heart', 'hug', 'kiss', 'coffee']
+          && request.resource.data.kind in ['heart', 'hug', 'kiss', 'miss', 'rose', 'think',
+                                         'coffee', 'food', 'home', 'sleep', 'cheer', 'laugh']
           && request.resource.data.keys().hasOnly(['from', 'kind', 'createdAt']);
         allow update: if false;
       }

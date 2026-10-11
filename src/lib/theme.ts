@@ -28,8 +28,8 @@ export function resolveMode(p: ThemePref): Mode {
 export function applyTheme(room: RoomId, mode: Mode) {
   const root = document.documentElement
   root.dataset.mode = mode
-  // Only a single-list tab (Important) takes its list's colour; the rest use the brand.
-  if (room === 'important') root.dataset.list = room
+  // A list tab takes its list's colour; the rest use the brand.
+  if (room === 'grocery' || room === 'important') root.dataset.list = room
   else delete root.dataset.list
   root.style.colorScheme = mode
   let meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]')

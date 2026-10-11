@@ -11,7 +11,7 @@ export interface Env {
 
 export type Kind = 'items' | 'notes' | 'hearts'
 const KINDS: Kind[] = ['items', 'notes', 'hearts']
-// grocery and household are kept for phones still on an older version; the app maps them to Shopping.
+// shopping and household are kept for phones still on an older version; the app maps them to Groceries.
 const ROOMS = ['home', 'shopping', 'important', 'meals', 'us', 'grocery', 'household']
 
 export interface Notice {

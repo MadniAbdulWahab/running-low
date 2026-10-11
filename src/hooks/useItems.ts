@@ -12,7 +12,8 @@ function toItem(id: string, d: DocumentData): Item {
     id,
     name: d.name,
     key: d.key,
-    list: d.list,
+    // Household was folded into Groceries; older items still say 'household'.
+    list: d.list === 'important' ? 'important' : 'grocery',
     status: d.status,
     addedBy: d.addedBy,
     addedAt: ms(d.addedAt) ?? Date.now(),

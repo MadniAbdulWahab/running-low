@@ -2,16 +2,19 @@ import type { Item, ListId } from './types'
 
 // Shown as quick-add shortcuts until real history replaces them.
 const STARTERS: Record<ListId, string[]> = {
-  grocery: ['Milk', 'Eggs', 'Bread', 'Coffee', 'Butter', 'Bananas', 'Cheese', 'Yogurt'],
-  household: [
+  grocery: [
+    'Milk',
+    'Eggs',
+    'Bread',
     'Toilet paper',
+    'Coffee',
     'Dish soap',
-    'Laundry detergent',
+    'Bananas',
+    'Butter',
+    'Cheese',
     'Bin bags',
-    'Paper towels',
-    'Sponges',
-    'Light bulbs',
-    'Batteries',
+    'Yogurt',
+    'Laundry detergent',
   ],
   important: ['Medication', 'Contact lenses', 'Passport renewal', 'Car insurance', 'Birthday gift', 'Phone bill'],
 }

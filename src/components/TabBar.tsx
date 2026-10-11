@@ -4,7 +4,7 @@ import { HeartGlyph, HomeGlyph, ListGlyph, MealsGlyph } from './Icons'
 
 const ICON: Record<RoomId, () => React.ReactElement> = {
   home: HomeGlyph,
-  shopping: () => <ListGlyph list="grocery" />,
+  grocery: () => <ListGlyph list="grocery" />,
   important: () => <ListGlyph list="important" />,
   meals: MealsGlyph,
   us: HeartGlyph,
@@ -23,12 +23,12 @@ export function TabBar({
     <nav className="tabbar" aria-label="Tabs">
       {ROOM_ORDER.map((r) => {
         const Icon = ICON[r]
-        const badge = r === 'shopping' || r === 'important' ? (counts[r] ?? 0) : 0
+        const badge = r === 'grocery' || r === 'important' ? (counts[r] ?? 0) : 0
         return (
           <button
             key={r}
             className="tab"
-            data-list={r === 'important' ? r : undefined}
+            data-list={r === 'grocery' || r === 'important' ? r : undefined}
             aria-current={r === room ? 'page' : undefined}
             onClick={() => onChange(r)}
           >

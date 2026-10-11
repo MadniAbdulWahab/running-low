@@ -30,11 +30,6 @@ export function Header({ room, count, onSettings }: { room: RoomId; count: numbe
           <h1 className="large-title">Meals</h1>
           <p className="subtitle">{count ? `${count} planned this week` : 'Plan the week together'}</p>
         </>
-      ) : room === 'shopping' ? (
-        <>
-          <h1 className="large-title">Shopping</h1>
-          <p className="subtitle">{selecting ? selectedLine : count ? `${count} to pick up` : 'Nothing to pick up'}</p>
-        </>
       ) : room === 'home' ? (
         <>
           <h1 className="large-title">Running Low</h1>

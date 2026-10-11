@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { useApp, type AddOptions } from '../app-context'
 import { compressImage } from '../data/photos'
 import { cleanName, normalizeKey, parseQty, splitEntry } from '../lib/parse'
-import { LIST_INFO, ROOM_LABEL, ROOM_LISTS, singleList } from '../rooms'
+import { LIST_INFO, LISTS, ROOM_LABEL, singleList } from '../rooms'
 import type { Item, ListId, ListRoom } from '../types'
 import { ArrowUp, CameraIcon, CloseIcon, PlusCircle } from './Icons'
 
@@ -12,7 +12,7 @@ export function QuickAdd({ room }: { room: ListRoom }) {
   const [photo, setPhoto] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [focused, setFocused] = useState(false)
-  const lists = ROOM_LISTS[room]
+  const lists = room === 'home' ? LISTS : [room]
   const single = singleList(room)
   const [picked, setPicked] = useState<ListId>(lists[0])
   const [chipTouched, setChipTouched] = useState(false)

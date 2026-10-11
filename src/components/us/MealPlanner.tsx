@@ -11,12 +11,12 @@ export const mealEmoji = (name: string) => {
   return e === '🛒' ? '🍽️' : e
 }
 
-/** Ingredient strings → entries for the Grocery list ("2 tomatoes" → Tomatoes ×2). */
+/** Ingredient strings → entries for the Groceries list ("2 tomatoes" → Tomatoes ×2). */
 export function ingredientEntries(ingredients: string[], known: Set<string>): Entry[] {
   return ingredients.flatMap((i) => splitEntry(i, known))
 }
 
-/** "Meals this week": Mon–Sun, tap a day to plan it; ingredients go to Grocery in one tap. */
+/** "Meals this week": Mon–Sun, tap a day to plan it; ingredients go to Groceries in one tap. */
 export function MealPlanner({ meals, onOpenDay }: { meals: Meal[] | null; onOpenDay: (day: string) => void }) {
   const { add, byKey } = useApp()
   const [offset, setOffset] = useState(0)
@@ -71,7 +71,7 @@ export function MealPlanner({ meals, onOpenDay }: { meals: Meal[] | null; onOpen
         })}
         {weekIngredients.length > 0 && (
           <button className="row row--action meal-add-all" onClick={addWeek}>
-            Add {weekIngredients.length === 1 ? 'the ingredient' : `all ${weekIngredients.length} ingredients`} to Grocery
+            Add {weekIngredients.length === 1 ? 'the ingredient' : `all ${weekIngredients.length} ingredients`} to Groceries
           </button>
         )}
       </div>

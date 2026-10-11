@@ -1,6 +1,7 @@
-export type ListId = 'grocery' | 'household' | 'important'
-/** Tabs that show items: Home (everything), Shopping (Grocery + Household) and Important. */
-export type ListRoom = 'home' | 'shopping' | 'important'
+/** The lists items live on. Older items may say 'household'; those are read as groceries. */
+export type ListId = 'grocery' | 'important'
+/** Tabs that show items: Home (everything) and one per list. */
+export type ListRoom = 'home' | ListId
 export type RoomId = ListRoom | 'meals' | 'us'
 export type ThemePref = 'system' | 'light' | 'dark'
 export type Mode = 'light' | 'dark'
@@ -50,7 +51,19 @@ export interface Note {
   updatedAt: number
 }
 
-export type PingKind = 'heart' | 'hug' | 'kiss' | 'coffee'
+export type PingKind =
+  | 'heart'
+  | 'hug'
+  | 'kiss'
+  | 'miss'
+  | 'rose'
+  | 'think'
+  | 'coffee'
+  | 'food'
+  | 'home'
+  | 'sleep'
+  | 'cheer'
+  | 'laugh'
 
 export interface Ping {
   id: string

@@ -138,11 +138,38 @@ Saved 2026-10-11 so work can resume after a restart. To continue, tell Claude:
   - When the last member leaves, the data is orphaned and nobody can read it.
   - Rule: a member may update only `members` + `memberNames`, removing only themselves. Rules tests: 21.
 - **E2E** (WebKit + Chromium, all passing): checks the new tab bar, the Shopping chip and its sections, that Meals is on its own tab, and that B leaves, A sees "Waiting for someone to join", and B rejoins with the same code.
+- **Superseded the same day by the next section:** Shopping became Groceries, a single list.
+
+## Groceries as one list, Home cards, hearts on Home (2026-10-11)
+- **Feedback:** the user found the Shopping tab messy and wanted it named Groceries, as a single list with no Grocery/Household sections. They found the tab titles too big. Home still showed the old list cards, without Meals and Us. They wanted the hearts moved to Home, with a more prominent view of what was sent and how often, and more emoji.
+- **Tabs:** Home · Groceries · Important · Meals · Us. Room ids are `home | grocery | important | meals | us`.
+- **One Groceries list:**
+  - `ListId` is now `'grocery' | 'important'`, and `LIST_INFO.grocery.label` = 'Groceries'.
+  - Old items stored as `'household'` are **read** as grocery in `useItems` (no data migration). They are rewritten as grocery the next time they're re-added or moved. The rules still accept 'household', for older app versions.
+  - Grocery starters now include household staples (Toilet paper, Dish soap, Bin bags, Laundry detergent).
+  - The Groceries and Important tabs are single-list tabs, so there's no chip on their add bar. Home keeps the Groceries/Important chip. `ROOM_LISTS` and `roomForList` are gone; `singleList(room)` is null only for Home.
+  - `asRoom()` in App.tsx maps old 'shopping'/'household' to 'grocery'. The Worker accepts all the old and new room names.
+- **Titles:** `.large-title` went from 34px to 28px (line-height 34px).
+- **Home cards** (`ListCards.tsx`): a 2×2 grid, one card per tab.
+  - Groceries and Important show the needed count and emoji.
+  - Meals shows the count of upcoming planned meals and "Tonight: …" or "Next: …".
+  - Us shows the number of notes and the next countdown ("✈️ Paris trip · 7 days").
+  - Tones: `[data-tone=meals]` uses the old Household blue (tokens renamed `--meals*`); `[data-tone=us]` uses the brand.
+- **Hearts card on Home** (`HeartsBar.tsx`, below the cards, hidden while selecting):
+  - The latest received one is shown big (58px tile, pop animation) with "Omar sent a rose · 5m ago", and "Today" chips counting each kind received today (❤️ 2 · 🌹 1).
+  - Below that is a 6×2 grid of 12 kinds: heart, hug, kiss, miss 🥺, rose 🌹, think 💭, coffee, food 🍕, home 🚗, sleep 😴, cheer 💪, laugh 😂. Heart has the brand fill.
+  - "You sent today" chips. The send burst starts from the tapped emoji.
+  - Heart notifications open Home.
+  - The rules allow the 12 kinds (rules test updated). `KEEP` is now 100 pings.
+- **Us tab:** Countdowns, Notes, Date jar.
+- **E2E:**
+  - New checks: the tab bar, the Groceries title, one list without sections or chip, household things landing in Groceries, the Home cards, hearts not on Us, 12 send buttons, the latest-received display, today's ❤️ 2 tally, and the sent tally.
+  - The first post-join sync check now waits 20 s: WebKit against the emulator takes 6–10 s there.
 
 ## Colour system (2026-10-11)
 - The user felt the colour identity was inconsistent: blue meant both actions and Household, red meant Important, delete and badges, and orange was only the icon and Grocery. They chose the **orange-brand** option, with **pastel** colours where possible.
 - **Brand orange** for the app and every action: pastel fill `--brand` #FFB066 with `--brand-ink` for text on it; links and text `--brand-link` (#A84700 light, #FFB870 dark); `--tint` = `--brand-link`.
-- **Lists:** Grocery green, Household blue, Important indigo. Each has a pastel fill (`--x`), `--x-ink` for text on the fill and `--x-text` for text on the page. They are never used for actions.
+- **Lists:** Grocery green, Household blue (now the Meals card tone), Important indigo. Each has a pastel fill (`--x`), `--x-ink` for text on the fill and `--x-text` for text on the page. They are never used for actions.
 - **Red** (`--danger`) only for delete and overdue dates. Tab badges use their list colour, and member avatars are two brand-orange shades.
 - **Rule:** text on a pastel fill always uses the matching ink, never white.
 - The app icon keeps the stronger iOS orange (#FF9500).

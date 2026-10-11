@@ -53,7 +53,7 @@ const gone = (page, text, timeout = 8000) =>
     .catch(() => false)
 
 async function tab(page, label) {
-  // Match the label exactly: "Us" is also inside "Household".
+  // Match the label exactly, so "Us" doesn't match some other tab.
   await page.locator('.tab', { has: page.locator('.tab-label', { hasText: new RegExp(`^${label}$`) }) }).click()
   await page.locator('.large-title').first().waitFor()
 }
@@ -90,13 +90,15 @@ try {
   check(true, 'A signs up and creates the household')
   await A.page.waitForTimeout(700)
   await A.page.screenshot({ path: `${OUT}/0-home-empty.png` })
-  await tab(A.page, 'Shopping')
+  await tab(A.page, 'Groceries')
   await A.page.waitForTimeout(700)
-  await A.page.screenshot({ path: `${OUT}/0-shopping-empty.png` })
+  await A.page.screenshot({ path: `${OUT}/0-groceries-empty.png` })
   check(
-    (await A.page.locator('.tab-label').allTextContents()).join() === 'Home,Shopping,Important,Meals,Us',
-    'tab bar is Home, Shopping, Important, Meals, Us',
+    (await A.page.locator('.tab-label').allTextContents()).join() === 'Home,Groceries,Important,Meals,Us',
+    'tab bar is Home, Groceries, Important, Meals, Us',
   )
+  check((await A.page.locator('.large-title').textContent()) === 'Groceries', 'the tab is called Groceries')
+  check((await A.page.locator('section[data-list]').count()) === 0, 'Groceries is one list, with no sections')
   await tab(A.page, 'Home')
 
   await A.page.locator('.members-btn').click()
@@ -118,12 +120,13 @@ try {
   await tab(B.page, 'Home')
   await add(A.page, 'Milk, eggs and bread.')
   check(await visible(A.page, 'Eggs'), 'A: comma/"and" entry splits into items')
-  check(await visible(B.page, 'Bread'), 'B sees A’s items live')
+  // The first sync right after joining can take ~10 s in WebKit against the local emulator.
+  check(await visible(B.page, 'Bread', 20000), 'B sees A’s items live')
   const meta = await B.page.locator('.item', { hasText: 'Milk' }).locator('.item-meta').textContent()
   check(meta.includes('Sara'), `B sees who added it (“${meta.trim()}”)`)
 
   // ── Live sync B → A via a magnet ──
-  await tab(B.page, 'Shopping')
+  await tab(B.page, 'Groceries')
   check(
     (await B.page.locator('.fold-toggle').getAttribute('aria-expanded')) === 'false',
     'Quick add starts folded on a tab that has items',
@@ -159,36 +162,29 @@ try {
   await B.page.locator('.quick-add input[type=file]').setInputFiles('public/pwa-512x512.png')
   await B.page.locator('.pending-photo img').waitFor()
   await add(B.page, 'Oat milk')
-  await tab(A.page, 'Shopping')
+  await tab(A.page, 'Groceries')
   check(await visible(A.page, 'Oat milk'), 'A sees B’s photo item')
   const thumb = A.page.locator('.item', { hasText: 'Oat milk' }).locator('.item-thumb img')
   check(await thumb.waitFor({ timeout: 8000 }).then(() => true).catch(() => false), 'photo thumbnail syncs')
 
-  // ── Household things on Shopping, then Important ──
+  // ── Household things go on Groceries too, then Important ──
   await tab(A.page, 'Important')
   check(
     (await A.page.locator('.fold-toggle').getAttribute('aria-expanded')) === 'true',
     'Quick add is open on a tab with nothing on it',
   )
   check((await A.page.locator('.list-chip').count()) === 0, 'Important has no list chip')
-  await tab(A.page, 'Shopping')
-  check((await A.page.locator('.list-chip').textContent()).includes('Grocery'), 'Shopping chip starts on Grocery')
+  await tab(A.page, 'Groceries')
+  check((await A.page.locator('.list-chip').count()) === 0, 'Groceries has no list chip')
   await openQuickAdd(A.page)
   await A.page.getByRole('button', { name: 'Add Dish soap' }).click()
-  await A.page.getByLabel('Add something').fill('Light bulbs')
-  await A.page.locator('.list-chip').click()
-  check((await A.page.locator('.list-chip').textContent()).includes('Household'), 'tapping the chip switches to Household')
-  await A.page.getByLabel('Add something').press('Enter')
+  await add(A.page, 'Light bulbs')
   check(
-    await A.page.locator('section[data-list=household] .item-name', { hasText: 'Light bulbs' })
-      .waitFor({ timeout: 8000 }).then(() => true).catch(() => false),
-    'Light bulbs lands in the Household section of Shopping',
+    (await visible(A.page, 'Light bulbs')) && (await visible(A.page, 'Dish soap')) &&
+      (await A.page.locator('.group').count()) === 1,
+    'household things land in the one Groceries list',
   )
-  check(
-    await A.page.locator('section[data-list=household] .item-name', { hasText: 'Dish soap' }).isVisible(),
-    'Dish soap from Quick add goes to Household',
-  )
-  await A.page.screenshot({ path: `${OUT}/shopping-both.png`, fullPage: true })
+  await A.page.screenshot({ path: `${OUT}/groceries-list.png`, fullPage: true })
   await tab(A.page, 'Important')
   await add(A.page, 'Passport renewal')
   await add(A.page, 'Dentist appointment')
@@ -205,11 +201,11 @@ try {
   )
 
   // ── Note on an item syncs to the other phone ──
-  await tab(A.page, 'Shopping')
+  await tab(A.page, 'Groceries')
   await A.page.locator('.item-body', { hasText: 'Eggs' }).first().click()
   await A.page.locator('.sheet textarea').fill('Free range, a dozen')
   await A.page.locator('.sheet-done').click()
-  await tab(B.page, 'Shopping')
+  await tab(B.page, 'Groceries')
   check(
     await B.page.locator('.item', { hasText: 'Eggs' }).locator('.item-note', { hasText: 'Free range' })
       .waitFor({ timeout: 8000 }).then(() => true).catch(() => false),
@@ -217,7 +213,7 @@ try {
   )
 
   // ── Press and hold opens the item menu; Delete asks first ──
-  await tab(A.page, 'Shopping')
+  await tab(A.page, 'Groceries')
   await A.page.waitForTimeout(400) // let the slide-in finish so the row doesn't move under the pointer
   const bulbs = A.page.locator('.item-body', { hasText: 'Light bulbs' }).first()
   await bulbs.evaluate((el) => el.scrollIntoView({ block: 'center' }))
@@ -234,18 +230,18 @@ try {
   )
   await A.page.screenshot({ path: `${OUT}/hold-menu.png` })
   await holdAlert.getByRole('button', { name: 'Delete' }).click()
-  await tab(B.page, 'Shopping')
+  await tab(B.page, 'Groceries')
   check(await gone(B.page, 'Light bulbs'), 'delete from the hold menu removes it on B')
 
   // ── Multi-select: tick two, Got it ──
-  await tab(A.page, 'Shopping')
+  await tab(A.page, 'Groceries')
   await A.page.locator('.select-toggle').click()
   check((await A.page.locator('.select-toggle').textContent()) === 'Unselect', 'Select toggles to Unselect')
   await A.page.locator('.item-body', { hasText: 'Olive oil' }).first().click()
   await A.page.locator('.item-body', { hasText: 'Coffee' }).first().click()
   await A.page.screenshot({ path: `${OUT}/multi-select.png` })
   await A.page.locator('.select-bar').getByRole('button', { name: 'Got it' }).click()
-  await tab(B.page, 'Shopping')
+  await tab(B.page, 'Groceries')
   check(
     (await ticked(B.page, 'Olive oil')) && (await ticked(B.page, 'Coffee')),
     'multi-select Got it ticks both items on B',
@@ -278,11 +274,11 @@ try {
   )
   // ── Home sections fold to one line ──
   await tab(A.page, 'Home')
-  await A.page.locator('.section-head', { hasText: 'Grocery' }).click()
+  await A.page.locator('.section-head', { hasText: 'Groceries' }).click()
   check(
     (await A.page.locator('section[data-list=grocery] .folded-names').textContent()).includes('Apples') &&
       (await A.page.locator('section[data-list=grocery] .item').count()) === 0,
-    'tapping Grocery on Home folds it to its heading plus item names',
+    'tapping Groceries on Home folds it to its heading plus item names',
   )
   await A.page.screenshot({ path: `${OUT}/home-folded.png` })
   check(await A.page.locator('section[data-list=grocery] .folded-show', { hasText: 'Show all' }).isVisible(), 'folded card says Show all')
@@ -292,7 +288,7 @@ try {
   check((await A.page.locator('section[data-list=grocery] .item').count()) > 0, 'tapping again unfolds it')
 
   // ── The page behind a sheet stays put; the bar stays on the bottom edge ──
-  await A.page.evaluate(() => window.scrollTo(0, 300))
+  await A.page.evaluate(() => document.querySelector('.item-body').scrollIntoView({ block: 'center' }))
   const before = await A.page.evaluate(() => window.scrollY)
   await A.page.locator('.item-body').first().click()
   await A.page.locator('.sheet').waitFor()
@@ -318,10 +314,14 @@ try {
   await B.page.getByRole('button', { name: 'Got Bread' }).click().catch(() => {})
   await tab(B.page, 'Home')
 
-  // Home on B: guess room from history (Dish soap → Pantry)
-  await B.page.getByLabel('Add something').fill('dish soap')
+  // Home on B: the chip guesses the list from history
+  await B.page.getByLabel('Add something').fill('passport renewal')
   const chip = await B.page.locator('.list-chip').textContent()
-  check(chip.includes('Household'), `Home chip guesses the room from history (${chip.trim()})`)
+  check(chip.includes('Important'), `Home chip guesses the list from history (${chip.trim()})`)
+  check(
+    (await B.page.locator('.list-card .list-card-name').allTextContents()).join() === 'Groceries,Important,Meals,Us',
+    'Home has a card for each tab',
+  )
   await B.page.getByLabel('Add something').fill('')
 
   // ── Us tab: notes board ──
@@ -363,15 +363,36 @@ try {
   }
   check(notesAfter === notesBefore, 'an empty new note is discarded on close')
 
-  // ── Hearts ──
-  await tab(B.page, 'Shopping')
-  await A.page.locator('.heart-main').click()
+  // ── Hearts (on Home) ──
+  check((await A.page.locator('.hearts').count()) === 0, 'hearts are no longer on Us')
+  await tab(A.page, 'Home')
+  await tab(B.page, 'Groceries')
+  check((await A.page.locator('.heart-quick').count()) >= 12, 'twelve things to send')
+  await A.page.getByRole('button', { name: 'Send: Heart' }).click()
   check(
     await B.page.locator('.toast', { hasText: 'sent a heart' }).waitFor({ timeout: 8000 }).then(() => true).catch(() => false),
     'a heart from A shows on B',
   )
   check((await B.page.locator('.heart-rain').count()) > 0, 'B gets the heart shower')
   await B.page.screenshot({ path: `${OUT}/heart-arrives.png` })
+  await A.page.waitForTimeout(400)
+  await A.page.getByRole('button', { name: 'Send: Heart' }).click()
+  await A.page.waitForTimeout(400)
+  await A.page.getByRole('button', { name: 'Send: Rose' }).click()
+  await tab(B.page, 'Home')
+  check(
+    await B.page.locator('.hearts-last', { hasText: 'Sara sent a rose' }).waitFor({ timeout: 8000 }).then(() => true).catch(() => false),
+    'B sees the latest one big on Home (a rose)',
+  )
+  check(
+    await B.page.locator('.hearts-today .hearts-chip', { hasText: '❤️2' }).waitFor({ timeout: 8000 }).then(() => true).catch(() => false),
+    "B sees today's count (❤️ 2)",
+  )
+  check(await A.page.locator('.hearts-sent .hearts-chip', { hasText: '🌹1' }).isVisible(), 'A sees what they sent today')
+  await B.page.locator('.hearts').evaluate((el) => el.scrollIntoView({ block: 'start' }))
+  await B.page.waitForTimeout(300)
+  await B.page.screenshot({ path: `${OUT}/hearts-card.png` })
+  await tab(A.page, 'Us')
 
   // ── Delete a note by press and hold ──
   await tab(B.page, 'Us')
@@ -389,7 +410,7 @@ try {
     'holding a note and confirming deletes it on B too',
   )
 
-  // ── Meal planner → Grocery ──
+  // ── Meal planner → Groceries ──
   await tab(A.page, 'Meals')
   await tab(B.page, 'Meals')
   check((await A.page.locator('.toolbar').count()) === 0, 'Meals has no add bar')
@@ -398,19 +419,19 @@ try {
   await A.page.locator('.meal-row[data-today]').click()
   await A.page.getByPlaceholder('What’s for dinner?').fill('Pasta night')
   await A.page.locator('#meal-ingredients').fill('pasta, 2 tomatoes, basil')
-  await A.page.locator('.sheet').getByRole('button', { name: 'Add ingredients to Grocery' }).click()
+  await A.page.locator('.sheet').getByRole('button', { name: 'Add ingredients to Groceries' }).click()
   await A.page.locator('.sheet').screenshot({ path: `${OUT}/meal-sheet.png` })
   await A.page.locator('.sheet-done').click()
   check(
     await B.page.locator('.meal-row[data-today] .meal-name', { hasText: 'Pasta night' }).waitFor({ timeout: 8000 }).then(() => true).catch(() => false),
     "today's meal planned on A shows on B",
   )
-  await tab(B.page, 'Shopping')
+  await tab(B.page, 'Groceries')
   check(
     (await visible(B.page, 'Pasta')) &&
       (await B.page.locator('.item', { hasText: 'Tomatoes' }).locator('.qty-value', { hasText: /^2$/ }).waitFor({ timeout: 8000 }).then(() => true).catch(() => false)) &&
       (await visible(B.page, 'Basil')),
-    'meal ingredients land in Grocery on B, with "2 tomatoes" as Tomatoes ×2',
+    'meal ingredients land in Groceries on B, with "2 tomatoes" as Tomatoes ×2',
   )
   await A.page.locator('.meal-add-all').click()
   check(
@@ -457,7 +478,7 @@ try {
   // ── Screenshots of every room, light and dark ──
   for (const scheme of ['light', 'dark']) {
     await A.page.emulateMedia({ colorScheme: scheme })
-    for (const [i, label] of ['Home', 'Shopping', 'Important', 'Meals', 'Us'].entries()) {
+    for (const [i, label] of ['Home', 'Groceries', 'Important', 'Meals', 'Us'].entries()) {
       await tab(A.page, label)
       await A.page.waitForTimeout(500)
       await A.page.screenshot({ path: `${OUT}/${i + 1}-${label.toLowerCase()}-${scheme}.png`, fullPage: true })
@@ -477,12 +498,12 @@ try {
     check(usWide.extra <= 0, `no sideways scrolling on Us (${usWide.extra}px; ${usWide.over.join(' | ')})`)
   }
   await A.page.emulateMedia({ colorScheme: 'light' })
-  await tab(A.page, 'Shopping')
+  await tab(A.page, 'Groceries')
   await A.page.waitForTimeout(400)
   const wide = await A.page.evaluate(() => document.documentElement.scrollWidth - innerWidth)
   check(wide <= 0, `no sideways scrolling on a list screen (${wide}px extra)`)
   if (await A.page.locator('.recent-head').count()) await A.page.locator('.recent-head').click()
-  await A.page.screenshot({ path: `${OUT}/shopping-recent.png`, fullPage: true })
+  await A.page.screenshot({ path: `${OUT}/groceries-recent.png`, fullPage: true })
   await tab(A.page, 'Home')
   await A.page.locator('.members-btn').click()
   await A.page.waitForTimeout(400)
@@ -515,7 +536,7 @@ try {
   await B.page.getByLabel('Code').fill(code)
   await B.page.getByRole('button', { name: 'Join with a code' }).click()
   await B.page.locator('.large-title').waitFor({ timeout: 15000 })
-  await tab(B.page, 'Shopping')
+  await tab(B.page, 'Groceries')
   check(await visible(B.page, 'Oat milk'), 'B can join again with the same code and sees the list')
 } catch (e) {
   failed++

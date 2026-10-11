@@ -104,7 +104,6 @@ const TABLE: [RegExp, string][] = [
 
 export const LIST_EMOJI: Record<ListId, string> = {
   grocery: '🛒',
-  household: '🧺',
   important: '📌',
 }
 

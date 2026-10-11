@@ -20,9 +20,9 @@
 }
 
 .large-title {
-  margin: 14px 0 0;
-  font-size: 34px;
-  line-height: 41px;
+  margin: 10px 0 0;
+  font-size: 28px;
+  line-height: 34px;
   font-weight: 700;
   letter-spacing: -0.035em;
 }
@@ -86,7 +86,7 @@
 /* ── Home: list cards ───────────────────────────────────────── */
 .list-cards {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
   margin-top: 24px;
 }
@@ -1257,6 +1257,7 @@ label.row:active {
   letter-spacing: 1px;
   white-space: nowrap;
   overflow: hidden;
+  text-overflow: ellipsis;
   color: var(--label-2);
 }
 
@@ -1339,7 +1340,7 @@ label.row:active {
   margin-top: 20px;
 }
 .list-card-peek--text {
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0;
 }
 
@@ -2113,54 +2114,111 @@ body {
 
 /* ══ Us tab ══════════════════════════════════════════════════ */
 
-/* Hearts row */
+/* Hearts card (on Home) */
 .hearts {
   position: relative;
-  margin-top: 20px;
+  margin-top: 16px;
   padding: 14px;
-  border-radius: 16px;
+  border-radius: 18px;
   background: var(--card);
   border: 1px solid var(--border);
 }
-.hearts-row {
+.hearts-in {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
+  padding: 2px 2px 14px;
+  border-bottom: 1px solid var(--separator, var(--border));
 }
-.heart-main {
-  flex: 1;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  min-height: 48px;
-  border-radius: 14px;
-  background: var(--brand);
-  color: var(--brand-ink);
-  font-size: 16px;
-  font-weight: 650;
-  transition: transform 120ms;
-}
-.heart-main:active,
-.heart-quick:active {
-  transform: scale(0.95);
-}
-.heart-main-emoji {
-  font-size: 20px;
-}
-.heart-quick {
+.hearts-big {
   flex: none;
-  width: 48px;
-  height: 48px;
-  border-radius: 14px;
-  background: var(--fill);
-  font-size: 22px;
-  transition: transform 120ms;
+  width: 58px;
+  height: 58px;
+  display: grid;
+  place-items: center;
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--brand) 28%, var(--card));
+  font-size: 34px;
+  line-height: 1;
+  animation: hearts-pop 420ms cubic-bezier(0.3, 1.5, 0.5, 1);
+}
+@keyframes hearts-pop {
+  from {
+    transform: scale(0.6);
+  }
+}
+.hearts-in-text {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
 }
 .hearts-last {
-  margin: 10px 2px 0;
-  font-size: 14px;
+  font-size: 16px;
+  font-weight: 650;
+  line-height: 1.25;
+  color: var(--label);
+}
+.hearts-when {
+  font-size: 13px;
   color: var(--label-2);
+}
+.hearts-today,
+.hearts-sent {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--label-2);
+}
+.hearts-today {
+  margin-top: 3px;
+}
+.hearts-sent {
+  margin: 12px 2px 0;
+}
+.hearts-tally {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.hearts-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 8px 2px 6px;
+  border-radius: 999px;
+  background: var(--fill);
+  font-size: 15px;
+  line-height: 20px;
+}
+.hearts-chip b {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--label);
+  font-variant-numeric: tabular-nums;
+}
+.hearts-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 14px;
+}
+.heart-quick {
+  aspect-ratio: 1;
+  max-height: 52px;
+  border-radius: 14px;
+  background: var(--fill);
+  font-size: 24px;
+  line-height: 1;
+  transition: transform 120ms;
+}
+.heart-quick[data-kind='heart'] {
+  background: var(--brand);
+}
+.heart-quick:active {
+  transform: scale(0.88);
 }
 
 /* Little burst when you send one */

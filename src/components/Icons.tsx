@@ -20,12 +20,6 @@ export function ListGlyph({ list }: { list: ListId }) {
           <path d="M9 8.5V7a3 3 0 0 1 6 0v1.5" />
         </svg>
       )
-    case 'household': // house
-      return (
-        <svg {...base} strokeWidth={2.2}>
-          <path d="M4 10.5 12 4l8 6.5V19a1 1 0 0 1-1 1h-4.5v-5.5h-5V20H5a1 1 0 0 1-1-1z" />
-        </svg>
-      )
     case 'important': // exclamation
       return (
         <svg {...base} strokeWidth={2.6}>

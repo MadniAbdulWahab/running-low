@@ -226,6 +226,7 @@ describe('notes and pings', () => {
     await assertSucceeds(setDoc(doc(as('alice'), path), { from: 'alice', kind: 'heart' }))
     await assertFails(setDoc(doc(as('alice'), `households/${CODE}/pings/p2`), { from: 'bob', kind: 'heart' }))
     await assertFails(setDoc(doc(as('alice'), `households/${CODE}/pings/p3`), { from: 'alice', kind: 'slap' }))
+    await assertSucceeds(setDoc(doc(as('alice'), `households/${CODE}/pings/p4`), { from: 'alice', kind: 'rose' }))
     await assertFails(updateDoc(doc(as('alice'), path), { kind: 'hug' }))
     await assertSucceeds(getDoc(doc(as('bob'), path)))
     await assertFails(getDoc(doc(as('carol'), path)))
