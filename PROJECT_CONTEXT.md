@@ -48,6 +48,11 @@ Saved 2026-10-11 so work can resume after a restart. To continue, tell Claude:
 - Verified with the production build, Chromium and WebKit two-user end-to-end checks, light/dark screenshot review, and layout checks at 320, 390, 430, 768, and 1440px. The due-date test now waits for the asynchronous label update. Visual artifacts are in ignored `output/playwright/`.
 - Deployed and pushed as commit e9b6cf9 "UI refinements".
 
+## Logo (2026-10-11)
+- The user chose the basket option from three SVG proposals: refined glass, pantry jar, and nearly empty grocery basket.
+- The current logo is a white basket with a small low-stock mark on iOS orange (#FF9500). The SVG source is `public/icon.svg`; use `npm run icons` to regenerate the PWA icons, iPhone Home Screen icon, and favicon.
+- This replaces the glass logo recorded in the earlier design history.
+
 ## Goal
 A shared list for two partners (**both on iPhone**) to quickly note that something is finished: groceries, household things, important items.
 - Must be **completely free**: no App Store fee, no paid backend, no credit card.

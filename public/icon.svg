@@ -1,5 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Running Low: nearly empty grocery basket">
   <rect width="512" height="512" fill="#FF9500"/>
-  <path d="M164 118h184l-22 284a26 26 0 0 1-26 24H212a26 26 0 0 1-26-24z" fill="none" stroke="#FFFFFF" stroke-width="26" stroke-linejoin="round"/>
-  <path d="M199 338h114l-4 48a12 12 0 0 1-12 11H215a12 12 0 0 1-12-11z" fill="#FFFFFF"/>
+  <path d="M205 156l-45 68m147-68 45 68" fill="none" stroke="#fff" stroke-width="22" stroke-linecap="round"/>
+  <path d="M144 224h224l-25 128c-3 19-18 32-38 32h-98c-20 0-35-13-38-32z" fill="none" stroke="#fff" stroke-width="22" stroke-linejoin="round"/>
+  <path d="M217 342h78" fill="none" stroke="#fff" stroke-width="22" stroke-linecap="round"/>
 </svg>
