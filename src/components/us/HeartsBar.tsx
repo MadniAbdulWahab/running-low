@@ -37,7 +37,13 @@ export function SendPings({ pings, layout }: { pings: Ping[]; layout: 'row' | 'g
 
   return (
     <div className="send-pings" data-layout={layout} data-end={atEnd || undefined}>
-      {layout === 'row' && <p className="send-pings-label">{sendLabel}</p>}
+      {layout === 'row' && (
+        <p className="send-pings-label">
+          {otherName ? (
+            <>Send something to <span className="send-pings-recipient">{otherName}</span></>
+          ) : sendLabel}
+        </p>
+      )}
       <div
         className="send-pings-track"
         role="group"

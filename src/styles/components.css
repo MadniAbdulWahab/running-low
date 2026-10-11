@@ -2155,6 +2155,9 @@ body {
 .hearts-big--photo {
   background: none;
 }
+.hearts-big--photo .avatar {
+  box-shadow: 0 0 0 1px var(--border);
+}
 .hearts-message-emoji {
   display: inline-block;
   font-size: 28px;
@@ -2179,20 +2182,22 @@ body {
   display: block;
   font-size: 14px;
   font-weight: 600;
-  color: var(--label);
+  color: var(--label-2);
   overflow-wrap: anywhere;
 }
 .hearts-last {
   font-size: 20px;
-  font-weight: 650;
+  font-weight: 600;
   line-height: 1.25;
-  letter-spacing: -0.025em;
+  letter-spacing: -0.015em;
   color: var(--label);
   overflow-wrap: anywhere;
 }
 .hearts-when {
   font-size: 12px;
   line-height: 1.4;
+  letter-spacing: 0;
+  font-variant-numeric: tabular-nums;
   color: var(--label-2);
 }
 .hearts-in:not([data-received]) .hearts-big {
@@ -2211,7 +2216,17 @@ body {
   position: relative;
 }
 .send-pings[data-layout='row'] {
-  border-top: 1px solid var(--separator, var(--border));
+  border-top: 1px solid transparent;
+  background: color-mix(in srgb, var(--bg) 35%, var(--card));
+}
+.send-pings[data-layout='row']::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: 16px;
+  right: 16px;
+  height: 1px;
+  background: var(--border);
 }
 .send-pings-label {
   margin: 0;
@@ -2221,14 +2236,18 @@ body {
   color: var(--label-2);
   overflow-wrap: anywhere;
 }
+.send-pings-recipient {
+  font-weight: 500;
+  color: var(--label);
+}
 .send-pings[data-layout='row'] .send-pings-track {
   display: flex;
   gap: 8px;
-  padding: 8px 14px 10px;
+  padding: 8px 16px 10px;
   overflow-x: auto;
   overscroll-behavior-x: contain;
   scroll-snap-type: x proximity;
-  scroll-padding-inline: 14px;
+  scroll-padding-inline: 16px;
   scrollbar-width: none;
   -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 36px), transparent);
   mask-image: linear-gradient(to right, #000 calc(100% - 36px), transparent);
@@ -2245,6 +2264,9 @@ body {
   width: 46px;
   height: 46px;
   scroll-snap-align: start;
+}
+.send-pings[data-layout='row'] .heart-quick:not([data-kind='heart']) {
+  background: color-mix(in srgb, var(--fill) 75%, transparent);
 }
 .send-pings[data-layout='grid'] .send-pings-track {
   display: grid;
