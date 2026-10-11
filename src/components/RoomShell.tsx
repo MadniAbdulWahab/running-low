@@ -300,6 +300,7 @@ export function RoomShell({ uid, household, room, setRoom, theme }: Props) {
         <Toast toast={toastData} onDone={clearToast} />
         {selecting ? (
           <div className="select-bar">
+            <button onClick={stopSelect}>Cancel</button>
             <button onClick={selectAll}>{allSelected ? 'Select none' : 'Select all'}</button>
             <button disabled={!selectedItems.some((i) => i.status === 'needed')} onClick={gotSelected}>
               Got it

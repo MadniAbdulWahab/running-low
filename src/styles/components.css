@@ -1772,3 +1772,29 @@ label.row:active {
   padding: 0 14px;
   margin-right: -2px;
 }
+
+/* Slim pills that still have a ~44px tap area (the ::before extends it). */
+.group-label .select-toggle,
+.list-chip {
+  position: relative;
+  min-height: 0;
+  height: 30px;
+}
+.group-label .select-toggle {
+  padding: 0 13px;
+  border-radius: 15px;
+  font-size: 14px;
+}
+.list-chip {
+  padding: 0 10px;
+}
+.group-label .select-toggle::before,
+.list-chip::before {
+  content: '';
+  position: absolute;
+  inset: -7px -4px;
+}
+
+.select-bar button {
+  font-size: 16px;
+}
