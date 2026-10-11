@@ -69,7 +69,7 @@ export function SendPings({ pings, layout }: { pings: Ping[]; layout: 'row' | 'g
  * row of things to send back.
  */
 export function HeartsBar({ pings, days, onOpen }: { pings: Ping[]; days: PingDay[] | null; onOpen: () => void }) {
-  const { household, uid, photos } = useApp()
+  const { household, uid } = useApp()
   const other = household.members.find((m) => m !== uid)
   const otherName = other ? (household.memberNames[other] ?? 'Someone') : null
   const lastIn = pings.find((p) => p.from !== uid)
@@ -77,24 +77,29 @@ export function HeartsBar({ pings, days, onOpen }: { pings: Ping[]; days: PingDa
   const today = (days ?? []).filter((d) => d.day === todayISO())
   const inToday = other ? totalOf(countsFor(today, other)) : 0
   const fromName = lastIn ? firstName(household.memberNames[lastIn.from] ?? 'Someone') : ''
+  const message = lastInfo ? lastInfo.verb.charAt(0).toUpperCase() + lastInfo.verb.slice(1) : null
 
   return (
     <section className="hearts" aria-label="Hearts">
-      <button className="hearts-in" onClick={onOpen} aria-label="Hearts: see today and this week">
-        {lastIn && lastInfo && photos[lastIn.from] ? (
-          <span className="hearts-big hearts-big--photo" aria-hidden="true" key={lastIn.id}>
-            <Avatar uid={lastIn.from} size={44} />
-            <span className="hearts-badge">{lastInfo.emoji}</span>
-          </span>
-        ) : (
-          <span className="hearts-big" aria-hidden="true" key={lastIn?.id}>
-            {lastInfo?.emoji ?? '💌'}
-          </span>
-        )}
+      <button
+        className="hearts-in"
+        data-received={lastIn ? true : undefined}
+        onClick={onOpen}
+        aria-label={`${lastIn && lastInfo ? `${fromName} ${lastInfo.verb}. ` : ''}Hearts: see today and this week`}
+      >
+        <span className="hearts-big" aria-hidden="true" key={lastIn?.id}>
+          {lastInfo?.emoji ?? '💌'}
+        </span>
         <span className="hearts-in-text">
+          {lastIn && (
+            <span className="hearts-sender">
+              <Avatar uid={lastIn.from} size={24} />
+              <span>{fromName}</span>
+            </span>
+          )}
           <strong className="hearts-last">
             {lastIn && lastInfo
-              ? `${fromName} ${lastInfo.verb}`
+              ? message
               : otherName
                 ? `Nothing from ${firstName(otherName)} yet`
                 : 'Waiting for someone to join'}

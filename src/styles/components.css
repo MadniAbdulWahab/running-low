@@ -2114,7 +2114,7 @@ body {
 
 /* ══ Us tab ══════════════════════════════════════════════════ */
 
-/* Hearts strip (on Home): the latest one in, and a row to send from */
+/* Hearts on Home: give the received emoji its own space above the send row. */
 .hearts {
   position: relative;
   margin-top: 16px;
@@ -2126,9 +2126,9 @@ body {
 .hearts-in {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
   width: 100%;
-  padding: 12px 14px;
+  padding: 16px;
   text-align: left;
   transition: background-color 120ms;
 }
@@ -2143,14 +2143,16 @@ body {
 }
 .hearts-big {
   flex: none;
-  width: 44px;
-  height: 44px;
+  width: 72px;
+  height: 72px;
   display: grid;
   place-items: center;
-  border-radius: 50%;
-  background: color-mix(in srgb, var(--brand) 28%, var(--card));
-  font-size: 24px;
+  border-radius: 20px;
+  background: color-mix(in srgb, var(--brand) 22%, var(--card));
+  font-size: 44px;
   line-height: 1;
+}
+.hearts-in[data-received] .hearts-big {
   animation: hearts-pop 420ms cubic-bezier(0.3, 1.5, 0.5, 1);
 }
 @keyframes hearts-pop {
@@ -2163,20 +2165,47 @@ body {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 5px;
 }
-.hearts-last {
-  font-size: 15px;
-  font-weight: 650;
-  line-height: 1.25;
-  color: var(--label);
-  white-space: nowrap;
+.hearts-sender {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 550;
+  color: var(--label-2);
+}
+.hearts-sender .avatar {
+  flex: none;
+}
+.hearts-sender > span:last-child {
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.hearts-last {
+  font-size: 20px;
+  font-weight: 650;
+  line-height: 1.25;
+  letter-spacing: -0.025em;
+  color: var(--label);
+  overflow-wrap: anywhere;
 }
 .hearts-when {
-  font-size: 13px;
+  font-size: 12px;
+  line-height: 1.4;
   color: var(--label-2);
+}
+.hearts-in:not([data-received]) .hearts-big {
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  font-size: 30px;
+}
+.hearts-in:not([data-received]) .hearts-last {
+  font-size: 15px;
+  letter-spacing: inherit;
 }
 
 /* The 12 to send: one swipeable row on Home, a grid in the sheet */
@@ -2988,25 +3017,6 @@ button.row:disabled {
 }
 .link--quiet {
   color: var(--label-2);
-}
-
-/* Hearts card: the sender's photo with the emoji they sent */
-.hearts-big--photo {
-  position: relative;
-  background: none;
-}
-.hearts-badge {
-  position: absolute;
-  right: -5px;
-  bottom: -5px;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  background: var(--card);
-  box-shadow: 0 1px 4px rgb(0 0 0 / 0.18);
-  font-size: 14px;
 }
 
 /* When one arrives: who sent it, big, over the shower */

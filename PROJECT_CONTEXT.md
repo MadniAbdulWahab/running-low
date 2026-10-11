@@ -1,5 +1,11 @@
 # Running Low: project context (handoff)
 
+## Hearts received-message polish (local, not deployed)
+- The user asked for receiving an emoji to feel more prominent, following the existing app identity.
+- Home's Hearts card now gives the received emoji its own 72px soft-orange tile, with the sender's 24px photo/initial and first name above a larger message heading. Time and daily count remain secondary. Longer messages wrap.
+- Keeps the swipeable send row, Hearts sheet, existing arrival animation and data behaviour. Empty/waiting states stay compact; existing reduced-motion styling applies to the emoji pop.
+- Verified: production build, existing Chromium two-person end-to-end suite, and Chromium/WebKit component previews in both themes at 320, 375, 412, 430 and 768px. All twelve message kinds fit at 320px; card opens the sheet and empty states work. Preview artifacts: ignored `output/playwright/hearts-refresh/`.
+
 Saved 2026-10-11 so work can resume after a restart. To continue, tell Claude:
 **"Read PROJECT_CONTEXT.md and continue building the app."**
 

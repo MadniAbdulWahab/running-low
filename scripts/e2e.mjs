@@ -443,7 +443,7 @@ try {
   await A.page.getByRole('button', { name: 'Send: Rose' }).click()
   await tab(B.page, 'Home')
   check(
-    await B.page.locator('.hearts-last', { hasText: 'Sara sent a rose' }).waitFor({ timeout: 8000 }).then(() => true).catch(() => false),
+    await B.page.locator('.hearts-in', { hasText: 'Sara' }).filter({ has: B.page.locator('.hearts-last', { hasText: 'Sent a rose' }) }).waitFor({ timeout: 8000 }).then(() => true).catch(() => false),
     'B sees the latest one big on Home (a rose)',
   )
   check(
@@ -453,7 +453,7 @@ try {
   await B.page.locator('.hearts').evaluate((el) => el.scrollIntoView({ block: 'start' }))
   await B.page.waitForTimeout(300)
   await B.page.screenshot({ path: `${OUT}/hearts-card.png` })
-  check(await B.page.locator('.hearts-big--photo img').isVisible(), 'the hearts card shows the sender’s photo with the emoji')
+  check(await B.page.locator('.hearts-sender img').isVisible(), 'the hearts card shows the sender’s photo beside the received emoji')
 
   // ── The Hearts sheet: today / this week, latest, and a grid to send from ──
   await B.page.locator('.hearts-in').click()
