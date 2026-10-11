@@ -3,7 +3,7 @@ import { AppContext, type AddOptions, type AppCtx } from '../app-context'
 import { addItem, deleteMany, markDone, markDoneMany, moveMany, undoDone, undoDoneMany } from '../data/items'
 import { useItems } from '../hooks/useItems'
 import { useRoomTheme, type ThemeState } from '../hooks/useTheme'
-import { emojiFor, LIST_EMOJI } from '../lib/emoji'
+import { LIST_EMOJI } from '../lib/emoji'
 import type { Entry } from '../lib/parse'
 import { WEEK } from '../lib/time'
 import { LIST_INFO, LISTS } from '../rooms'
@@ -279,7 +279,6 @@ export function RoomShell({ uid, household, room, setRoom, theme }: Props) {
                 {listLabel}
                 {LISTS.filter((l) => rows[l].length).map((l) => {
                   const isFolded = !!folded[l] && !selecting
-                  const peek = [...new Set(rows[l].map((i) => emojiFor(i.name, i.list)))].slice(0, 4)
                   return (
                     <section key={l} data-list={l}>
                       <button
@@ -289,14 +288,11 @@ export function RoomShell({ uid, household, room, setRoom, theme }: Props) {
                       >
                         {LIST_INFO[l].label}
                         <span className="section-count">{needed[l].length}</span>
-                        {isFolded && (
-                          <span className="section-peek" aria-hidden="true">
-                            {peek.join(' ')}
-                          </span>
-                        )}
                         <ChevronRight />
                       </button>
-                      {!isFolded && (
+                      {isFolded ? (
+                        <FoldedCard items={needed[l]} ticked={rows[l].length - needed[l].length} onOpen={() => toggleFold(l)} />
+                      ) : (
                         <div className="group">
                           {rows[l].map((i) => (
                             <ItemRow key={i.id} item={i} />
@@ -379,6 +375,28 @@ export function RoomShell({ uid, household, room, setRoom, theme }: Props) {
       {openItem && <ItemSheet key={openItem.id} item={openItem} onClose={() => setOpenId(null)} />}
       {settings && <SettingsSheet theme={theme} onClose={() => setSettings(false)} />}
     </AppContext.Provider>
+  )
+}
+
+/** A folded Home section: one card naming the first few things still needed. */
+function FoldedCard({ items, ticked, onOpen }: { items: Item[]; ticked: number; onOpen: () => void }) {
+  const SHOW = 3
+  const names = items.slice(0, SHOW).map((i) => (i.qty && i.qty > 1 ? `${i.name} ×${i.qty}` : i.name))
+  const more = items.length - names.length
+  return (
+    <button className="group folded-card" onClick={onOpen}>
+      <span className="folded-names">
+        {names.length ? (
+          <>
+            {names.join(', ')}
+            {more > 0 && <span className="folded-more"> +{more} more</span>}
+          </>
+        ) : (
+          <span className="folded-more">All got · {plural(ticked)} ticked</span>
+        )}
+      </span>
+      <span className="folded-show">Show</span>
+    </button>
   )
 }
 

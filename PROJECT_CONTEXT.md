@@ -70,7 +70,7 @@ Saved 2026-10-11 so work can resume after a restart. To continue, tell Claude:
   - It reads "Select", and "Unselect" while active (tapping it again cancels).
   - The bottom bar becomes **Select all · Got it · Move · Delete**. Got it has an Undo; Delete asks first.
   - It uses batched writes (`markDoneMany`, `moveMany`, `deleteMany`).
-- **Home sections fold:** tapping a list heading on Home (Grocery/Household/Important) folds it to one line showing its count and emoji; the state is remembered per phone (localStorage `outof.folded`). The tab bar opens the full lists.
+- **Home sections fold:** tapping a list heading on Home (Grocery/Household/Important) folds it to a single card naming the first 3 items still needed (with ×qty), then "+N more" and "Show"; tapping the card or heading unfolds it; the state is remembered per phone (localStorage `outof.folded`). The tab bar opens the full lists.
 - **Sheets and pop-ups freeze the page behind them** (`useScrollLock`: body pinned with position: fixed, scroll restored on close). Sheets can be dragged down from anywhere once their content is at the top.
 - **Bottom bar:** `useKeyboard` lifts the dock only while typing and when the gap is keyboard-sized (over 120px); html/body have overscroll-behavior: none. Small visual-viewport shifts while scrolling used to make the tab bar drift.
 - **Pop-ups:** confirmations use `src/components/Alert.tsx`, an iOS-style centred alert in the app's colours. Choosing a list for Move uses `ActionSheet.tsx`.

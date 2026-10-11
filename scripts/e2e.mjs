@@ -243,9 +243,9 @@ try {
   await tab(A.page, 'Home')
   await A.page.locator('.section-head', { hasText: 'Grocery' }).click()
   check(
-    (await A.page.locator('section[data-list=grocery] .section-peek').isVisible()) &&
+    (await A.page.locator('section[data-list=grocery] .folded-names').textContent()).includes('Apples') &&
       (await A.page.locator('section[data-list=grocery] .item').count()) === 0,
-    'tapping Grocery on Home folds it to one line',
+    'tapping Grocery on Home folds it to one card naming its items',
   )
   await A.page.screenshot({ path: `${OUT}/home-folded.png` })
   await A.page.locator('.section-head', { hasText: 'Grocery' }).click()
