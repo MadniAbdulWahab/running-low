@@ -31,7 +31,7 @@ npm run deploy                         # app + security rules
 npx firebase deploy --only hosting     # app only, when the rules didn't change
 ```
 
-Both phones pick up the new version the next time the app is opened. If one still shows the old version, swipe it away in the app switcher and open it again.
+Both phones pick up the new version the next time the app is opened. (The app reopens on the tab you were on while it stays open in the background; after closing it fully from the app switcher, it opens on Home.) If one still shows the old version, swipe it away in the app switcher and open it again.
 
 ## Notifications (free Cloudflare Worker)
 
@@ -73,7 +73,7 @@ npm run dev:emu     # Vite against the emulators; no Firebase project needed
 - **Home:** a card for each tab (what's needed, tonight's meal, the next countdown), the hearts card, and both lists in foldable sections.
 - **Profile photos:** add one on setup (optional), or later from Settings (tap the faces at the top right). A selfie just taken with the front camera is mirrored to match the camera preview, and **Flip** turns any photo around. Removing a photo asks first. It shows in place of your initial, and with every heart you send: when one arrives, a card pops up with the sender's photo, name and emoji.
 - **Hearts (on Home):** a slim strip with the last one you received (their photo, the emoji, how many today) and a row of twelve to send (❤️ 🤗 😘 🥺 🌹 💭 ☕ 🍕 🚗 😴 💪 😂); swipe it sideways for more. Tap the strip for the Hearts sheet: Today / This week totals for each of you, a breakdown per emoji, the latest ones, and a grid to send from.
-- **Meals tab:** plan the week's meals and send their ingredients to Groceries in one tap. **Our meals** below it is a saved list of meals you make often: type one in the bar at the bottom ("Pasta night", or "Pasta night: pasta, 2 tomatoes, basil" to include ingredients). Tap a saved meal to edit it, plan it for any of the next 7 days, or send its ingredients to Groceries. When planning a day, "From our meals" fills in the name and ingredients in one tap, and "Save to Our meals" keeps a new one for next time.
+- **Meals tab:** plan the week's meals and send their ingredients to Groceries in one tap. **Our meals** below it is a saved list of meals you make often: type one in the bar at the bottom ("Pasta night", or "Pasta night: pasta, 2 tomatoes, basil" to include ingredients), with a photo from the camera button if you like, just like Groceries. Tap a saved meal to edit it, plan it for any of the next 7 days, or send its ingredients to Groceries. When planning a day, "From our meals" fills in the name and ingredients in one tap, and "Save to Our meals" keeps a new one for next time.
 - **Us tab:** count down to things you are looking forward to, keep shared sticky notes with checklists, and let the date jar pick what to do together.
 - **Leaving a list:** Settings → **Leave this list** takes you off it, so you can start a new one or join someone else's. Everything stays for whoever is still on it, and their invite code works again.
 - **Using it:** tap the tick on the right to mark something as got (it stays in the list, struck through, for a day; tapping it again asks before putting it back). Tap an item for its quantity, note, photo and due date. Press and hold to delete. Tap **Select** next to "On the list" to act on several items at once. Typing "2 milk" or "milk x2" sets a quantity.

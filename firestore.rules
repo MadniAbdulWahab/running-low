@@ -170,7 +170,9 @@ service cloud.firestore {
           && request.resource.data.name is string
           && request.resource.data.name.size() > 0 && request.resource.data.name.size() <= 80
           && request.resource.data.ingredients is list && request.resource.data.ingredients.size() <= 20
-          && (!('uses' in request.resource.data) || request.resource.data.uses is int);
+          && (!('uses' in request.resource.data) || request.resource.data.uses is int)
+          && (!('photoId' in request.resource.data) || request.resource.data.photoId == null
+              || request.resource.data.photoId is string);
       }
 
       // One planned meal per day; the doc id is the date.
@@ -181,6 +183,7 @@ service cloud.firestore {
           && request.resource.data.day == day
           && request.resource.data.name is string && request.resource.data.name.size() <= 80
           && request.resource.data.ingredients is list && request.resource.data.ingredients.size() <= 20
+          && (!('photoId' in request.resource.data) || request.resource.data.photoId is string)
           && request.resource.data.updatedBy == me();
       }
 

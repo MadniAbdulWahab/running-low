@@ -26,8 +26,11 @@ function readRoom(): RoomId {
     history.replaceState(null, '', location.pathname)
     return fromUrl
   }
+  // The tab is kept for this session only (switching apps, a reload), so opening the
+  // app fresh after closing it fully starts on Home.
   try {
-    const r = asRoom(localStorage.getItem(ROOM_KEY))
+    localStorage.removeItem(ROOM_KEY) // older versions kept it for good
+    const r = asRoom(sessionStorage.getItem(ROOM_KEY))
     if (r) return r
   } catch {}
   return 'home'
@@ -73,7 +76,7 @@ function SignedIn({ user, theme }: { user: User; theme: ThemeState }) {
   const setRoom = useCallback((r: RoomId) => {
     setRoomState(r)
     try {
-      localStorage.setItem(ROOM_KEY, r)
+      sessionStorage.setItem(ROOM_KEY, r)
     } catch {}
   }, [])
 

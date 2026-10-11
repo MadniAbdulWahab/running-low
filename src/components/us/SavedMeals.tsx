@@ -1,6 +1,6 @@
 import type { Recipe } from '../../data/recipes'
 import { ChevronRight } from '../Icons'
-import { mealEmoji } from './MealPlanner'
+import { MealThumb } from './MealThumb'
 
 /** "Our meals": the saved list on the Meals tab. Tap one to edit it, plan it or shop for it. */
 export function SavedMeals({ recipes, onOpen }: { recipes: Recipe[] | null; onOpen: (id: string) => void }) {
@@ -14,9 +14,7 @@ export function SavedMeals({ recipes, onOpen }: { recipes: Recipe[] | null; onOp
         <div className="group">
           {recipes.map((r) => (
             <button key={r.id} className="meal-row recipe-row" onClick={() => onOpen(r.id)}>
-              <span className="recipe-emoji" aria-hidden="true">
-                {mealEmoji(r.name)}
-              </span>
+              <MealThumb name={r.name} photoId={r.photoId} />
               <span className="meal-text">
                 <span className="meal-name">{r.name}</span>
                 {r.ingredients.length ? (

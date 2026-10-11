@@ -365,3 +365,19 @@ households/{CODE}/photos/{id}   { itemKey, dataUrl, createdAt }
   - E2E: saving from the bar with ingredients, sync to B, duplicate caught, the chip fills today's sheet, no "Save to Our meals" for an already-saved meal, planning from the saved meal's sheet, the planned-day dot, Replace asks and Cancel keeps it, ingredients edited on B show on A, and Delete asks and syncs.
 - **E2E timing:** sync waits are now 15 s in WebKit and 8 s in Chromium (`WAIT` in `scripts/e2e.mjs`). With more live collections, WebKit on Windows takes 6–10 s for the first sync after a join against the emulator. "B sees A's photo at the top right" still missed once right after an emulator cold start, then passed.
 
+## Meal photos; open on Home after a full close (2026-10-12)
+- **Feedback:** saved meals had no photo option, unlike Groceries, so the design wasn't consistent. The app also reopened on the last tab even after being fully closed; it should open on Home.
+- **Meal photos (same as grocery items):**
+  - The Meals bar (`MealComposer`) has the camera button and the pending-photo preview from QuickAdd (`compressImage`); the placeholder becomes "Name this meal". The camera is labelled "Add a meal photo".
+  - `recipes/{id}.photoId` points at the shared `photos/` collection (`newPhotoDoc`).
+  - The saved meal's sheet has a Photo section like ItemSheet: photo-frame, tap for `PhotoViewer`, Replace photo, Remove photo.
+  - `MealThumb` shows the photo (32px) or the emoji tile, in Our meals rows and on planned days.
+  - Planning from a saved meal copies its `photoId` onto `meals/{day}` (from both the meal's sheet and the "From our meals" chips), so the week shows the photo too.
+  - Old photos are deleted when replaced, removed or when the meal is deleted, unless a planned day still uses them.
+  - Rules: `photoId` must be a string (null allowed for recipes) on recipes and meals.
+- **Tab memory:**
+  - `App.tsx` keeps the tab in **sessionStorage** (the `outof.room` key). It survives switching apps and reloads, but a fresh start after a full close opens Home.
+  - The old localStorage key is removed on start. Notification `?room=` links still win.
+- **E2E:** the Meals bar takes a photo; B sees the thumb; the meal's sheet shows it; planning it (Replace) puts the photo on today's row. At the very end, a reload keeps the tab, the app still syncs after the reload, and a fresh page opens on Home.
+- **WebKit test quirk:** a reload leaves the old page's long-poll channels hanging for a while. Both simulated phones share one WebKit browser and its per-host connection limit, so later syncs stalled for both. That's why the reload checks run last. The cancelled-channel console message ("…channel?… due to access control checks") is filtered out.
+

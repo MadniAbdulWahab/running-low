@@ -2,6 +2,7 @@ import { collection, deleteDoc, doc, increment, serverTimestamp, setDoc, updateD
 import { db } from '../firebase'
 import { toMs } from '../hooks/useCollection'
 import { report } from '../lib/report'
+import { newPhotoDoc, photoRef } from './photos'
 
 /**
  * "Our meals": meals you make often, saved with their ingredients so a day in the
@@ -14,6 +15,8 @@ export interface Recipe {
   ingredients: string[]
   /** How many times it's been planned; the most used come first. */
   uses: number
+  /** A photo of the meal (in `photos/`), like grocery items have. */
+  photoId: string | null
   createdAt: number
 }
 
@@ -26,6 +29,7 @@ export function toRecipe(id: string, d: DocumentData): Recipe {
     name: d.name ?? '',
     ingredients: Array.isArray(d.ingredients) ? d.ingredients : [],
     uses: typeof d.uses === 'number' ? d.uses : 0,
+    photoId: typeof d.photoId === 'string' ? d.photoId : null,
     createdAt: toMs(d.createdAt) ?? Date.now(),
   }
 }
@@ -39,10 +43,33 @@ const clean = (name: string, ingredients: string[]) => ({
 })
 
 /** Saves a new meal and returns its id right away. */
-export function createRecipe(hid: string, uid: string, name: string, ingredients: string[] = []): string {
+export function createRecipe(
+  hid: string,
+  uid: string,
+  name: string,
+  ingredients: string[] = [],
+  photo: string | null = null,
+): string {
   const ref = doc(recipesCol(hid))
-  setDoc(ref, { ...clean(name, ingredients), uses: 0, createdBy: uid, createdAt: serverTimestamp() }).catch(report)
+  const photoId = photo ? newPhotoDoc(hid, `meal:${ref.id}`, photo) : null
+  setDoc(ref, {
+    ...clean(name, ingredients),
+    uses: 0,
+    ...(photoId ? { photoId } : {}),
+    createdBy: uid,
+    createdAt: serverTimestamp(),
+  }).catch(report)
   return ref.id
+}
+
+/**
+ * Adds, replaces or (with null) removes a saved meal's photo. The old photo is kept while a
+ * planned day still shows it.
+ */
+export function setRecipePhoto(hid: string, recipe: Recipe, dataUrl: string | null, inUse: boolean) {
+  const photoId = dataUrl ? newPhotoDoc(hid, `meal:${recipe.id}`, dataUrl) : null
+  updateDoc(recipeRef(hid, recipe.id), { photoId }).catch(report)
+  if (recipe.photoId && !inUse) deleteDoc(photoRef(hid, recipe.photoId)).catch(report)
 }
 
 export function updateRecipe(hid: string, id: string, name: string, ingredients: string[]) {
@@ -54,8 +81,10 @@ export function usedRecipe(hid: string, id: string) {
   updateDoc(recipeRef(hid, id), { uses: increment(1) }).catch(report)
 }
 
-export function deleteRecipe(hid: string, id: string) {
-  deleteDoc(recipeRef(hid, id)).catch(report)
+/** Deletes a saved meal, and its photo unless a planned day still shows it. */
+export function deleteRecipe(hid: string, recipe: Recipe, photoInUse: boolean) {
+  deleteDoc(recipeRef(hid, recipe.id)).catch(report)
+  if (recipe.photoId && !photoInUse) deleteDoc(photoRef(hid, recipe.photoId)).catch(report)
 }
 
 /** The saved meal with this name, ignoring case and spaces at the ends. */

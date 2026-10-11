@@ -3245,3 +3245,10 @@ section[aria-label='Our meals'] {
   border-radius: 50%;
   background: var(--brand);
 }
+
+/* A meal's photo: same size and shape as its emoji tile, so rows line up */
+.meal-thumb {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+}

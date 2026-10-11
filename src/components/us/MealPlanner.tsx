@@ -5,6 +5,7 @@ import { emojiFor } from '../../lib/emoji'
 import { splitEntry, type Entry } from '../../lib/parse'
 import { parseISO, todayISO, weekDays, weekLabel } from '../../lib/time'
 import { ChevronRight } from '../Icons'
+import { MealThumb } from './MealThumb'
 
 export const mealEmoji = (name: string) => {
   const e = emojiFor(name, 'grocery')
@@ -61,11 +62,14 @@ export function MealPlanner({ meals, onOpenDay }: { meals: Meal[] | null; onOpen
                 )}
                 {m && m.ingredients.length > 0 && <span className="meal-ingredients">{m.ingredients.join(', ')}</span>}
               </span>
-              {m?.name && (
-                <span className="meal-emoji" aria-hidden="true">
-                  {mealEmoji(m.name)}
-                </span>
-              )}
+              {m?.name &&
+                (m.photoId ? (
+                  <MealThumb name={m.name} photoId={m.photoId} />
+                ) : (
+                  <span className="meal-emoji" aria-hidden="true">
+                    {mealEmoji(m.name)}
+                  </span>
+                ))}
             </button>
           )
         })}

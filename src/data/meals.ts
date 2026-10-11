@@ -9,6 +9,8 @@ export interface Meal {
   name: string
   /** As typed, one entry per ingredient ("2 tomatoes"). */
   ingredients: string[]
+  /** The saved meal's photo, when planned from one. */
+  photoId: string | null
   updatedBy: string
   updatedAt: number
 }
@@ -21,6 +23,7 @@ export function toMeal(id: string, d: DocumentData): Meal {
     day: id,
     name: d.name ?? '',
     ingredients: Array.isArray(d.ingredients) ? d.ingredients : [],
+    photoId: typeof d.photoId === 'string' ? d.photoId : null,
     updatedBy: d.updatedBy,
     updatedAt: toMs(d.updatedAt) ?? Date.now(),
   }
@@ -35,7 +38,14 @@ export function splitIngredients(text: string): string[] {
     .slice(0, 20)
 }
 
-export function saveMeal(hid: string, uid: string, day: string, name: string, ingredients: string[]) {
+export function saveMeal(
+  hid: string,
+  uid: string,
+  day: string,
+  name: string,
+  ingredients: string[],
+  photoId: string | null = null,
+) {
   if (!name.trim() && !ingredients.length) {
     deleteDoc(mealRef(hid, day)).catch(report)
     return
@@ -44,6 +54,7 @@ export function saveMeal(hid: string, uid: string, day: string, name: string, in
     day,
     name: name.trim().slice(0, 80),
     ingredients: ingredients.map((i) => i.slice(0, 80)).slice(0, 20),
+    ...(photoId ? { photoId } : {}),
     updatedBy: uid,
     updatedAt: serverTimestamp(),
   }).catch(report)

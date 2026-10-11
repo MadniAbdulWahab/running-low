@@ -1,10 +1,14 @@
 import { useRef, useState } from 'react'
 import { useApp } from '../../app-context'
 import { saveMeal, splitIngredients, type Meal } from '../../data/meals'
-import { deleteRecipe, updateRecipe, usedRecipe, type Recipe } from '../../data/recipes'
+import { compressImage } from '../../data/photos'
+import { deleteRecipe, setRecipePhoto, updateRecipe, usedRecipe, type Recipe } from '../../data/recipes'
+import { usePhoto } from '../../hooks/usePhoto'
 import { emojiFor } from '../../lib/emoji'
 import { parseISO, toISO } from '../../lib/time'
 import { Alert, type AlertAction } from '../Alert'
+import { CameraIcon } from '../Icons'
+import { PhotoViewer } from '../PhotoViewer'
 import { Sheet } from '../Sheet'
 import { ingredientEntries } from './MealPlanner'
 
@@ -25,6 +29,26 @@ export function RecipeSheet({ recipe, meals, onClose }: { recipe: Recipe; meals:
   const [name, setName] = useState(recipe.name)
   const [ingredients, setIngredients] = useState(recipe.ingredients.join(', '))
   const [alert, setAlert] = useState<{ title: string; message?: string; actions: AlertAction[] } | null>(null)
+  const photo = usePhoto(hid, recipe.photoId)
+  const [busy, setBusy] = useState(false)
+  const [viewing, setViewing] = useState(false)
+  // A planned day may still show the old photo; keep it for that day.
+  const photoInUse = !!recipe.photoId && (meals ?? []).some((m) => m.photoId === recipe.photoId)
+
+  const onFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    setBusy(true)
+    try {
+      setRecipePhoto(hid, recipe, await compressImage(file), photoInUse)
+    } catch {
+      toast('Couldn’t read that photo')
+    } finally {
+      setBusy(false)
+    }
+  }
+  const fileInput = <input type="file" accept="image/*" hidden onChange={onFile} />
   const latest = useRef({ name, ingredients })
   latest.current = { name, ingredients }
   const saved = useRef(JSON.stringify([recipe.name, recipe.ingredients]))
@@ -49,7 +73,7 @@ export function RecipeSheet({ recipe, meals, onClose }: { recipe: Recipe; meals:
     const n = name.trim() || recipe.name
     const doIt = () => {
       save()
-      saveMeal(hid, uid, day, n, list)
+      saveMeal(hid, uid, day, n, list, recipe.photoId)
       usedRecipe(hid, recipe.id)
       toast(`Planned ${n} for ${label === 'Today' ? 'today' : parseISO(day).toLocaleDateString(undefined, { weekday: 'long' })}`)
     }
@@ -75,7 +99,7 @@ export function RecipeSheet({ recipe, meals, onClose }: { recipe: Recipe; meals:
           onSelect: () => {
             saved.current = 'deleted'
             latest.current = { name: recipe.name, ingredients: recipe.ingredients.join(', ') }
-            deleteRecipe(hid, recipe.id)
+            deleteRecipe(hid, recipe, photoInUse)
             toast(`Deleted ${recipe.name}`)
             onClose()
           },
@@ -128,6 +152,30 @@ export function RecipeSheet({ recipe, meals, onClose }: { recipe: Recipe; meals:
       )}
       <p className="group-footer">Separate with commas. Put a number first for a quantity, like “2 tomatoes”.</p>
 
+      <h3 className="group-label">Photo</h3>
+      <div className="group">
+        {photo ? (
+          <>
+            <button className="photo-frame" onClick={() => setViewing(true)} aria-label="View photo">
+              <img src={photo} alt={`Photo of ${recipe.name}`} />
+            </button>
+            <label className="row row--action">
+              Replace photo
+              {fileInput}
+            </label>
+            <button className="row row--danger" onClick={() => setRecipePhoto(hid, recipe, null, photoInUse)}>
+              Remove photo
+            </button>
+          </>
+        ) : (
+          <label className="row row--action">
+            <CameraIcon />
+            {busy ? 'Shrinking photo…' : 'Add a photo'}
+            {fileInput}
+          </label>
+        )}
+      </div>
+
       <h3 className="group-label">Plan it for</h3>
       <div className="plan-days" role="group" aria-label="Plan it for">
         {nextDays().map((d) => (
@@ -157,6 +205,9 @@ export function RecipeSheet({ recipe, meals, onClose }: { recipe: Recipe; meals:
         </button>
       </div>
       {alert && <Alert {...alert} onClose={() => setAlert(null)} />}
+      {viewing && photo && (
+        <PhotoViewer src={photo} alt={`Photo of ${recipe.name}`} onClose={() => setViewing(false)} />
+      )}
     </Sheet>
   )
 }

@@ -620,7 +620,21 @@ try {
     await A.page.locator('.recipe-row', { hasText: 'Tacos' }).waitFor({ state: 'detached', timeout: 8000 }).then(() => true).catch(() => false),
     'a deleted meal goes from Our meals on A too',
   )
+  // ── A meal with a photo, like groceries: from the bar's camera, then planned for today ──
+  await A.page.locator('.toolbar .quick-add input[type=file]').setInputFiles('public/pwa-192x192.png')
+  check(await A.page.locator('.toolbar .pending-photo img').waitFor({ timeout: WAIT }).then(() => true).catch(() => false), 'the Meals bar takes a photo, like Groceries')
+  await A.page.getByLabel('Save a meal').fill('Pizza: dough, mozzarella')
+  await A.page.getByLabel('Save a meal').press('Enter')
+  const pizzaOnB = B.page.locator('.recipe-row', { hasText: 'Pizza' })
+  check(await pizzaOnB.locator('.meal-thumb img').waitFor({ timeout: WAIT }).then(() => true).catch(() => false), 'the saved meal shows its photo on B')
+  await pizzaOnB.click()
+  check(await B.page.locator('.sheet .photo-frame img').waitFor({ timeout: WAIT }).then(() => true).catch(() => false), 'the meal’s sheet shows the photo, with Replace and Remove')
+  await B.page.locator('.sheet .plan-day').first().click()
+  await B.page.locator('.alert').getByRole('button', { name: 'Replace' }).click()
+  await B.page.locator('.sheet-done').click()
+  check(await A.page.locator('.meal-row[data-today] .meal-thumb img').waitFor({ timeout: WAIT }).then(() => true).catch(() => false), 'planned from a meal with a photo, the day shows the photo too')
   await A.page.screenshot({ path: `${OUT}/our-meals.png`, fullPage: true })
+
   await tab(A.page, 'Us')
   check((await A.page.locator('.meal-row').count()) === 0, 'Us no longer shows meals')
 
@@ -726,11 +740,31 @@ try {
       .then(() => true).catch(() => false),
     'B’s photo comes back with them',
   )
+
+  // ── Last, because a reload in WebKit leaves the old page's connections hanging for a while,
+  //    which slows every simulated phone (one browser). A real iPhone reloads a fresh process.
+  // The open tab is kept while the app is open (even a reload), but a fresh start opens Home.
+  await tab(A.page, 'Meals')
+  await A.page.reload()
+  await A.page.locator('.large-title').first().waitFor()
+  check((await A.page.locator('.large-title').first().textContent()) === 'Meals', 'a reload stays on the same tab')
+  await tab(B.page, 'Groceries')
+  await add(B.page, 'Lemons')
+  await tab(A.page, 'Groceries')
+  check(await visible(A.page, 'Lemons', 60000), 'after a reload, the app still syncs')
+  {
+    const fresh = await A.ctx.newPage()
+    await fresh.goto(URL)
+    await fresh.locator('.large-title').first().waitFor({ timeout: 30000 })
+    check((await fresh.locator('.large-title').first().textContent()) === 'Running Low', 'opening the app fresh starts on Home')
+    await fresh.close()
+  }
 } catch (e) {
   failed++
   console.error('ERROR', e)
 } finally {
-  const real = errors.filter((e) => !/offline|network|Could not reach|WebChannel|net::|internal error|Beacon API/i.test(e))
+  // "due to access control checks": WebKit cancelling the old page's Firestore channel on a reload.
+  const real = errors.filter((e) => !/offline|network|Could not reach|WebChannel|net::|internal error|Beacon API|channel\?.*due to access control checks/i.test(e))
   check(real.length === 0, `no console errors${real.length ? ':\n  ' + real.join('\n  ') : ''}`)
   await browser.close()
   console.log(failed ? `\n${failed} check(s) failed` : '\nAll checks passed')

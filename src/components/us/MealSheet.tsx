@@ -24,6 +24,8 @@ export function MealSheet({
   const [name, setName] = useState(meal?.name ?? '')
   const [ingredients, setIngredients] = useState((meal?.ingredients ?? []).join(', '))
   const editing = useRef(false)
+  // The photo comes from the saved meal it was filled from.
+  const photoId = useRef(meal?.photoId ?? null)
   const saved = useRef(JSON.stringify([meal?.name ?? '', meal?.ingredients ?? []]))
 
   // Take changes from the other phone, but never while typing here.
@@ -39,7 +41,7 @@ export function MealSheet({
     const key = JSON.stringify([n.trim(), list])
     if (key === saved.current) return
     saved.current = key
-    saveMeal(hid, uid, day, n, list)
+    saveMeal(hid, uid, day, n, list, photoId.current)
   }
   useEffect(() => {
     if (!editing.current) return
@@ -59,6 +61,8 @@ export function MealSheet({
   // A saved meal fills in the name and ingredients in one tap.
   const fillFrom = (r: Recipe) => {
     const ing = r.ingredients.join(', ')
+    photoId.current = r.photoId
+    saved.current = '' // a new photo is a change even if the words match
     setName(r.name)
     setIngredients(ing)
     save(r.name, ing)
