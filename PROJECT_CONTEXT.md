@@ -103,7 +103,7 @@ Saved 2026-10-11 so work can resume after a restart. To continue, tell Claude:
   - Data: `meals/{YYYY-MM-DD}` (one per day), with rules and a rules test. `weekDays`, `toISO` and `weekLabel` are in lib/time.ts.
 - **Countdowns (done):** a swipeable row of pastel cards on Us (days to go, Today! 🎉, past one-offs faded at the end). They can repeat every year. Tapping one opens `CountdownSheet` (name, date, Once / Every year, emoji, delete). Data: `countdowns/{id}`.
 - **Date jar (done):** add ideas; "Pick one" shuffles for about 1.1 s and lands on an idea not yet done (never the same one twice in a row). "Let's do it" marks it done (`doneAt`); "See all ideas" lists them with Put back and remove. Data: `ideas/{id}`.
-- **Us tab order:** Hearts, Countdowns, Notes, Meals, Date jar. There are 19 rules tests.
+- **Us tab order:** Hearts, Countdowns, Notes, Meals, Date jar (later: Meals moved to its own tab, see below). There are 19 rules tests.
 - **Push notifications (phase 2, done):**
   - **Worker:** `running-low-push` on Cloudflare (the user's account, wrangler 4.149 pinned in `worker/`), at https://running-low-push.madniabdulwahab.workers.dev.
     - `POST /notify {hid, kind: items|notes|hearts, title, body, room}` with the Firebase ID token.
@@ -117,8 +117,27 @@ Saved 2026-10-11 so work can resume after a restart. To continue, tell Claude:
   - **Tests:** the worker has unit tests (`npm run test:worker`, 7), and the rules tests total 20. The live worker was checked with a throwaway account: real token accepted, non-member 403, bad input 400.
   - **Still to check on real phones:** push delivery can't be simulated end-to-end.
 - **Code:** `src/components/us/*`, `src/data/{notes,pings}.ts` and `src/hooks/useCollection.ts` (a generic live query; `toMs` lives there).
-- **Types:** `RoomId` = `ListRoom` | 'us', with `ListRoom` = 'home' | ListId. List-only components take `ListRoom`, and `isList()` is in rooms.ts.
+- **Types:** see "Shopping and Meals tabs" below (`isList()` was replaced).
 - **Rules:** notes (members only, size and colour checks, can't change `createdBy`, `updatedBy` must be you) and pings (sent as yourself, never edited). Both are covered by rules tests (16 total).
+
+## Shopping and Meals tabs; leaving a list (2026-10-11)
+- **Request:** the user wanted meals on their own tab, but six tabs is too many, so Grocery and Household were merged. Separately, a member could not leave a list. The two options were leaving or belonging to several lists; leaving was chosen because it is simpler and fits a two-person app.
+- **Tabs:** Home · Shopping · Important · Meals · Us.
+  - **Shopping** shows the Grocery and Household lists as two foldable sections in their own colours (the fold state is shared with Home). It has a Grocery/Household chip on the add bar (guesses from history, tap to switch) and Quick add with 5 picks per list. Its badge counts both lists.
+  - **Meals** is the planner, moved off Us, with no add bar.
+  - **Us** is now Hearts, Countdowns, Notes and the Date jar.
+  - The data model is unchanged: items still have `list: grocery|household|important`.
+- **Types and helpers:** `ListRoom` = 'home' | 'shopping' | 'important'; `RoomId` = ListRoom | 'meals' | 'us'. rooms.ts has `ROOM_LISTS` (lists shown per tab), `isListRoom`, `singleList` (the list for a one-list tab, or null), `roomForList` (list → tab) and `ROOM_LABEL`.
+- **Compatibility:**
+  - `App.tsx` `asRoom()` maps an old saved tab or notification link (`grocery`/`household`) to `shopping`.
+  - The Worker accepts the new and the old room names.
+  - QuickAdd ignores a chip choice that doesn't belong to the current tab, because the bar stays mounted across tabs.
+- **Leave this list** (Settings, danger row above Sign out, with an Alert):
+  - `leaveHousehold` is one batch: `arrayRemove` yourself from `members`, delete your `memberNames` entry and your `push/{uid}`, and delete `users/{uid}`. The app then shows the start-or-join screen.
+  - The data stays for the other member, and the code works again since there is room.
+  - When the last member leaves, the data is orphaned and nobody can read it.
+  - Rule: a member may update only `members` + `memberNames`, removing only themselves. Rules tests: 21.
+- **E2E** (WebKit + Chromium, all passing): checks the new tab bar, the Shopping chip and its sections, that Meals is on its own tab, and that B leaves, A sees "Waiting for someone to join", and B rejoins with the same code.
 
 ## Colour system (2026-10-11)
 - The user felt the colour identity was inconsistent: blue meant both actions and Household, red meant Important, delete and badges, and orange was only the icon and Grocery. They chose the **orange-brand** option, with **pastel** colours where possible.

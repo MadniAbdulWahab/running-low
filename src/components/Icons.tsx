@@ -44,6 +44,13 @@ export const HomeGlyph = () => (
   </svg>
 )
 
+export const MealsGlyph = () => (
+  <svg {...base} strokeWidth={2}>
+    <path d="M7 3.5v7.5M4.5 3.5v4.5a2.5 2.5 0 0 0 5 0V3.5M7 11v9.5" />
+    <path d="M17 20.5V3.5c-2.2 1.2-3.3 3.7-3.3 6.6v3.4H17" />
+  </svg>
+)
+
 export const HeartGlyph = () => (
   <svg {...base} strokeWidth={2}>
     <path d="M12 20s-7.5-4.6-7.5-10.1A4.4 4.4 0 0 1 12 7.3a4.4 4.4 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20z" />

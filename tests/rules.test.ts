@@ -7,7 +7,9 @@ import {
   type RulesTestEnvironment,
 } from '@firebase/rules-unit-testing'
 import {
+  arrayRemove,
   arrayUnion,
+  deleteField,
   deleteDoc,
   doc,
   getDoc,
@@ -150,6 +152,24 @@ describe('households: join', () => {
         'memberNames.bob': 'Bob',
       }),
     )
+  })
+})
+
+describe('households: leaving', () => {
+  it('a member can leave (removing only themselves), freeing the spot', async () => {
+    await seed(['alice', 'bob'])
+    const ref = (who: string) => doc(as(who), 'households', CODE)
+    // Can't remove someone else, or leave while renaming the list.
+    await assertFails(updateDoc(ref('alice'), { members: arrayRemove('bob'), 'memberNames.bob': deleteField() }))
+    await assertFails(
+      updateDoc(ref('bob'), { members: arrayRemove('bob'), 'memberNames.bob': deleteField(), name: 'Mine' }),
+    )
+    // Keeping your name while leaving isn't allowed either.
+    await assertFails(updateDoc(ref('bob'), { members: arrayRemove('bob') }))
+    await assertSucceeds(updateDoc(ref('bob'), { members: arrayRemove('bob'), 'memberNames.bob': deleteField() }))
+    await assertFails(getDoc(ref('bob')))
+    // Someone new can now join with the code.
+    await assertSucceeds(updateDoc(ref('carol'), { members: arrayUnion('carol'), 'memberNames.carol': 'Carol' }))
   })
 })
 

@@ -13,16 +13,22 @@ import type { RoomId } from './types'
 
 const ROOM_KEY = 'outof.room'
 
+/** A known tab, or null. Grocery and Household were once tabs of their own; they live in Shopping now. */
+function asRoom(r: unknown): RoomId | null {
+  if (r === 'grocery' || r === 'household') return 'shopping'
+  return ROOM_ORDER.includes(r as RoomId) ? (r as RoomId) : null
+}
+
 function readRoom(): RoomId {
   // Opened from a notification: /?room=us
-  const fromUrl = new URLSearchParams(location.search).get('room') as RoomId | null
-  if (fromUrl && ROOM_ORDER.includes(fromUrl)) {
+  const fromUrl = asRoom(new URLSearchParams(location.search).get('room'))
+  if (fromUrl) {
     history.replaceState(null, '', location.pathname)
     return fromUrl
   }
   try {
-    const r = localStorage.getItem(ROOM_KEY) as RoomId | null
-    if (r && ROOM_ORDER.includes(r)) return r
+    const r = asRoom(localStorage.getItem(ROOM_KEY))
+    if (r) return r
   } catch {}
   return 'home'
 }
@@ -75,8 +81,8 @@ function SignedIn({ user, theme }: { user: User; theme: ThemeState }) {
   useEffect(() => {
     if (!('serviceWorker' in navigator)) return
     const onMessage = (e: MessageEvent) => {
-      const r = e.data?.room as RoomId | undefined
-      if (e.data?.type === 'open-room' && r && ROOM_ORDER.includes(r)) setRoom(r)
+      const r = asRoom(e.data?.room)
+      if (e.data?.type === 'open-room' && r) setRoom(r)
     }
     navigator.serviceWorker.addEventListener('message', onMessage)
     return () => navigator.serviceWorker.removeEventListener('message', onMessage)

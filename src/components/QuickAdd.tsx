@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { useApp, type AddOptions } from '../app-context'
 import { compressImage } from '../data/photos'
 import { cleanName, normalizeKey, parseQty, splitEntry } from '../lib/parse'
-import { LIST_INFO, LISTS } from '../rooms'
+import { LIST_INFO, ROOM_LABEL, ROOM_LISTS, singleList } from '../rooms'
 import type { Item, ListId, ListRoom } from '../types'
 import { ArrowUp, CameraIcon, CloseIcon, PlusCircle } from './Icons'
 
@@ -12,25 +12,30 @@ export function QuickAdd({ room }: { room: ListRoom }) {
   const [photo, setPhoto] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [focused, setFocused] = useState(false)
-  const [picked, setPicked] = useState<ListId>('grocery')
+  const lists = ROOM_LISTS[room]
+  const single = singleList(room)
+  const [picked, setPicked] = useState<ListId>(lists[0])
   const [chipTouched, setChipTouched] = useState(false)
   const known = useMemo(() => new Set(byKey.keys()), [byKey])
 
-  // On the home screen, guess the list from history as you type, until the chip is tapped.
-  const chip: ListId = chipTouched ? picked : (byKey.get(normalizeKey(parseQty(text).name))?.list ?? picked)
+  // On tabs with several lists, guess the list from history as you type, until the chip is tapped.
+  const guess = byKey.get(normalizeKey(parseQty(text).name))?.list
+  // The bar stays mounted across tabs, so a choice made on another tab may not belong here.
+  const base = lists.includes(picked) ? picked : lists[0]
+  const chip: ListId = chipTouched ? base : guess && lists.includes(guess) ? guess : base
 
   const suggestions = useMemo(() => {
     const q = normalizeKey(parseQty(text).name)
     if (!q || photo) return []
     const starts = (i: Item) => Number(i.key.startsWith(q))
     return items
-      .filter((i) => i.status !== 'needed' && i.key.includes(q) && (room === 'home' || i.list === room))
+      .filter((i) => i.status !== 'needed' && i.key.includes(q) && lists.includes(i.list))
       .sort((a, b) => starts(b) - starts(a) || b.count - a.count)
       .slice(0, 4)
-  }, [text, items, room, photo])
+  }, [text, items, lists, photo])
 
   const target = (): AddOptions =>
-    room === 'home' ? (chipTouched ? { list: chip } : { fallback: chip }) : { list: room }
+    room === 'home' ? (chipTouched ? { list: chip } : { fallback: chip }) : { list: single ?? chip }
 
   const reset = () => {
     setText('')
@@ -53,7 +58,7 @@ export function QuickAdd({ room }: { room: ListRoom }) {
   }
 
   const pick = (item: Item) => {
-    add([item.name], { list: room === 'home' ? item.list : room })
+    add([item.name], { list: single ?? item.list })
     reset()
   }
 
@@ -72,12 +77,12 @@ export function QuickAdd({ room }: { room: ListRoom }) {
   }
 
   const cycleChip = () => {
-    setPicked(LISTS[(LISTS.indexOf(chip) + 1) % LISTS.length])
+    setPicked(lists[(lists.indexOf(chip) + 1) % lists.length])
     setChipTouched(true)
   }
 
   const canAdd = Boolean(text.trim() || photo)
-  const placeholder = photo ? 'What is it? (optional)' : room === 'home' ? 'New item' : `Add to ${LIST_INFO[room].label}`
+  const placeholder = photo ? 'What is it? (optional)' : room === 'home' ? 'New item' : `Add to ${ROOM_LABEL[room]}`
 
   return (
     <div className="toolbar-inner">
@@ -100,7 +105,7 @@ export function QuickAdd({ room }: { room: ListRoom }) {
         </ul>
       )}
       <form className="quick-add" onSubmit={submit}>
-        {room === 'home' ? (
+        {!single ? (
           <button
             type="button"
             className="list-chip"

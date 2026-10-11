@@ -1,7 +1,7 @@
 export type ListId = 'grocery' | 'household' | 'important'
-/** Screens that show items: Home plus the three lists. */
-export type ListRoom = 'home' | ListId
-export type RoomId = ListRoom | 'us'
+/** Tabs that show items: Home (everything), Shopping (Grocery + Household) and Important. */
+export type ListRoom = 'home' | 'shopping' | 'important'
+export type RoomId = ListRoom | 'meals' | 'us'
 export type ThemePref = 'system' | 'light' | 'dark'
 export type Mode = 'light' | 'dark'
 

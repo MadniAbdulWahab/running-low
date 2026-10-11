@@ -2,7 +2,7 @@
 
 A shared "we're running low" list for two people. It's an installable PWA for iPhone that syncs live between both phones and works offline. It runs entirely on Firebase's free **Spark** plan, so no card is needed.
 
-It looks and feels like a native iOS app. There are three lists, **Grocery**, **Household** and **Important** (with due dates), plus a home screen showing everything at once.
+It looks and feels like a native iOS app. There are three lists, **Grocery**, **Household** and **Important** (with due dates). The tab bar is **Home** (everything at once) · **Shopping** (Grocery and Household together) · **Important** · **Meals** (the week's plan) · **Us**.
 
 **Live:** https://running-low.web.app (Firebase project `running-low`).
 
@@ -70,10 +70,13 @@ npm run dev:emu     # Vite against the emulators; no Firebase project needed
 ## How it works
 
 - **Data:** `households/{CODE}`, with `items` and `photos` subcollections. There is one item doc per name: adding something you've had before flips it back to *needed* and bumps its count, and those counts drive the Quick add suggestions.
-- **Us tab:** send a heart (or a hug, kiss, coffee), count down to things you are looking forward to, keep shared sticky notes with checklists, plan the week's meals (and send their ingredients to Grocery in one tap), and let the date jar pick what to do together.
+- **Shopping tab:** Grocery and Household as two foldable sections. The chip on the add bar picks which one a new item goes to (it guesses from history; tap it to switch).
+- **Meals tab:** plan the week's meals and send their ingredients to Grocery in one tap.
+- **Us tab:** send a heart (or a hug, kiss, coffee), count down to things you are looking forward to, keep shared sticky notes with checklists, and let the date jar pick what to do together.
+- **Leaving a list:** Settings → **Leave this list** takes you off it, so you can start a new one or join someone else's. Everything stays for whoever is still on it, and their invite code works again.
 - **Using it:** tap the tick on the right to mark something as got (it stays in the list, struck through, for a day; tapping it again asks before putting it back). Tap an item for its quantity, note, photo and due date. Press and hold to delete. Tap **Select** next to "On the list" to act on several items at once. Typing "2 milk" or "milk x2" sets a quantity.
 - **Offline:** the Firestore persistent cache. Writes are never awaited, so they apply instantly and sync later.
 - **Photos:** compressed in the browser to roughly 640px JPEG (about 40–80 KB) and stored as data URLs in Firestore, because Firebase Storage needs the paid plan.
-- **Security:** [firestore.rules](firestore.rules). Only members can read or write. Joining is allowed only with the code and only while there is room for a second person. Each member can rename only themselves.
+- **Security:** [firestore.rules](firestore.rules). Only members can read or write. Joining is allowed only with the code and only while there is room for a second person. Each member can rename only themselves, and can remove only themselves.
 - **Free-tier headroom:** 50k reads and 20k writes a day, 1 GB of Firestore storage, and 10 GB a month of Hosting transfer. Two people won't come close.
 - **Design:** native iOS style with the system font, a plain grouped background, restrained category colours, and true-black dark mode. Rounded cards, consistent spacing, and larger touch targets keep the lists easy to scan. Navigation and the bottom input stay within the same 600px column on larger screens. All colours are CSS tokens in [src/styles/tokens.css](src/styles/tokens.css), and each has one job: soft brand orange for the app and every action, pastel green / blue / indigo only for Grocery / Household / Important, and red only for delete and overdue.

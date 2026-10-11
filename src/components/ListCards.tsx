@@ -1,6 +1,6 @@
 import { useApp } from '../app-context'
 import { emojiFor } from '../lib/emoji'
-import { LIST_INFO, LISTS } from '../rooms'
+import { LIST_INFO, LISTS, roomForList } from '../rooms'
 import type { Item, ListId } from '../types'
 import { ListGlyph } from './Icons'
 
@@ -11,7 +11,7 @@ export function ListCards({ needed }: { needed: Record<ListId, Item[]> }) {
       {LISTS.map((l) => {
         const peek = [...new Set(needed[l].map((i) => emojiFor(i.name, i.list)))].slice(0, 3)
         return (
-          <button key={l} className="list-card" data-list={l} onClick={() => goTo(l)}>
+          <button key={l} className="list-card" data-list={l} onClick={() => goTo(roomForList(l))}>
             <span className="list-card-top">
               <span className="list-icon">
                 <ListGlyph list={l} />

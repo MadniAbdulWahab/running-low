@@ -1,4 +1,4 @@
-import { arrayUnion, doc, serverTimestamp, updateDoc, writeBatch } from 'firebase/firestore'
+import { arrayRemove, arrayUnion, deleteField, doc, serverTimestamp, updateDoc, writeBatch } from 'firebase/firestore'
 import { FirebaseError } from 'firebase/app'
 import { db } from '../firebase'
 import { report } from '../lib/report'
@@ -48,6 +48,19 @@ export async function joinHousehold(uid: string, myName: string, code: string): 
   const batch = writeBatch(db)
   batch.update(householdRef(code), { members: arrayUnion(uid), [`memberNames.${uid}`]: myName })
   batch.set(userRef(uid), { householdId: code })
+  await batch.commit()
+}
+
+/**
+ * Leave the list: take yourself (and your name) off it, stop its notifications on
+ * this phone, and forget it, so you can start or join another. Everything else stays
+ * for anyone still on it, and their invite code works again for someone new.
+ */
+export async function leaveHousehold(h: Household, uid: string): Promise<void> {
+  const batch = writeBatch(db)
+  batch.update(householdRef(h.id), { members: arrayRemove(uid), [`memberNames.${uid}`]: deleteField() })
+  batch.delete(doc(db, 'households', h.id, 'push', uid))
+  batch.delete(userRef(uid))
   await batch.commit()
 }
 

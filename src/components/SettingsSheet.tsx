@@ -1,10 +1,11 @@
 import { signOut } from 'firebase/auth'
 import { useState } from 'react'
 import { initials, useApp } from '../app-context'
-import { formatCode, renameHousehold, setMyName } from '../data/household'
+import { formatCode, leaveHousehold, renameHousehold, setMyName } from '../data/household'
 import { auth } from '../firebase'
 import type { ThemeState } from '../hooks/useTheme'
 import type { ThemePref } from '../types'
+import { Alert } from './Alert'
 import { NotificationSettings } from './NotificationSettings'
 import { Sheet } from './Sheet'
 
@@ -20,6 +21,17 @@ export function SettingsSheet({ onClose, theme }: { onClose: () => void; theme: 
   const [myName, setMyNameDraft] = useState(household.memberNames[uid] ?? '')
   const code = formatCode(household.id)
   const waiting = household.members.length < 2
+  const [confirmLeave, setConfirmLeave] = useState(false)
+  const alone = household.members.length <= 1
+
+  const leave = async () => {
+    try {
+      await leaveHousehold(household, uid)
+      // The app switches to "Start a new list / Join with a code" on its own.
+    } catch {
+      toast('Couldn’t leave the list. Check your connection and try again.')
+    }
+  }
 
   const share = async () => {
     const text =
@@ -136,6 +148,9 @@ export function SettingsSheet({ onClose, theme }: { onClose: () => void; theme: 
       <NotificationSettings />
 
       <div className="group" style={{ marginTop: 28 }}>
+        <button className="row row--danger row--center" onClick={() => setConfirmLeave(true)}>
+          Leave this list
+        </button>
         <button className="row row--danger row--center" onClick={() => signOut(auth)}>
           Sign out
         </button>
@@ -143,6 +158,21 @@ export function SettingsSheet({ onClose, theme }: { onClose: () => void; theme: 
       <p className="group-footer" style={{ textAlign: 'center' }}>
         Works offline. Changes sync when you’re back online.
       </p>
+      {confirmLeave && (
+        <Alert
+          title={`Leave ${household.name}?`}
+          message={
+            alone
+              ? 'You’re the only one on it, so its lists, notes and meals will be gone for good. You can start or join another list straight after.'
+              : 'You’ll stop seeing its lists, notes and meals here. Everything stays for anyone else on it, and you can start or join another list straight after.'
+          }
+          actions={[
+            { label: 'Cancel', style: 'cancel' },
+            { label: 'Leave', style: 'destructive', onSelect: leave },
+          ]}
+          onClose={() => setConfirmLeave(false)}
+        />
+      )}
     </Sheet>
   )
 }

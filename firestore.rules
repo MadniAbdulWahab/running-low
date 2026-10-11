@@ -52,6 +52,13 @@ service cloud.firestore {
           && validName(request.resource.data.name)
           && onlyMyMemberName())
         ||
+        // A member leaves: removes only themselves (and their name), nothing else.
+        (me() in resource.data.members
+          && request.resource.data.members == resource.data.members.removeAll([me()])
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['members', 'memberNames'])
+          && request.resource.data.memberNames.diff(resource.data.memberNames).affectedKeys().hasOnly([me()])
+          && !(me() in request.resource.data.memberNames))
+        ||
         // A non-member joins with the code, only while there is room.
         (!(me() in resource.data.members)
           && resource.data.members.size() < 2

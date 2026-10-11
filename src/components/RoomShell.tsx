@@ -13,8 +13,8 @@ import { useMyPush } from '../data/push'
 import { useRoomTheme, type ThemeState } from '../hooks/useTheme'
 import { LIST_EMOJI } from '../lib/emoji'
 import type { Entry } from '../lib/parse'
-import { WEEK } from '../lib/time'
-import { LIST_INFO, LISTS, pingInfo } from '../rooms'
+import { WEEK, weekDays } from '../lib/time'
+import { isListRoom, LIST_INFO, LISTS, pingInfo, ROOM_LISTS, roomForList } from '../rooms'
 import type { Household, Item, ListId, Note, RoomId } from '../types'
 import { ActionSheet } from './ActionSheet'
 import { Alert, type AlertAction } from './Alert'
@@ -30,6 +30,7 @@ import { TabBar } from './TabBar'
 import { Toast, type ToastData } from './Toast'
 import { CountdownSheet } from './us/Countdowns'
 import { HeartRain } from './us/HeartRain'
+import { MealPlanner } from './us/MealPlanner'
 import { MealSheet } from './us/MealSheet'
 import { NoteComposer } from './us/NoteComposer'
 import { NoteSheet } from './us/NoteSheet'
@@ -153,8 +154,7 @@ export function RoomShell({ uid, household, room, setRoom, theme }: Props) {
     recent.sort(byDoneNewest)
     const counts = {
       home: needed.grocery.length + needed.household.length + needed.important.length,
-      grocery: needed.grocery.length,
-      household: needed.household.length,
+      shopping: needed.grocery.length + needed.household.length,
       important: needed.important.length,
     }
     return { needed, rows, recent, counts }
@@ -162,7 +162,7 @@ export function RoomShell({ uid, household, room, setRoom, theme }: Props) {
 
   // Everything shown in the list on this screen can be selected.
   const visible = useMemo(
-    () => (room === 'home' ? LISTS.flatMap((l) => rows[l]) : room === 'us' ? [] : rows[room]),
+    () => (isListRoom(room) ? ROOM_LISTS[room].flatMap((l) => rows[l]) : []),
     [room, rows],
   )
   const selectedItems = useMemo(() => visible.filter((i) => selected.has(i.id)), [visible, selected])
@@ -239,7 +239,7 @@ export function RoomShell({ uid, household, room, setRoom, theme }: Props) {
         addedTo.push(list)
         added.push((existing?.name ?? name) + (qty && qty > 1 ? ` ×${qty}` : ''))
       }
-      notifyItemsAdded(hid, household.memberNames[uid] ?? 'Someone', added, addedTo[0] ?? 'home')
+      notifyItemsAdded(hid, household.memberNames[uid] ?? 'Someone', added, addedTo[0] ? roomForList(addedTo[0]) : 'home')
       const parts: string[] = []
       if (added.length === 1) parts.push(`Added ${added[0]}`)
       else if (added.length > 1) parts.push(`Added ${added.length} items`)
@@ -318,6 +318,13 @@ export function RoomShell({ uid, household, room, setRoom, theme }: Props) {
   }
 
   const openItem = openId ? items.find((i) => i.id === openId) : undefined
+  const thisWeek = weekDays(0)
+  const headerCount =
+    room === 'us'
+      ? (notes?.length ?? 0)
+      : room === 'meals'
+        ? (meals ?? []).filter((m) => m.name && thisWeek.includes(m.day)).length
+        : counts[room]
 
   const listLabel = (
     <h2 className="group-label list-label">
@@ -337,7 +344,7 @@ export function RoomShell({ uid, household, room, setRoom, theme }: Props) {
   return (
     <AppContext.Provider value={ctx}>
       <main className="page" key={room} data-dir={direction.current}>
-        <Header room={room} count={room === 'us' ? (notes?.length ?? 0) : counts[room]} onSettings={() => setSettings(true)} />
+        <Header room={room} count={headerCount} onSettings={() => setSettings(true)} />
 
         {room === 'us' ? (
           <UsRoom
@@ -346,25 +353,48 @@ export function RoomShell({ uid, household, room, setRoom, theme }: Props) {
             onOpenNote={setOpenNoteId}
             onNewNote={newNote}
             onAskDeleteNote={askDeleteNote}
-            meals={meals}
-            onOpenMealDay={setMealDay}
             countdowns={countdowns}
             ideas={ideas}
             onOpenCountdown={setCountdownId}
           />
-        ) : room === 'home' ? (
+        ) : room === 'meals' ? (
+          <MealPlanner meals={meals} onOpenDay={setMealDay} />
+        ) : room === 'important' ? (
+          <div data-list="important">
+            {!selecting && <QuickPicks room="important" neededCount={needed.important.length} />}
+            {listLabel}
+            {loaded === null ? null : rows.important.length ? (
+              <div className="group">
+                {rows.important.map((i) => (
+                  <ItemRow key={i.id} item={i} />
+                ))}
+              </div>
+            ) : (
+              <EmptyArt emojis={[LIST_EMOJI.important]} title="All sorted" text={LIST_INFO.important.empty} />
+            )}
+          </div>
+        ) : (
           <>
-            <ListCards needed={needed} />
+            {room === 'home' && <ListCards needed={needed} />}
+            {room === 'shopping' && !selecting && <QuickPicks room="shopping" neededCount={counts.shopping} />}
             {loaded === null ? null : visible.length === 0 ? (
-              <EmptyArt
-                emojis={['🥛', '🧻', '📌']}
-                title="Nothing’s running low"
-                text="Tap something below or type it in when it runs out."
-              />
+              room === 'home' ? (
+                <EmptyArt
+                  emojis={['🥛', '🧻', '📌']}
+                  title="Nothing’s running low"
+                  text="Tap something below or type it in when it runs out."
+                />
+              ) : (
+                <EmptyArt
+                  emojis={[LIST_EMOJI.grocery, LIST_EMOJI.household]}
+                  title="All stocked up"
+                  text="Groceries and household things go here. Tap Quick add or type below."
+                />
+              )
             ) : (
               <>
                 {listLabel}
-                {LISTS.filter((l) => rows[l].length).map((l) => {
+                {ROOM_LISTS[room].filter((l) => rows[l].length).map((l) => {
                   const isFolded = !!folded[l] && !selecting
                   return (
                     <section key={l} data-list={l}>
@@ -395,26 +425,12 @@ export function RoomShell({ uid, household, room, setRoom, theme }: Props) {
               </>
             )}
             {/* On Home, quick add is for getting started; it goes once something is on the list. */}
-            {!selecting && counts.home === 0 && <QuickPicks room="home" />}
+            {room === 'home' && !selecting && counts.home === 0 && <QuickPicks room="home" />}
           </>
-        ) : (
-          <div data-list={room}>
-            {!selecting && <QuickPicks room={room} neededCount={needed[room].length} />}
-            {listLabel}
-            {loaded === null ? null : rows[room].length ? (
-              <div className="group">
-                {rows[room].map((i) => (
-                  <ItemRow key={i.id} item={i} />
-                ))}
-              </div>
-            ) : (
-              <EmptyArt emojis={[LIST_EMOJI[room]]} title="All stocked up" text={LIST_INFO[room].empty} />
-            )}
-          </div>
         )}
 
-        {loaded !== null && !selecting && room !== 'us' && (
-          <Recent items={room === 'home' ? recent : recent.filter((i) => i.list === room)} />
+        {loaded !== null && !selecting && isListRoom(room) && (
+          <Recent items={recent.filter((i) => ROOM_LISTS[room].includes(i.list))} />
         )}
       </main>
 
@@ -440,9 +456,11 @@ export function RoomShell({ uid, household, room, setRoom, theme }: Props) {
           </div>
         ) : (
           <>
-            <div className="toolbar">
-              {room === 'us' ? <NoteComposer notes={notes ?? []} /> : <QuickAdd room={room} />}
-            </div>
+            {room !== 'meals' && (
+              <div className="toolbar">
+                {room === 'us' ? <NoteComposer notes={notes ?? []} /> : <QuickAdd room={room} />}
+              </div>
+            )}
             <TabBar room={room} counts={counts} onChange={goTo} />
           </>
         )}
