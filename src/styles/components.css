@@ -2022,3 +2022,38 @@ body {
 .folded-head:active .folded-row {
   opacity: 0.6;
 }
+
+/* Foldable Quick add on list tabs: the whole heading row is the toggle. */
+.group-label .fold-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 32px;
+  padding: 0;
+  font: inherit;
+  text-transform: inherit;
+  letter-spacing: inherit;
+  color: inherit;
+}
+.fold-toggle-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 15px;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--tint);
+}
+.fold-toggle-action svg {
+  width: 14px;
+  height: 14px;
+  transition: transform 200ms ease;
+}
+.fold-toggle[aria-expanded='true'] .fold-toggle-action svg {
+  transform: rotate(-90deg);
+}
+.fold-toggle[aria-expanded='false'] .fold-toggle-action svg {
+  transform: rotate(90deg);
+}

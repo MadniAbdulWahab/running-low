@@ -65,6 +65,12 @@ const ticked = (page, text, want = true, timeout = 8000) =>
     .then(() => true)
     .catch(() => false)
 
+/** On a list tab, Quick add folds once the list has items; open it if needed. */
+async function openQuickAdd(page) {
+  const t = page.locator('.fold-toggle')
+  if ((await t.count()) && (await t.getAttribute('aria-expanded')) === 'false') await t.click()
+}
+
 async function add(page, text) {
   const input = page.getByLabel('Add something')
   await input.fill(text)
@@ -113,6 +119,11 @@ try {
 
   // ── Live sync B → A via a magnet ──
   await tab(B.page, 'Grocery')
+  check(
+    (await B.page.locator('.fold-toggle').getAttribute('aria-expanded')) === 'false',
+    'Quick add starts folded on a tab that has items',
+  )
+  await openQuickAdd(B.page)
   await B.page.getByRole('button', { name: 'Add Coffee' }).click()
   check(await visible(A.page, 'Coffee'), 'A sees B’s magnet tap live')
 
@@ -150,6 +161,10 @@ try {
 
   // ── Household + Important ──
   await tab(A.page, 'Household')
+  check(
+    (await A.page.locator('.fold-toggle').getAttribute('aria-expanded')) === 'true',
+    'Quick add is open on a tab with nothing on it',
+  )
   await A.page.getByRole('button', { name: 'Add Dish soap' }).click()
   await add(A.page, 'Light bulbs')
   await tab(A.page, 'Important')

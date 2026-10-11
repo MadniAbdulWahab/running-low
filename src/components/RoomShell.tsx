@@ -312,7 +312,7 @@ export function RoomShell({ uid, household, room, setRoom, theme }: Props) {
           </>
         ) : (
           <div data-list={room}>
-            {!selecting && <QuickPicks room={room} />}
+            {!selecting && <QuickPicks room={room} neededCount={needed[room].length} />}
             {listLabel}
             {loaded === null ? null : rows[room].length ? (
               <div className="group">
