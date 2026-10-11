@@ -314,9 +314,9 @@ households/{CODE}/photos/{id}   { itemKey, dataUrl, createdAt }
 - **E2E:** A adds a photo at setup; B sees it at the top right; the pop-up has Sara's name and photo; the hearts card shows the photo; B adds one in Settings and A sees it; after B leaves the setup screen is prefilled with B's photo; after rejoining, both photos show.
 - **Ideas not done yet:** a tiny photo in place of the coloured dot in item rows ("Sara · 2m ago"). Web Push can't carry the photo (payload too small, and iOS uses the app icon).
 - **Mirrored selfies (follow-up):** iPhone saves front-camera photos un-mirrored, so they looked flipped next to the preview (the user called it "reverted").
-  - : the EXIF LensModel (read by ) contains "front" and the file is under 2 minutes old. Such photos are mirrored in .
+  - `isFreshSelfie(file)`: the EXIF LensModel (read by `src/lib/exif.ts`) contains "front" and the file is under 2 minutes old. Such photos are mirrored in `compressAvatar(file, { mirror })`.
   - Library selfies are left alone, since that's how they look in Photos.
-  - PhotoPicker has a **Flip** button () for anything else.
-  - Tests:  (2), and an e2e check with a synthetic red|blue JPEG tagged as a front-camera shot.
+  - PhotoPicker has a **Flip** button (`flipPhoto`) for anything else.
+  - Tests: `tests/exif.test.ts` (2), and an e2e check with a synthetic red|blue JPEG tagged as a front-camera shot.
   - If iOS strips the EXIF, auto-mirroring silently doesn't happen; Flip covers that.
 
