@@ -67,11 +67,11 @@ export function SignIn() {
 
   return (
     <main className="intro">
-      <p className="eyebrow">For the two of us</p>
+      <p className="eyebrow">Shared list</p>
       <h1 className="intro-title">
         Running <em>low</em>
       </h1>
-      <p className="intro-lede">One shared list for groceries, the pantry and the important stuff. It updates on both phones as you go.</p>
+      <p className="intro-lede">Add what’s running low. You both see it straight away.</p>
 
       {needsInstall() && (
         <p className="install-tip">
