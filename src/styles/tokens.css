@@ -22,6 +22,9 @@
   --border: rgb(60 60 67 / 0.08);
   --ring: #a8a8b0;
   --tint: #007aff;
+  --brand: #ff9500;
+  --brand-ink: #342200;
+  --brand-link: #a84700;
   --danger: #ff3b30;
   --toast: rgb(44 44 46 / 0.96);
   --backdrop: rgb(0 0 0 / 0.3);
@@ -56,6 +59,7 @@
   --border: rgb(235 235 245 / 0.09);
   --ring: #74747d;
   --tint: #0a84ff;
+  --brand-link: #ffb340;
   --danger: #ff453a;
   --toast: rgb(58 58 60 / 0.97);
   --backdrop: rgb(0 0 0 / 0.55);

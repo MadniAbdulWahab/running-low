@@ -66,41 +66,40 @@ export function SignIn() {
   }
 
   return (
-    <main className="intro">
-      <img className="intro-icon" src="/pwa-192x192.png" alt="" />
-      <h1 className="large-title">Running Low</h1>
-      <p className="intro-lede">Add what’s running low. It updates instantly for everyone you share it with.</p>
+    <main className="auth-screen">
+      <header className="auth-brand">
+        <img className="auth-logo" src="/maskable-icon-512x512.png?v=basket" alt="" />
+        <h1 className="large-title">Running Low</h1>
+        <p className="auth-tagline">Keep your home stocked, together.</p>
+      </header>
 
-      {needsInstall() && (
-        <p className="notice">
-          <strong>Install it first:</strong> tap Share, then “Add to Home Screen”, and open it from there.
-          The installed app keeps its own sign-in, separate from Safari.
-        </p>
-      )}
-
-      <form onSubmit={submit}>
-        <h2 className="group-label">{mode === 'up' ? 'Create an account' : 'Sign in'}</h2>
-        <div className="group">
-          <label className="row">
-            <span className="row-key">Email</span>
+      <form className="auth-form" onSubmit={submit} aria-label={mode === 'up' ? 'Create an account' : 'Sign in'} aria-busy={busy}>
+        <h2 className="auth-title">{mode === 'up' ? 'Create your account' : 'Welcome back'}</h2>
+        <div className="auth-fields">
+          <label className="auth-field">
+            <span className="auth-field-name">Email</span>
             <input
-              className="row-input"
+              className="auth-input"
               type="email"
               autoComplete="email"
+              autoCapitalize="none"
+              autoCorrect="off"
               inputMode="email"
+              enterKeyHint="next"
               placeholder="name@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
             />
           </label>
-          <label className="row">
-            <span className="row-key">Password</span>
+          <label className="auth-field">
+            <span className="auth-field-name">Password</span>
             <input
-              className="row-input"
+              className="auth-input"
               type="password"
               autoComplete={mode === 'up' ? 'new-password' : 'current-password'}
-              placeholder={mode === 'up' ? 'At least 6 characters' : 'Required'}
+              placeholder={mode === 'up' ? 'At least 6 characters' : 'Enter your password'}
+              enterKeyHint="done"
               minLength={6}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -108,29 +107,44 @@ export function SignIn() {
             />
           </label>
         </div>
-        {error && <p className="form-error" role="alert">{error}</p>}
-        {note && <p className="form-note">{note}</p>}
-        <button className="btn" disabled={busy}>
+        {mode === 'in' ? (
+          <div className="auth-recovery">
+            <button type="button" className="auth-link" onClick={reset} disabled={busy}>
+              Forgot password?
+            </button>
+          </div>
+        ) : (
+          <p className="auth-password-note">Use at least 6 characters.</p>
+        )}
+        {error && <p className="auth-feedback form-error" role="alert">{error}</p>}
+        {note && <p className="auth-feedback form-note" role="status">{note}</p>}
+        <button type="submit" className="btn auth-submit" disabled={busy}>
           {busy ? 'One moment…' : mode === 'up' ? 'Create account' : 'Sign in'}
         </button>
-        <div className="form-links">
-          <button
-            type="button"
-            className="link"
-            onClick={() => {
-              setMode(mode === 'in' ? 'up' : 'in')
-              setError('')
-            }}
-          >
-            {mode === 'in' ? 'New here? Create an account' : 'Have an account? Sign in'}
-          </button>
-          {mode === 'in' && (
-            <button type="button" className="link" onClick={reset}>
-              Forgot password
-            </button>
-          )}
-        </div>
       </form>
+
+      <footer className="auth-footer">
+        <p>{mode === 'in' ? 'New to Running Low?' : 'Already have an account?'}</p>
+        <button
+          type="button"
+          className="auth-secondary"
+          disabled={busy}
+          onClick={() => {
+            setMode(mode === 'in' ? 'up' : 'in')
+            setError('')
+            setNote('')
+          }}
+        >
+          {mode === 'in' ? 'Create an account' : 'Sign in instead'}
+        </button>
+      </footer>
+
+      {needsInstall() && (
+        <aside className="auth-install">
+          <strong>Add to your Home Screen</strong>
+          <p>In Safari, tap Share → Add to Home Screen. Open Running Low from there before signing in.</p>
+        </aside>
+      )}
     </main>
   )
 }

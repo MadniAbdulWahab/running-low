@@ -53,6 +53,14 @@ Saved 2026-10-11 so work can resume after a restart. To continue, tell Claude:
 - The current logo is a white basket with a small low-stock mark on iOS orange (#FF9500). The SVG source is `public/icon.svg`; use `npm run icons` to regenerate the PWA icons, iPhone Home Screen icon, and favicon.
 - This replaces the glass logo recorded in the earlier design history.
 
+## Sign-in screen (2026-10-11)
+- The user asked for a more polished mobile first screen that follows the app identity.
+- Sign-in and account creation now share a centered basket logo, a short household tagline, full-width labelled inputs, an orange primary action, and a separate account-switch button.
+- Styling is scoped to `.auth-screen`, preserving household setup and the main lists. Brand tokens keep button text and links readable in light and dark mode.
+- The page scrolls naturally on small screens and uses tighter spacing below 700px height. Safari installation guidance appears below the form; installed apps omit it.
+- Verified with the production build and Chromium/WebKit checks for sign-in, account creation, error feedback, autofill attributes, themes, and phone sizes from 320px upward. Screenshots are in ignored `output/playwright/auth/`.
+- These sign-in changes are local and have not been deployed.
+
 ## Goal
 A shared list for two partners (**both on iPhone**) to quickly note that something is finished: groceries, household things, important items.
 - Must be **completely free**: no App Store fee, no paid backend, no credit card.
