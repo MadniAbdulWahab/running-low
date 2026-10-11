@@ -149,7 +149,8 @@ try {
   await A.page.locator('.sheet').screenshot({ path: `${OUT}/sheet-important.png` })
   await A.page.keyboard.press('Escape')
   check(
-    await A.page.locator('.item', { hasText: 'Passport renewal' }).locator('.item-due').isVisible(),
+    await A.page.locator('.item', { hasText: 'Passport renewal' }).locator('.item-due')
+      .waitFor({ timeout: 8000 }).then(() => true).catch(() => false),
     'due date set from the item sheet',
   )
   await B.page.getByRole('button', { name: 'Got Bread' }).click().catch(() => {})

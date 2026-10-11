@@ -1,4 +1,4 @@
-import type { Item, ListId, RoomId } from '../types'
+import type { ListId } from '../types'
 
 // First match wins, so specific words come before general ones. Patterns match at word starts,
 // so "foil" never matches "oil" and "steak" never matches "tea".
@@ -111,29 +111,4 @@ export function emojiFor(name: string, list: ListId): string {
   const k = name.toLocaleLowerCase()
   for (const [re, e] of TABLE) if (re.test(k)) return e
   return LIST_EMOJI[list]
-}
-
-const DEFAULT_STICKERS: Record<RoomId, string[]> = {
-  home: ['🛒', '🥛', '🧻', '🍌', '💡', '📌', '🥚', '🧼', '🎁', '☕'],
-  grocery: ['🥛', '🍌', '🥚', '🧀', '🍞', '🥑', '🍓', '🧈', '🥕', '🍋'],
-  household: ['🧻', '🧼', '🧽', '💡', '🔋', '🧴', '🧺', '🪥', '🕯️', '🪴'],
-  important: ['📄', '💊', '🔑', '🎁', '✉️', '🛂', '🧾', '📅', '👓', '💳'],
-}
-
-/** Background stickers: emojis of what's on this tab's list first, then the tab's defaults. */
-export function stickersFor(room: RoomId, items: Item[], count = 7): string[] {
-  const relevant = items
-    .filter((i) => room === 'home' || i.list === room)
-    .sort((a, b) => Number(b.status === 'needed') - Number(a.status === 'needed') || b.count - a.count)
-  const out: string[] = []
-  for (const i of relevant) {
-    const e = emojiFor(i.name, i.list)
-    if (!out.includes(e) && !Object.values(LIST_EMOJI).includes(e)) out.push(e)
-    if (out.length >= Math.ceil(count / 2)) break
-  }
-  for (const e of DEFAULT_STICKERS[room]) {
-    if (out.length >= count) break
-    if (!out.includes(e)) out.push(e)
-  }
-  return out
 }

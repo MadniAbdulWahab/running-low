@@ -29,6 +29,15 @@ Saved 2026-10-11 so work can resume after a restart. To continue, tell Claude:
 - **Live:** https://running-low.web.app (Firebase project 'running-low'). Repo: github.com/MadniAbdulWahab/running-low.
 - The "rooms" section below is kept for history only.
 
+## UI polish (2026-10-11)
+- The user confirmed that the existing native iOS style should be polished, and separately approved removing the floating emoji stickers and colour-wash wallpaper.
+- Plain grouped grey in light mode and true black in dark mode; item emojis, category colours, and family initials remain.
+- Refined title spacing and tracking, subtler section headings and separators, rounded list cards with labels that fit small phones, and consistent larger touch targets.
+- Retains the current four-tab navigation, quick-add workflow, and all existing data/sync behaviour. The dock is now constrained to the same 600px column as the page on larger screens.
+- Removed the unused background sticker component and its helper. Empty-state illustrations remain.
+- Verified with the production build, Chromium and WebKit two-user end-to-end checks, light/dark screenshot review, and layout checks at 320, 390, 430, 768, and 1440px. The due-date test now waits for the asynchronous label update. Visual artifacts are in ignored `output/playwright/`.
+- Changes are local; this UI polish has not been deployed.
+
 ## Goal
 A shared list for two partners (**both on iPhone**) to quickly note that something is finished: groceries, household things, important items.
 - Must be **completely free**: no App Store fee, no paid backend, no credit card.

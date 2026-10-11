@@ -3,7 +3,7 @@ import { AppContext, type AddOptions, type AppCtx } from '../app-context'
 import { addItem, markDone, undoDone } from '../data/items'
 import { useItems } from '../hooks/useItems'
 import { useRoomTheme, type ThemeState } from '../hooks/useTheme'
-import { LIST_EMOJI, stickersFor } from '../lib/emoji'
+import { LIST_EMOJI } from '../lib/emoji'
 import { WEEK } from '../lib/time'
 import { LIST_INFO, LISTS } from '../rooms'
 import type { Household, Item, ListId, RoomId } from '../types'
@@ -15,7 +15,6 @@ import { ListCards } from './ListCards'
 import { QuickAdd } from './QuickAdd'
 import { QuickPicks } from './QuickPicks'
 import { SettingsSheet } from './SettingsSheet'
-import { Stickers } from './Stickers'
 import { TabBar } from './TabBar'
 import { Toast, type ToastData } from './Toast'
 
@@ -121,11 +120,9 @@ export function RoomShell({ uid, household, room, setRoom, theme }: Props) {
 
   const openItem = openId ? items.find((i) => i.id === openId) : undefined
   const roomRecent = room === 'home' ? recent : recent.filter((i) => i.list === room)
-  const stickers = useMemo(() => stickersFor(room, items), [room, items])
 
   return (
     <AppContext.Provider value={ctx}>
-      <Stickers room={room} emojis={stickers} />
       <main className="page" key={room} data-dir={direction.current}>
         <Header room={room} count={counts[room]} onSettings={() => setSettings(true)} />
 

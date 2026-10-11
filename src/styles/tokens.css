@@ -7,7 +7,7 @@
 :root {
   --font: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', system-ui, sans-serif;
   --mono: ui-monospace, 'SF Mono', Menlo, monospace;
-  --dock-h: 116px;
+  --dock-h: 136px;
 
   --bg: #f2f2f7;
   --card: #ffffff;
@@ -15,17 +15,18 @@
   --fill: rgb(118 118 128 / 0.12);
   --fill-strong: rgb(118 118 128 / 0.2);
   --segment-on: #ffffff;
-  --label: #000000;
-  --label-2: #6c6c70;
+  --label: #1c1c1e;
+  --label-2: #65656c;
   --label-3: #c7c7cc;
-  --sep: #c6c6c8;
+  --sep: #e5e5ea;
+  --border: rgb(60 60 67 / 0.08);
+  --ring: #a8a8b0;
   --tint: #007aff;
   --danger: #ff3b30;
   --toast: rgb(44 44 46 / 0.96);
   --backdrop: rgb(0 0 0 / 0.3);
-  --bar: rgb(249 249 249 / 0.97);
-  --tab-off: #8e8e93;
-  --sticker-shadow: rgb(0 0 0 / 0.16);
+  --bar: #ffffff;
+  --tab-off: #6c6c73;
 
   --grocery: #ff9500;
   --grocery-text: #c93400;
@@ -34,8 +35,8 @@
   --important: #ff3b30;
   --important-text: #d70015;
 
-  --p0: #5856d6;
-  --p1: #30b0c7;
+  --p0: #596789;
+  --p1: #427d83;
 
   --list: var(--tint);
   --list-text: var(--tint);
@@ -52,13 +53,14 @@
   --label-2: #98989f;
   --label-3: #48484a;
   --sep: #38383a;
+  --border: rgb(235 235 245 / 0.09);
+  --ring: #74747d;
   --tint: #0a84ff;
   --danger: #ff453a;
   --toast: rgb(58 58 60 / 0.97);
   --backdrop: rgb(0 0 0 / 0.55);
-  --bar: rgb(22 22 24 / 0.97);
-  --tab-off: #8e8e93;
-  --sticker-shadow: rgb(0 0 0 / 0.7);
+  --bar: #1c1c1e;
+  --tab-off: #a0a0a8;
 
   --grocery: #ff9f0a;
   --grocery-text: #ff9f0a;
@@ -67,8 +69,8 @@
   --important: #ff453a;
   --important-text: #ff6961;
 
-  --p0: #5e5ce6;
-  --p1: #40c8e0;
+  --p0: #6c7da5;
+  --p1: #508f95;
 }
 
 [data-list='grocery'] {

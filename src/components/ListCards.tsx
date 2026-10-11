@@ -9,7 +9,7 @@ export function ListCards({ needed }: { needed: Record<ListId, Item[]> }) {
   return (
     <nav className="list-cards" aria-label="Lists">
       {LISTS.map((l) => {
-        const peek = [...new Set(needed[l].map((i) => emojiFor(i.name, i.list)))].slice(0, 4)
+        const peek = [...new Set(needed[l].map((i) => emojiFor(i.name, i.list)))].slice(0, 3)
         return (
           <button key={l} className="list-card" data-list={l} onClick={() => goTo(l)}>
             <span className="list-card-top">
