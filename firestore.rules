@@ -1,0 +1,85 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function me() {
+      return request.auth.uid;
+    }
+
+    function isMember(hid) {
+      return signedIn()
+        && me() in get(/databases/$(database)/documents/households/$(hid)).data.members;
+    }
+
+    function validName(n) {
+      return n is string && n.size() > 0 && n.size() <= 60;
+    }
+
+    // Changes to memberNames may only touch the caller's own entry.
+    function onlyMyMemberName() {
+      return request.resource.data.memberNames.diff(resource.data.memberNames)
+        .affectedKeys().hasOnly([me()])
+        && validName(request.resource.data.memberNames[me()]);
+    }
+
+    match /users/{uid} {
+      allow read, write: if signedIn() && me() == uid;
+    }
+
+    match /households/{hid} {
+      allow get: if signedIn() && me() in resource.data.members;
+      allow list: if false;
+      allow delete: if false;
+
+      allow create: if signedIn()
+        && hid.matches('^[A-HJ-NP-Z2-9]{8}$')
+        && request.resource.data.keys().hasOnly(['name', 'members', 'memberNames', 'createdAt'])
+        && request.resource.data.members == [me()]
+        && request.resource.data.memberNames.keys().hasOnly([me()])
+        && validName(request.resource.data.memberNames[me()])
+        && validName(request.resource.data.name);
+
+      allow update: if signedIn() && (
+        // A member edits the household name or their own display name.
+        (me() in resource.data.members
+          && request.resource.data.members == resource.data.members
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'memberNames'])
+          && validName(request.resource.data.name)
+          && onlyMyMemberName())
+        ||
+        // A non-member joins with the code, only while there is room.
+        (!(me() in resource.data.members)
+          && resource.data.members.size() < 2
+          && request.resource.data.members == resource.data.members.concat([me()])
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['members', 'memberNames'])
+          && onlyMyMemberName())
+      );
+
+      function validItem() {
+        let d = request.resource.data;
+        return d.name is string && d.name.size() > 0 && d.name.size() <= 100
+          && d.key is string && d.key.size() > 0 && d.key.size() <= 100
+          && d.list in ['grocery', 'household', 'important']
+          && d.status in ['needed', 'done'];
+      }
+
+      match /items/{itemId} {
+        allow read, delete: if isMember(hid);
+        allow create, update: if isMember(hid) && validItem();
+      }
+
+      match /photos/{photoId} {
+        allow read, delete: if isMember(hid);
+        allow create, update: if isMember(hid)
+          && request.resource.data.dataUrl is string
+          && request.resource.data.dataUrl.matches('^data:image/.*')
+          && request.resource.data.dataUrl.size() < 900000;
+      }
+    }
+  }
+}

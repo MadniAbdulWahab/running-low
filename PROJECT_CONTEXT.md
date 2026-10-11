@@ -1,0 +1,126 @@
+# Running Low: project context (handoff)
+
+Saved 2026-10-11 so work can resume after a restart. To continue, tell Claude:
+**"Read PROJECT_CONTEXT.md and continue building the app."**
+
+## Status (updated 2026-10-11)
+- **The app is built and verified.** See README.md for Firebase setup, deploy, and installing on the iPhones.
+- **Tests passing:**
+  - 13 rules tests (`npm run test:rules`).
+  - Type check and build (`npm run build`).
+  - All end-to-end checks (`npm run e2e`) in both WebKit and Chromium, with the iPhone 15 profile: sign-up, joining by code, live sync both ways, undo, catching duplicates, offline adding, photo sync, due dates, room guessing on Home.
+- **Testing quirk:** Windows WebKit ignores variable font weights and has no date picker. Judge the visuals with `BROWSER=chromium`.
+- **The user's next step:** create the Firebase project (README steps 1–6), then install on both phones.
+- **Versions installed:** Firebase 13, React 19, Vite 8, TypeScript 7, Vitest 5, vite-plugin-pwa 2.
+- **Differences from the plan:**
+  - Your name is entered on the setup screen, not at sign-up.
+  - First-time users see starter suggestions as magnets, jars and tabs until real history replaces them.
+  - Room state lives in the `SignedIn` component in App.tsx; the theme preference comes from `useThemePref`.
+
+## Goal
+A shared list for two partners (**both on iPhone**) to quickly note that something is finished: groceries, household things, important items.
+- Must be **completely free**: no App Store fee, no paid backend, no credit card.
+- Must **sync live** between both phones.
+- The user is an experienced developer.
+
+## Decisions made
+- **App type:** a PWA (installed from Safari with Share → Add to Home Screen).
+- **Backend:** the free **Firebase Spark** plan: Firestore (real-time sync and offline cache), Auth, Hosting.
+- **Backends considered and rejected:**
+  - Supabase: free projects pause after 7 days with no use.
+  - Cloudflare: no built-in login or offline sync, and R2 photo storage needs a card.
+  - InstantDB / Convex: younger, weaker offline support.
+  - PocketBase: you'd run and patch your own server.
+- **Sign-in: email and password, not Google.** Google sign-in by popup or redirect is unreliable inside iOS Home Screen apps. Home Screen apps also keep their storage separate from Safari, so email-link sign-in breaks too.
+- **Quick-add methods:**
+  - One-tap frequent items.
+  - Photo of the item.
+  - A text box with autocomplete.
+  - Voice through the iPhone keyboard's dictation mic, which needs no extra code. The text box splits on commas, newlines and " and ", unless the whole phrase matches an item already in history. A big in-app mic button (`webkitSpeechRecognition`) can be added later.
+- **Photos:**
+  - Firebase Storage needs the paid Blaze plan, so it isn't used.
+  - The photo is compressed in the browser with a canvas (about 640px, JPEG quality 0.6, roughly 40–80 KB) and stored as a base64 data URL in `photos/{id}`.
+  - **The photo stays attached to the item** (it reminds you which brand to buy). It is deleted only when you remove it or delete the item.
+- **Design can change later.** All styling uses CSS variables (tokens) set per room.
+
+## Design: "Rooms of the house" (elegant, not gimmicky; light by default, full dark mode)
+- **Feel:** soft color, subtle low-opacity texture, one signature detail per room, no cartoon drawings.
+- **Avoid:** purple gradients, frosted glass, stock component libraries, heavy shadows.
+- **Theme:** follows the iPhone light/dark setting, with a manual switch (System / Light / Dark).
+
+| Tab | Light | Dark | Signature detail |
+|---|---|---|---|
+| **Home = Kitchen**: overview of everything needed, grouped by room | Oat/linen #F4EEE3 with a faint linen texture; terracotta accent #B85C3E | Warm charcoal-brown #1D1916; soft terracotta #D98466 | Glazed ceramic tiles (one per room, in that room's colors, with a count); the combined list below |
+| **Grocery = Fridge** | Enamel off-white #EEF2F0 with a vertical sheen; sage accent #5E8C76 | Slate-green #131A18 with a fridge-light glow at the top; accent #8DBBA4 | Frequent items as round pastel **magnets** with a monogram letter in Fraunces italic; the list is a notepad held by a magnet; a "snap" animation on add |
+| **Household = Pantry** | Birch #F1E8DA with a faint wood grain; dusty-blue accent #587A99 | Walnut #1B1612; accent #8FAECB | Shelf lines between rows; frequent items as jar labels |
+| **Important = Desk** | Paper #F7F5F0; ochre accent #A97A2C | Ink-navy #12151C; accent #D6AC5E | Items as index cards (one red header line and faint blue rules) with an optional due date; frequent items as paper tabs |
+
+**Shared across rooms**
+- **Fonts:** **Fraunces** (variable serif, with the SOFT axis) for titles and item names; **Instrument Sans** for interface text. Both self-hosted from `@fontsource-variable` so they work offline.
+- **Header:** a small uppercase label (e.g. "Grocery"), a large serif title ("The Fridge"), a count line ("4 things to pick up"), and a settings button showing both partners' dots.
+- **Ticking off:** a thin pencil-stroke SVG line draws across the item (about 260 ms), then it moves to "Recently bought" (last 7 days; tap to re-add). An undo toast appears.
+- **Who added it:** a colored dot for each partner ("Sara · 2h ago").
+- **Tab changes:** the background color and texture crossfade (about 350 ms); room content fades in.
+- **Navigation:** a bottom tab bar with custom thin-line icons. The quick-add bar sits just above it: a text field, a camera button, and on Home a room chip (it guesses the room from history and cycles when tapped).
+- **Item sheet:** tap an item to open a bottom sheet with its photo (view, add, replace, remove), a room switcher, a due date (Important only), delete, and who added it.
+- **Settings sheet:** members, the invite code with a Share button, Appearance, sign out.
+- **iPhone details:** inputs at least 16px (stops iOS zooming in), safe-area insets, `viewport-fit=cover`, status-bar style "default", and the `theme-color` meta updated for each room and mode.
+
+## Data model (Firestore)
+```
+users/{uid}                     { householdId }
+households/{CODE}               { name, members: [uid], memberNames: {uid: name}, createdAt }
+   (doc id = 8-character invite code from an unambiguous alphabet, shown as XXXX-XXXX)
+households/{CODE}/items/{"i_"+encodeURIComponent(key)}
+                                { name, key (lowercase, trimmed), list: 'grocery'|'household'|'important',
+                                  status: 'needed'|'done', addedBy, addedAt, doneBy, doneAt,
+                                  count (increment), lastUsed, photoId?, due? ('YYYY-MM-DD') }
+households/{CODE}/photos/{id}   { itemKey, dataUrl, createdAt }
+```
+- **One doc per item name.** Re-adding an item flips its status back to `needed`, so the doc also holds the history used for autocomplete and the frequent items. There is no separate `frequent` collection.
+- **Writes don't wait.** Writes are fired without `await`, because offline writes only resolve once the server confirms them. Errors are caught.
+- Reads use `serverTimestamps: 'estimate'`.
+- Firestore runs with `persistentLocalCache` and `persistentMultipleTabManager`.
+
+## Security rules (summary)
+- `users/{uid}`: only the owner can read or write it.
+- `households/{hid}`:
+  - **Read:** only members can `get` it.
+  - **Create:** only with `members == [self]` and only the allowed keys.
+  - **Update:** a member may edit it without changing `members`. A non-member may **join** only while `members.size() < 2`, and the update must be exactly `members.concat([self])` plus their own `memberNames` key.
+- **Subcollections:** only members (checked with `get()` on the household).
+- **Joining:** the partner types the code inside the installed app (an invite link would open Safari, which has separate storage). It's an update with `arrayUnion` and no read beforehand.
+
+## Planned files
+- **Setup:** `index.html`, `vite.config.ts` (vite-plugin-pwa: manifest, auto-update service worker), `.env.example` (`VITE_FIREBASE_*`, plus `VITE_USE_EMULATORS`)
+- **Core:** `src/main.tsx`, `src/App.tsx` (sign-in check → household check → main screen), `src/firebase.ts`, `src/types.ts`, `src/rooms.ts`
+- **Data:** `src/data/{household,items,photos}.ts`
+- **Helpers:** `src/lib/{parse,time,theme}.ts`, `src/hooks/{useAuth,useHousehold,useItems,useTheme,usePhoto}.ts`
+- **Styles:** `src/styles/{tokens,base,rooms,components}.css` (tokens keyed by `[data-room]` and `[data-mode]`; textures are inline SVG and gradients)
+- **Components:** `src/components/`: `RoomShell`, `TabBar`, `RoomHeader`, `RoomTiles`, `QuickAdd`, `FrequentItems`, `ItemRow`, `ItemSheet`, `SettingsSheet`, `Toast`, `SignIn`, `HouseholdSetup`, `PhotoViewer`
+- **Firebase:** `firestore.rules`, `firestore.indexes.json`, `firebase.json` (Hosting rewrites to index.html, emulators for Auth and Firestore)
+- **Assets:** `public/icon.svg`, with app icons generated by `@vite-pwa/assets-generator`
+- **Tests:** `tests/rules.test.ts` (vitest + `@firebase/rules-unit-testing`)
+- **Docs:** `README.md` (Firebase setup and deploy)
+
+## Dependencies
+- **App:** react, react-dom, firebase, @fontsource-variable/fraunces, @fontsource-variable/instrument-sans
+- **Dev:** vite, @vitejs/plugin-react, typescript, @types/react, @types/react-dom, vite-plugin-pwa, @vite-pwa/assets-generator, vitest, @firebase/rules-unit-testing, firebase-tools, and playwright (WebKit with the iPhone profile, for screenshots)
+
+## Verification plan
+1. Rules tests against the emulator, using the demo project `demo-outof` (no real Firebase project needed).
+2. `npm run build` (TypeScript checks and the Vite build) passes.
+3. **Playwright WebKit (iPhone 15 profile) against dev server + emulators:**
+   - User A signs up, creates the household, and adds items.
+   - User B joins with the code; check live sync in both directions.
+   - Go offline, add items, go back online; check they sync.
+   - Take screenshots of all 4 rooms in light and dark mode at 390px wide.
+4. **User's own steps:**
+   - Create a Firebase project (Spark plan) and enable Email/Password sign-in.
+   - Put the config in `.env.local`.
+   - Run `firebase deploy`.
+   - On both iPhones: Add to Home Screen.
+
+## Later (optional, still free)
+- **Push notification when your partner adds something:** Web Push works on iOS 16.4+ for Home Screen apps, sent from a free Cloudflare Worker with VAPID keys.
+- **Reminders** for Important items with a due date.
