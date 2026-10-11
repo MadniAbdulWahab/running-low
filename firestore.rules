@@ -163,6 +163,16 @@ service cloud.firestore {
           && request.resource.data.text.size() > 0 && request.resource.data.text.size() <= 200;
       }
 
+      // "Our meals": saved meals with their ingredients, used to fill in planned days.
+      match /recipes/{id} {
+        allow read, delete: if isMember(hid);
+        allow create, update: if isMember(hid)
+          && request.resource.data.name is string
+          && request.resource.data.name.size() > 0 && request.resource.data.name.size() <= 80
+          && request.resource.data.ingredients is list && request.resource.data.ingredients.size() <= 20
+          && (!('uses' in request.resource.data) || request.resource.data.uses is int);
+      }
+
       // One planned meal per day; the doc id is the date.
       match /meals/{day} {
         allow read, delete: if isMember(hid);

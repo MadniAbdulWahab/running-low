@@ -1,14 +1,25 @@
 import { useEffect, useRef, useState } from 'react'
 import { useApp } from '../../app-context'
 import { clearMeal, saveMeal, splitIngredients, type Meal } from '../../data/meals'
+import { createRecipe, findRecipe, usedRecipe, type Recipe } from '../../data/recipes'
 import { emojiFor } from '../../lib/emoji'
 import { parseISO } from '../../lib/time'
 import { Sheet } from '../Sheet'
-import { ingredientEntries } from './MealPlanner'
+import { ingredientEntries, mealEmoji } from './MealPlanner'
 
 /** Plan one day: the meal and its ingredients. Saves as you type and on close. */
-export function MealSheet({ day, meal, onClose }: { day: string; meal?: Meal; onClose: () => void }) {
-  const { household, uid, add, byKey } = useApp()
+export function MealSheet({
+  day,
+  meal,
+  recipes,
+  onClose,
+}: {
+  day: string
+  meal?: Meal
+  recipes: Recipe[]
+  onClose: () => void
+}) {
+  const { household, uid, add, byKey, toast } = useApp()
   const hid = household.id
   const [name, setName] = useState(meal?.name ?? '')
   const [ingredients, setIngredients] = useState((meal?.ingredients ?? []).join(', '))
@@ -43,10 +54,38 @@ export function MealSheet({ day, meal, onClose }: { day: string; meal?: Meal; on
   }
 
   const list = splitIngredients(ingredients)
+  const savedRecipe = findRecipe(recipes, name)
+
+  // A saved meal fills in the name and ingredients in one tap.
+  const fillFrom = (r: Recipe) => {
+    const ing = r.ingredients.join(', ')
+    setName(r.name)
+    setIngredients(ing)
+    save(r.name, ing)
+    usedRecipe(hid, r.id)
+  }
   const title = parseISO(day).toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'short' })
 
   return (
     <Sheet title={title} onClose={finish}>
+      {recipes.length > 0 && (
+        <>
+          <h3 className="group-label">From our meals</h3>
+          <div className="recipe-picks" role="group" aria-label="From our meals">
+            {recipes.map((r) => (
+              <button
+                key={r.id}
+                className="recipe-pick"
+                aria-pressed={savedRecipe?.id === r.id}
+                onClick={() => fillFrom(r)}
+              >
+                <span aria-hidden="true">{mealEmoji(r.name)}</span>
+                {r.name}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
       <h3 className="group-label">Meal</h3>
       <div className="group">
         <label className="row">
@@ -106,6 +145,17 @@ export function MealSheet({ day, meal, onClose }: { day: string; meal?: Meal; on
         >
           Add ingredients to Groceries
         </button>
+        {name.trim() && !savedRecipe && (
+          <button
+            className="row row--action"
+            onClick={() => {
+              createRecipe(hid, uid, name, list)
+              toast(`Saved ${name.trim()} to Our meals`)
+            }}
+          >
+            Save to Our meals
+          </button>
+        )}
         {meal && (
           <button
             className="row row--danger"

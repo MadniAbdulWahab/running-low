@@ -250,6 +250,23 @@ describe('push subscriptions', () => {
   })
 })
 
+describe('saved meals (Our meals)', () => {
+  it('members save, edit and delete meals; bad ones and outsiders are refused', async () => {
+    await seed(['alice', 'bob'])
+    const path = `households/${CODE}/recipes/r1`
+    const r = { name: 'Pasta night', ingredients: ['pasta', '2 tomatoes'], uses: 0, createdBy: 'alice' }
+    await assertSucceeds(setDoc(doc(as('alice'), path), r))
+    await assertSucceeds(updateDoc(doc(as('bob'), path), { uses: increment(1) }))
+    await assertSucceeds(getDoc(doc(as('bob'), path)))
+    await assertFails(setDoc(doc(as('alice'), path), { ...r, name: '' }))
+    await assertFails(setDoc(doc(as('alice'), path), { ...r, ingredients: Array(21).fill('x') }))
+    await assertFails(setDoc(doc(as('alice'), path), { ...r, uses: 'lots' }))
+    await assertFails(getDoc(doc(as('carol'), path)))
+    await assertFails(setDoc(doc(as('carol'), `households/${CODE}/recipes/r2`), r))
+    await assertSucceeds(deleteDoc(doc(as('bob'), path)))
+  })
+})
+
 describe('heart counts per day', () => {
   it('each person bumps only their own counts; outsiders see nothing', async () => {
     await seed(['alice', 'bob'])

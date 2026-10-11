@@ -10,6 +10,8 @@ mkdirSync(OUT, { recursive: true })
 
 const run = Date.now().toString(36)
 const engine = process.env.BROWSER === 'chromium' ? chromium : webkit
+// Sync waits: WebKit on Windows is slow against the local emulator (first syncs after a join take 6–10 s).
+const WAIT = engine === webkit ? 15000 : 8000
 const browser = await engine.launch()
 const errors = []
 let failed = 0
@@ -36,7 +38,7 @@ async function signUp(page, email) {
   await page.getByText('Set up').waitFor()
 }
 
-const visible = (page, text, timeout = 8000) =>
+const visible = (page, text, timeout = WAIT) =>
   page
     .locator('.item-name', { hasText: text })
     .first()
@@ -44,7 +46,7 @@ const visible = (page, text, timeout = 8000) =>
     .then(() => true)
     .catch(() => false)
 
-const gone = (page, text, timeout = 8000) =>
+const gone = (page, text, timeout = WAIT) =>
   page
     .locator('.item-name', { hasText: text })
     .first()
@@ -58,7 +60,7 @@ async function tab(page, label) {
   await page.locator('.large-title').first().waitFor()
 }
 
-const ticked = (page, text, want = true, timeout = 8000) =>
+const ticked = (page, text, want = true, timeout = WAIT) =>
   page
     .locator(want ? '.item[data-done]' : '.item:not([data-done])', { has: page.locator('.item-name', { hasText: text }) })
     .first()
@@ -163,7 +165,7 @@ try {
   await B.page.getByRole('button', { name: 'Join with a code' }).click()
   await B.page.locator('.large-title').waitFor({ timeout: 15000 })
   check(true, 'B joins with the code')
-  check(await B.page.locator('.members-btn .avatar--photo img').first().waitFor({ timeout: 20000 }).then(() => true).catch(() => false), 'B sees A’s photo at the top right')
+  check(await B.page.locator('.members-btn .avatar--photo img').first().waitFor({ timeout: 30000 }).then(() => true).catch(() => false), 'B sees A’s photo at the top right')
   check((await B.page.locator('.members-btn .avatar').count()) === 2, 'both people show at the top right')
 
   // ── Live sync A → B ──
@@ -541,12 +543,30 @@ try {
   // ── Meal planner → Groceries ──
   await tab(A.page, 'Meals')
   await tab(B.page, 'Meals')
-  check((await A.page.locator('.toolbar').count()) === 0, 'Meals has no add bar')
-  check((await B.page.locator('.meal-row').count()) >= 7, 'Meals shows the week')
+  check((await B.page.locator('.meal-row:not(.recipe-row)').count()) === 7, 'Meals shows the week')
   check((await A.page.locator('section[aria-label=Notes]').count()) === 0, 'Meals tab has only meals')
+  check(await A.page.locator('.recipe-empty').isVisible(), 'Our meals starts empty, with a hint')
+
+  // ── Our meals: save one from the add bar (with ingredients after a colon) ──
+  await A.page.getByLabel('Save a meal').fill('Pasta night: pasta, 2 tomatoes, basil')
+  await A.page.getByLabel('Save a meal').press('Enter')
+  const pastaOnB = B.page.locator('.recipe-row', { hasText: 'Pasta night' })
+  check(await pastaOnB.waitFor({ timeout: 8000 }).then(() => true).catch(() => false), 'a meal saved on A shows in Our meals on B')
+  check((await pastaOnB.locator('.meal-ingredients').textContent()) === 'pasta, 2 tomatoes, basil', 'with its ingredients')
+  await A.page.getByLabel('Save a meal').fill('pasta NIGHT')
+  await A.page.getByLabel('Save a meal').press('Enter')
+  check(await A.page.locator('.toast', { hasText: 'already in Our meals' }).waitFor({ timeout: 5000 }).then(() => true).catch(() => false), 'saving the same meal twice is caught')
+  await A.page.getByLabel('Save a meal').fill('')
+
+  // ── Plan today from the saved meal ──
   await A.page.locator('.meal-row[data-today]').click()
-  await A.page.getByPlaceholder('What’s for dinner?').fill('Pasta night')
-  await A.page.locator('#meal-ingredients').fill('pasta, 2 tomatoes, basil')
+  await A.page.locator('.sheet .recipe-pick', { hasText: 'Pasta night' }).click()
+  check(
+    (await A.page.getByPlaceholder('What’s for dinner?').inputValue()) === 'Pasta night' &&
+      (await A.page.locator('#meal-ingredients').inputValue()) === 'pasta, 2 tomatoes, basil',
+    'tapping a saved meal fills in the day, ingredients and all',
+  )
+  check((await A.page.locator('.sheet').getByRole('button', { name: 'Save to Our meals' }).count()) === 0, 'no "Save to Our meals" for a meal that is already saved')
   await A.page.locator('.sheet').getByRole('button', { name: 'Add ingredients to Groceries' }).click()
   await A.page.locator('.sheet').screenshot({ path: `${OUT}/meal-sheet.png` })
   await A.page.locator('.sheet-done').click()
@@ -567,6 +587,40 @@ try {
     'adding the week again skips what is already on the list',
   )
   await A.page.screenshot({ path: `${OUT}/meals.png`, fullPage: true })
+
+  // ── A saved meal's sheet: ingredients, plan it, replace asks first, delete asks first ──
+  await tab(B.page, 'Meals')
+  await B.page.getByLabel('Save a meal').fill('Tacos')
+  await B.page.getByLabel('Save a meal').press('Enter')
+  await B.page.locator('.recipe-row', { hasText: 'Tacos' }).click()
+  await B.page.locator('#recipe-ingredients').fill('tortillas, beans, 2 avocados')
+  await B.page.locator('.sheet .plan-day').nth(1).click()
+  check(await B.page.locator('.toast', { hasText: 'Planned Tacos for' }).waitFor({ timeout: 5000 }).then(() => true).catch(() => false), 'plan a saved meal for tomorrow from its sheet')
+  check(await B.page.locator('.sheet .plan-day[data-planned]').first().isVisible(), 'days that already have a meal are marked')
+  await B.page.locator('.sheet').screenshot({ path: `${OUT}/recipe-sheet.png` })
+  await B.page.locator('.sheet .plan-day').first().click()
+  const replace = B.page.locator('.alert', { hasText: 'Replace Pasta night?' })
+  check(await replace.waitFor({ timeout: 5000 }).then(() => true).catch(() => false), 'planning over a day that has a meal asks first')
+  await replace.getByRole('button', { name: 'Cancel' }).click()
+  await B.page.locator('.sheet-done').click()
+  check(
+    await A.page.locator('.recipe-row', { hasText: 'Tacos' }).locator('.meal-ingredients', { hasText: 'tortillas, beans, 2 avocados' }).waitFor({ timeout: 8000 }).then(() => true).catch(() => false),
+    'ingredients added in the sheet on B show on A',
+  )
+  check(
+    (await A.page.locator('.meal-row[data-today] .meal-name').textContent()) === 'Pasta night',
+    'Cancel kept today’s meal',
+  )
+  await B.page.locator('.recipe-row', { hasText: 'Tacos' }).click()
+  await B.page.locator('.sheet').getByRole('button', { name: 'Delete meal' }).click()
+  const del = B.page.locator('.alert', { hasText: 'Delete Tacos?' })
+  check(await del.waitFor({ timeout: 5000 }).then(() => true).catch(() => false), 'deleting a saved meal asks first')
+  await del.getByRole('button', { name: 'Delete' }).click()
+  check(
+    await A.page.locator('.recipe-row', { hasText: 'Tacos' }).waitFor({ state: 'detached', timeout: 8000 }).then(() => true).catch(() => false),
+    'a deleted meal goes from Our meals on A too',
+  )
+  await A.page.screenshot({ path: `${OUT}/our-meals.png`, fullPage: true })
   await tab(A.page, 'Us')
   check((await A.page.locator('.meal-row').count()) === 0, 'Us no longer shows meals')
 

@@ -5,6 +5,7 @@ import { byBoardOrder, createNote, deleteNote, nextColor, notesCol, toNote } fro
 import { countdownsCol, toCountdown } from '../data/countdowns'
 import { ideasCol, toIdea } from '../data/ideas'
 import { mealsCol, toMeal } from '../data/meals'
+import { byUse, recipesCol, toRecipe } from '../data/recipes'
 import { pingDaysSince, readPingSeen, recentPings, toPing, toPingDay, writePingSeen } from '../data/pings'
 import { profilesCol, toProfile } from '../data/profiles'
 import { useCollection } from '../hooks/useCollection'
@@ -35,7 +36,10 @@ import { HeartsBar } from './us/HeartsBar'
 import { HeartsSheet } from './us/HeartsSheet'
 import { PingArrival } from './us/PingArrival'
 import { MealPlanner } from './us/MealPlanner'
+import { MealComposer } from './us/MealComposer'
 import { MealSheet } from './us/MealSheet'
+import { RecipeSheet } from './us/RecipeSheet'
+import { SavedMeals } from './us/SavedMeals'
 import { NoteComposer } from './us/NoteComposer'
 import { NoteSheet } from './us/NoteSheet'
 import { UsRoom } from './us/UsRoom'
@@ -109,6 +113,10 @@ export function RoomShell({ uid, household, room, setRoom, theme }: Props) {
     [profiles],
   )
   const [mealDay, setMealDay] = useState<string | null>(null)
+  const recipesLive = useCollection(`recipes/${hid}`, () => recipesCol(hid), toRecipe)
+  const recipes = useMemo(() => (recipesLive ? [...recipesLive].sort(byUse) : null), [recipesLive])
+  const [recipeId, setRecipeId] = useState<string | null>(null)
+  const openRecipe = recipeId ? recipes?.find((r) => r.id === recipeId) : undefined
   const myPush = useMyPush(hid, uid)
   const pushChecked = useRef(false)
   useEffect(() => {
@@ -372,7 +380,10 @@ export function RoomShell({ uid, household, room, setRoom, theme }: Props) {
             onOpenCountdown={setCountdownId}
           />
         ) : room === 'meals' ? (
-          <MealPlanner meals={meals} onOpenDay={setMealDay} />
+          <>
+            <MealPlanner meals={meals} onOpenDay={setMealDay} />
+            <SavedMeals recipes={recipes} onOpen={setRecipeId} />
+          </>
         ) : room === 'home' ? (
           <>
             <ListCards needed={needed} meals={meals} notes={notes} countdowns={countdowns} />
@@ -466,11 +477,15 @@ export function RoomShell({ uid, household, room, setRoom, theme }: Props) {
           </div>
         ) : (
           <>
-            {room !== 'meals' && (
-              <div className="toolbar">
-                {room === 'us' ? <NoteComposer notes={notes ?? []} /> : <QuickAdd room={room} />}
-              </div>
-            )}
+            <div className="toolbar">
+              {room === 'us' ? (
+                <NoteComposer notes={notes ?? []} />
+              ) : room === 'meals' ? (
+                <MealComposer recipes={recipes ?? []} />
+              ) : (
+                <QuickAdd room={room} />
+              )}
+            </div>
             <TabBar room={room} counts={counts} onChange={goTo} />
           </>
         )}
@@ -504,8 +519,12 @@ export function RoomShell({ uid, household, room, setRoom, theme }: Props) {
           key={mealDay}
           day={mealDay}
           meal={meals?.find((m) => m.day === mealDay)}
+          recipes={recipes ?? []}
           onClose={() => setMealDay(null)}
         />
+      )}
+      {openRecipe && (
+        <RecipeSheet key={openRecipe.id} recipe={openRecipe} meals={meals} onClose={() => setRecipeId(null)} />
       )}
       {countdownId && (
         <CountdownSheet

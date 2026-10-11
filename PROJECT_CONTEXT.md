@@ -349,3 +349,19 @@ households/{CODE}/photos/{id}   { itemKey, dataUrl, createdAt }
   - 25 unit tests (rules + EXIF), including the new pingDays test.
   - E2E: 12 buttons in one row that runs off the edge; "3 today" on the strip; the sheet shows 3,0 and the ❤️ 2·0 / 🌹 1·0 breakdown, with the rose first in Latest; This week ≥ today; sending from the grid reaches A and updates the score live (3,1); the 12th button (swiped into view) sends.
 
+## Our meals: saved meals as templates (2026-10-12)
+- **Request:** a list of meals, noted like grocery items, that can be used as templates in the week planner.
+- **Data:** `households/{hid}/recipes/{id}` = `{ name 1–80, ingredients ≤20, uses int, createdBy, createdAt }`, in `src/data/recipes.ts` (`createRecipe`, `updateRecipe`, `usedRecipe` (`increment`), `deleteRecipe`, `findRecipe` (case-insensitive), sorted by `byUse`: most planned first, then A–Z). Rules: members read, write and delete; name and size checks; `uses` must be an int.
+- **Meals tab:**
+  - The week planner, then **Our meals** (`SavedMeals.tsx`): rows with an emoji tile, the name and ingredients ("Tap to add ingredients" if none). It has an empty-state card.
+  - The dock now has an add bar on Meals (`MealComposer.tsx`, "Save a meal…"). "Name: a, b, c" saves the ingredients too, and duplicates are caught with a toast.
+- **Saved meal sheet** (`RecipeSheet.tsx`):
+  - Edit the name and ingredients (saved on blur and close; never with an empty name).
+  - **Plan it for**: 7 day chips starting Today (weekday short names; a brand dot marks days that already have a meal). Planning over a different meal asks first ("Replace X?").
+  - Add ingredients to Groceries, and Delete meal (asks first).
+- **Day sheet** (`MealSheet.tsx`): a "From our meals" chip row at the top fills the name and ingredients, saves, and counts a use; the chip of the matching saved meal is highlighted. "Save to Our meals" shows when the day's meal name isn't saved yet.
+- **Tests:**
+  - Rules tests: 26.
+  - E2E: saving from the bar with ingredients, sync to B, duplicate caught, the chip fills today's sheet, no "Save to Our meals" for an already-saved meal, planning from the saved meal's sheet, the planned-day dot, Replace asks and Cancel keeps it, ingredients edited on B show on A, and Delete asks and syncs.
+- **E2E timing:** sync waits are now 15 s in WebKit and 8 s in Chromium (`WAIT` in `scripts/e2e.mjs`). With more live collections, WebKit on Windows takes 6–10 s for the first sync after a join against the emulator. "B sees A's photo at the top right" still missed once right after an emulator cold start, then passed.
+

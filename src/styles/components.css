@@ -3133,3 +3133,115 @@ button.row:disabled {
 .hearts-bar[data-zero] {
   visibility: hidden;
 }
+
+/* ══ Our meals (saved meals on the Meals tab) ════════════════ */
+section[aria-label='Our meals'] {
+  margin-top: 8px;
+}
+.recipe-row > svg {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  color: var(--label-3);
+}
+.recipe-row + .recipe-row::before {
+  left: 62px;
+}
+.recipe-emoji {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--meals) 30%, var(--card));
+  font-size: 19px;
+}
+.recipe-hint {
+  color: var(--label-3);
+}
+
+/* "From our meals" in a day's sheet: one swipeable row of chips */
+.recipe-picks {
+  display: flex;
+  gap: 8px;
+  margin: 0 -16px;
+  padding: 0 16px 2px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.recipe-picks::-webkit-scrollbar {
+  display: none;
+}
+.recipe-pick {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 38px;
+  padding: 0 14px 0 10px;
+  border-radius: 19px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--label);
+  font-size: 15px;
+  white-space: nowrap;
+  transition: transform 120ms;
+}
+.recipe-pick:active {
+  transform: scale(0.96);
+}
+.recipe-pick[aria-pressed='true'] {
+  background: var(--brand);
+  border-color: transparent;
+  color: var(--brand-ink);
+  font-weight: 600;
+}
+
+/* "Plan it for" in a saved meal's sheet: the next 7 days */
+.plan-days {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+}
+.plan-day {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 8px 0 9px;
+  border-radius: 12px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  transition: transform 120ms;
+}
+.plan-day:active {
+  transform: scale(0.94);
+}
+.plan-day-label {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--label-2);
+}
+.plan-day-date {
+  font-size: 17px;
+  font-weight: 650;
+  color: var(--label);
+}
+/* A dot on days that already have a meal planned */
+.plan-day[data-planned]::after {
+  content: '';
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--brand);
+}
