@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AppContext, type AddOptions, type AppCtx } from '../app-context'
 import { addItem, deleteMany, markDone, markDoneMany, moveMany, undoDone, undoDoneMany } from '../data/items'
 import { byBoardOrder, createNote, deleteNote, nextColor, notesCol, toNote } from '../data/notes'
+import { mealsCol, toMeal } from '../data/meals'
 import { readPingSeen, recentPings, toPing, writePingSeen } from '../data/pings'
 import { useCollection } from '../hooks/useCollection'
 import { useItems } from '../hooks/useItems'
@@ -24,6 +25,7 @@ import { SettingsSheet } from './SettingsSheet'
 import { TabBar } from './TabBar'
 import { Toast, type ToastData } from './Toast'
 import { HeartRain } from './us/HeartRain'
+import { MealSheet } from './us/MealSheet'
 import { NoteComposer } from './us/NoteComposer'
 import { NoteSheet } from './us/NoteSheet'
 import { UsRoom } from './us/UsRoom'
@@ -84,6 +86,8 @@ export function RoomShell({ uid, household, room, setRoom, theme }: Props) {
   const notes = useMemo(() => (notesLive ? [...notesLive].sort(byBoardOrder) : null), [notesLive])
   const pingsLive = useCollection(`pings/${hid}`, () => recentPings(hid), toPing)
   const pings = useMemo(() => pingsLive ?? [], [pingsLive])
+  const meals = useCollection(`meals/${hid}`, () => mealsCol(hid), toMeal)
+  const [mealDay, setMealDay] = useState<string | null>(null)
   // Home sections can be folded down to one line; remembered on this phone.
   const [folded, setFolded] = useState(readFolded)
   const toggleFold = (l: ListId) =>
@@ -324,6 +328,8 @@ export function RoomShell({ uid, household, room, setRoom, theme }: Props) {
             onOpenNote={setOpenNoteId}
             onNewNote={newNote}
             onAskDeleteNote={askDeleteNote}
+            meals={meals}
+            onOpenMealDay={setMealDay}
           />
         ) : room === 'home' ? (
           <>
@@ -442,6 +448,14 @@ export function RoomShell({ uid, household, room, setRoom, theme }: Props) {
           note={openNote}
           onClose={() => setOpenNoteId(null)}
           onAskDelete={() => askDeleteNote(openNote)}
+        />
+      )}
+      {mealDay && (
+        <MealSheet
+          key={mealDay}
+          day={mealDay}
+          meal={meals?.find((m) => m.day === mealDay)}
+          onClose={() => setMealDay(null)}
         />
       )}
       {rain && <HeartRain emoji={rain} onDone={endRain} />}

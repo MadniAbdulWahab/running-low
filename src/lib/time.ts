@@ -14,7 +14,7 @@ export function ago(ms: number | null, now = Date.now()): string {
   return new Date(ms).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })
 }
 
-function parseISO(iso: string): Date {
+export function parseISO(iso: string): Date {
   const [y, m, d] = iso.split('-').map(Number)
   return new Date(y, m - 1, d)
 }
@@ -36,4 +36,26 @@ export function dueLabel(iso: string): string {
   return n < 7
     ? `Due ${date.toLocaleDateString(undefined, { weekday: 'long' })}`
     : `Due ${date.toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}`
+}
+
+/** Local date → 'YYYY-MM-DD' (not UTC, so late evenings don't jump a day). */
+export function toISO(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+export const todayISO = () => toISO(new Date())
+
+/** The seven days (Mon–Sun) of the week `offset` weeks from this one. */
+export function weekDays(offset = 0): string[] {
+  const t = new Date()
+  const monday = new Date(t.getFullYear(), t.getMonth(), t.getDate() - ((t.getDay() + 6) % 7) + offset * 7)
+  return Array.from({ length: 7 }, (_, i) => toISO(new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + i)))
+}
+
+export function weekLabel(offset: number): string {
+  if (offset === 0) return 'This week'
+  if (offset === 1) return 'Next week'
+  if (offset === -1) return 'Last week'
+  const first = parseISO(weekDays(offset)[0])
+  return `Week of ${first.toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}`
 }

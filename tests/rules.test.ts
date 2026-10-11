@@ -213,6 +213,22 @@ describe('notes and pings', () => {
   })
 })
 
+describe('meals', () => {
+  const meal = { day: '2026-10-12', name: 'Pasta night', ingredients: ['pasta', '2 tomatoes'], updatedBy: 'alice' }
+  it('members plan meals by date; outsiders and bad shapes are rejected', async () => {
+    await seed(['alice', 'bob'])
+    const path = `households/${CODE}/meals/2026-10-12`
+    await assertSucceeds(setDoc(doc(as('alice'), path), meal))
+    await assertSucceeds(getDoc(doc(as('bob'), path)))
+    await assertFails(getDoc(doc(as('carol'), path)))
+    await assertFails(setDoc(doc(as('alice'), `households/${CODE}/meals/monday`), { ...meal, day: 'monday' }))
+    await assertFails(setDoc(doc(as('alice'), path), { ...meal, day: '2026-10-13' }))
+    await assertFails(setDoc(doc(as('alice'), path), { ...meal, ingredients: Array(21).fill('x') }))
+    await assertFails(setDoc(doc(as('alice'), path), { ...meal, updatedBy: 'bob' }))
+    await assertSucceeds(deleteDoc(doc(as('bob'), path)))
+  })
+})
+
 describe('items and photos', () => {
   it('members can read and write items; outsiders cannot', async () => {
     await seed(['alice', 'bob'])

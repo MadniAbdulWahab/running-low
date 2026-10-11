@@ -368,6 +368,33 @@ try {
     'holding a note and confirming deletes it on B too',
   )
 
+  // ── Meal planner → Grocery ──
+  await tab(A.page, 'Us')
+  await tab(B.page, 'Us')
+  await A.page.locator('.meal-row[data-today]').click()
+  await A.page.getByPlaceholder('What’s for dinner?').fill('Pasta night')
+  await A.page.locator('#meal-ingredients').fill('pasta, 2 tomatoes, basil')
+  await A.page.locator('.sheet').getByRole('button', { name: 'Add ingredients to Grocery' }).click()
+  await A.page.locator('.sheet').screenshot({ path: `${OUT}/meal-sheet.png` })
+  await A.page.locator('.sheet-done').click()
+  check(
+    await B.page.locator('.meal-row[data-today] .meal-name', { hasText: 'Pasta night' }).waitFor({ timeout: 8000 }).then(() => true).catch(() => false),
+    "today's meal planned on A shows on B",
+  )
+  await tab(B.page, 'Grocery')
+  check(
+    (await visible(B.page, 'Pasta')) &&
+      (await B.page.locator('.item', { hasText: 'Tomatoes' }).locator('.qty-value', { hasText: /^2$/ }).waitFor({ timeout: 8000 }).then(() => true).catch(() => false)) &&
+      (await visible(B.page, 'Basil')),
+    'meal ingredients land in Grocery on B, with "2 tomatoes" as Tomatoes ×2',
+  )
+  await A.page.locator('.meal-add-all').click()
+  check(
+    await A.page.locator('.toast', { hasText: 'already on the list' }).waitFor({ timeout: 5000 }).then(() => true).catch(() => false),
+    'adding the week again skips what is already on the list',
+  )
+  await A.page.screenshot({ path: `${OUT}/meals.png`, fullPage: true })
+
   // ── Screenshots of every room, light and dark ──
   for (const scheme of ['light', 'dark']) {
     await A.page.emulateMedia({ colorScheme: scheme })

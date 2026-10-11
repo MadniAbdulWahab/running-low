@@ -101,6 +101,17 @@ service cloud.firestore {
         allow update: if false;
       }
 
+      // One planned meal per day; the doc id is the date.
+      match /meals/{day} {
+        allow read, delete: if isMember(hid);
+        allow create, update: if isMember(hid)
+          && day.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+          && request.resource.data.day == day
+          && request.resource.data.name is string && request.resource.data.name.size() <= 80
+          && request.resource.data.ingredients is list && request.resource.data.ingredients.size() <= 20
+          && request.resource.data.updatedBy == me();
+      }
+
       match /photos/{photoId} {
         allow read, delete: if isMember(hid);
         allow create, update: if isMember(hid)

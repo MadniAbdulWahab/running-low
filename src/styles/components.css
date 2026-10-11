@@ -2405,3 +2405,138 @@ body {
   place-items: center;
   font-size: 18px;
 }
+
+/* Meals this week */
+.week-nav {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.week-label {
+  min-width: 92px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--label);
+}
+.group-label .week-arrow {
+  position: relative;
+  width: 30px;
+  height: 30px;
+  min-height: 0;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 15px;
+  color: var(--tint);
+}
+.week-arrow::before {
+  content: '';
+  position: absolute;
+  inset: -7px -2px;
+}
+.week-arrow svg {
+  width: 16px;
+  height: 16px;
+}
+.week-arrow .flip {
+  display: grid;
+  transform: scaleX(-1);
+}
+.meal-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  min-height: 58px;
+  padding: 8px 16px;
+  text-align: left;
+}
+.meal-row + .meal-row::before,
+.meal-add-all::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 70px;
+  right: 0;
+  height: 0.5px;
+  background: var(--sep);
+}
+.meal-row:active {
+  background: var(--card-pressed);
+}
+.meal-day {
+  flex: none;
+  width: 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.1;
+}
+.meal-dow {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--label-2);
+}
+.meal-date {
+  font-size: 19px;
+  font-weight: 650;
+  color: var(--label);
+}
+.meal-row[data-today] .meal-date,
+.meal-row[data-today] .meal-dow {
+  color: var(--tint);
+}
+.meal-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.meal-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--label);
+}
+.meal-empty {
+  font-size: 15px;
+  color: var(--label-3);
+}
+:root[data-mode='dark'] .meal-empty {
+  color: #6c6c70;
+}
+.meal-ingredients {
+  font-size: 13px;
+  color: var(--label-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.meal-emoji {
+  flex: none;
+  font-size: 22px;
+}
+.meal-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 10px 4px 0;
+}
+.meal-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px 4px 8px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--grocery) 22%, var(--card));
+  color: var(--label);
+  font-size: 14px;
+}
+button.row:disabled {
+  opacity: 0.4;
+}
