@@ -1,7 +1,7 @@
-import { ROOMS } from '../rooms'
 import type { Mode, RoomId, ThemePref } from '../types'
 
 const KEY = 'outof.theme'
+const BAR: Record<Mode, string> = { light: '#F2F2F7', dark: '#000000' }
 
 export function readPref(): ThemePref {
   try {
@@ -24,11 +24,12 @@ export function resolveMode(p: ThemePref): Mode {
   return p
 }
 
-/** Puts room + mode on <html> and tints the iOS status bar to match. */
+/** Puts mode (and the open list, for its colour) on <html> and tints the iOS status bar. */
 export function applyTheme(room: RoomId, mode: Mode) {
   const root = document.documentElement
-  root.dataset.room = room
   root.dataset.mode = mode
+  if (room === 'home') delete root.dataset.list
+  else root.dataset.list = room
   root.style.colorScheme = mode
   let meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]')
   if (!meta) {
@@ -36,5 +37,5 @@ export function applyTheme(room: RoomId, mode: Mode) {
     meta.name = 'theme-color'
     document.head.appendChild(meta)
   }
-  meta.content = ROOMS[room].bg[mode]
+  meta.content = BAR[mode]
 }

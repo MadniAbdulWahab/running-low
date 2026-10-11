@@ -49,90 +49,97 @@ export function SettingsSheet({ onClose, theme }: { onClose: () => void; theme: 
     if (v && v !== household.memberNames[uid]) setMyName(household, uid, v.slice(0, 60))
     else setMyNameDraft(household.memberNames[uid] ?? '')
   }
+  const blurOnEnter = (e: React.KeyboardEvent<HTMLInputElement>) => e.key === 'Enter' && e.currentTarget.blur()
 
   return (
-    <Sheet label="Settings" onClose={onClose}>
-      <h2 className="sheet-title">Settings</h2>
-
-      <label className="field">
-        <span className="field-label">Household</span>
-        <input
-          className="input"
-          value={homeName}
-          maxLength={60}
-          onChange={(e) => setHomeName(e.target.value)}
-          onBlur={saveHome}
-          enterKeyHint="done"
-          onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
-        />
-      </label>
-
-      <div className="field">
-        <span className="field-label">Who’s in</span>
-        <ul className="members">
-          {household.members.map((m, i) => (
-            <li key={m}>
-              <span className="avatar" data-p={i}>
-                {initials(household.memberNames[m] ?? '?')}
-              </span>
-              {household.memberNames[m] ?? 'Someone'}
-              {m === uid && <span className="members-you">you</span>}
-            </li>
-          ))}
-          {waiting && (
-            <li className="members-waiting">
-              <span className="avatar avatar--empty">+</span>
-              Waiting for someone to join
-            </li>
-          )}
-        </ul>
+    <Sheet title="Settings" onClose={onClose}>
+      <h3 className="group-label">List name</h3>
+      <div className="group">
+        <label className="row">
+          <span className="visually-hidden">List name</span>
+          <input
+            className="row-input"
+            value={homeName}
+            maxLength={60}
+            onChange={(e) => setHomeName(e.target.value)}
+            onBlur={saveHome}
+            enterKeyHint="done"
+            onKeyDown={blurOnEnter}
+          />
+        </label>
       </div>
 
-      <div className="invite">
-        <span className="field-label">Invite code</span>
-        <div className="invite-row">
+      <h3 className="group-label">Members</h3>
+      <div className="group">
+        {household.members.map((m, i) => (
+          <div key={m} className="row row--tall">
+            <span className="avatar" data-p={i}>
+              {initials(household.memberNames[m] ?? '?')}
+            </span>
+            {household.memberNames[m] ?? 'Someone'}
+            {m === uid && <span className="you-tag">You</span>}
+          </div>
+        ))}
+        {waiting && (
+          <div className="row row--tall row-value">
+            <span className="avatar avatar--empty">+</span>
+            Waiting for someone to join
+          </div>
+        )}
+      </div>
+
+      <h3 className="group-label">Invite code</h3>
+      <div className="group">
+        <div className="row row--tall">
           <span className="invite-code">{code}</span>
-          <button className="btn btn--primary btn--small" onClick={share}>
+          <button className="share-btn" onClick={share}>
             Share
           </button>
         </div>
-        <p className="hint">
-          {waiting
-            ? 'Share this code. They add the app to their Home Screen, make an account, then enter it.'
-            : 'Everyone’s in. The code stops working once two people have joined.'}
-        </p>
+      </div>
+      <p className="group-footer">
+        {waiting
+          ? 'Share this code. They add the app to their Home Screen, make an account, then enter it.'
+          : 'Everyone’s in. The code stops working once two people have joined.'}
+      </p>
+
+      <h3 className="group-label">Your name</h3>
+      <div className="group">
+        <label className="row">
+          <span className="visually-hidden">Your name</span>
+          <input
+            className="row-input"
+            value={myName}
+            maxLength={60}
+            onChange={(e) => setMyNameDraft(e.target.value)}
+            onBlur={saveMe}
+            enterKeyHint="done"
+            onKeyDown={blurOnEnter}
+          />
+        </label>
       </div>
 
-      <label className="field">
-        <span className="field-label">Your name</span>
-        <input
-          className="input"
-          value={myName}
-          maxLength={60}
-          onChange={(e) => setMyNameDraft(e.target.value)}
-          onBlur={saveMe}
-          enterKeyHint="done"
-          onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
-        />
-      </label>
-
-      <div className="field">
-        <span className="field-label">Appearance</span>
-        <div className="segmented">
-          {PREFS.map((p) => (
-            <button key={p.id} aria-pressed={theme.pref === p.id} onClick={() => theme.setPref(p.id)}>
-              {p.label}
-            </button>
-          ))}
+      <h3 className="group-label">Appearance</h3>
+      <div className="group">
+        <div className="row row--segmented">
+          <div className="segmented">
+            {PREFS.map((p) => (
+              <button key={p.id} aria-pressed={theme.pref === p.id} onClick={() => theme.setPref(p.id)}>
+                {p.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
-      <div className="sheet-actions">
-        <button className="btn btn--quiet" onClick={() => signOut(auth)}>
+      <div className="group" style={{ marginTop: 28 }}>
+        <button className="row row--danger row--center" onClick={() => signOut(auth)}>
           Sign out
         </button>
       </div>
-      <p className="hint hint--center">Works offline. Changes sync when you’re back online.</p>
+      <p className="group-footer" style={{ textAlign: 'center' }}>
+        Works offline. Changes sync when you’re back online.
+      </p>
     </Sheet>
   )
 }

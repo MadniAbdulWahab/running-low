@@ -1,17 +1,16 @@
 import { useEffect, useRef, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import type { ListId } from '../types'
-import { CloseIcon } from './Icons'
 
 interface Props {
-  label: string
+  title: string
   onClose: () => void
-  palette?: ListId
+  list?: ListId
   children: ReactNode
 }
 
-/** Bottom sheet: tap outside, press Escape or drag the handle down to close. */
-export function Sheet({ label, onClose, palette, children }: Props) {
+/** iOS-style sheet: tap outside, press Escape, tap Done or drag the handle down to close. */
+export function Sheet({ title, onClose, list, children }: Props) {
   const panel = useRef<HTMLDivElement>(null)
   const drag = useRef<{ y: number; dy: number } | null>(null)
   const close = useRef(onClose)
@@ -47,9 +46,9 @@ export function Sheet({ label, onClose, palette, children }: Props) {
   }
 
   return createPortal(
-    <div className="sheet-layer" data-palette={palette}>
+    <div className="sheet-layer" data-list={list}>
       <div className="sheet-backdrop" onClick={onClose} />
-      <div className="sheet" role="dialog" aria-modal="true" aria-label={label} ref={panel}>
+      <div className="sheet" role="dialog" aria-modal="true" aria-label={title} ref={panel}>
         <div
           className="sheet-handle"
           onPointerDown={onDown}
@@ -59,10 +58,13 @@ export function Sheet({ label, onClose, palette, children }: Props) {
         >
           <span className="sheet-grabber" />
         </div>
-        <button className="sheet-close" onClick={onClose} aria-label="Close">
-          <CloseIcon />
-        </button>
-        <div className="sheet-body">{children}</div>
+        <div className="sheet-bar">
+          <h2 className="sheet-title">{title}</h2>
+          <button className="sheet-done" onClick={onClose}>
+            Done
+          </button>
+        </div>
+        {children}
       </div>
     </div>,
     document.body,

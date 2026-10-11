@@ -1,28 +1,20 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AppContext, type AddOptions, type AppCtx } from '../app-context'
 import { addItem, markDone, undoDone } from '../data/items'
 import { useItems } from '../hooks/useItems'
 import { useRoomTheme, type ThemeState } from '../hooks/useTheme'
 import { WEEK } from '../lib/time'
-import { LISTS, ROOMS } from '../rooms'
+import { LIST_INFO, LISTS } from '../rooms'
 import type { Household, Item, ListId, RoomId } from '../types'
-import { Backdrop } from './Backdrop'
-import { FrequentItems } from './FrequentItems'
-import { ChevronIcon } from './Icons'
+import { Header } from './Header'
+import { ChevronRight } from './Icons'
 import { ItemRow, RecentRow } from './ItemRow'
 import { ItemSheet } from './ItemSheet'
+import { ListCards } from './ListCards'
 import { QuickAdd } from './QuickAdd'
-import { RoomHeader } from './RoomHeader'
-import { RoomTiles } from './RoomTiles'
+import { QuickPicks } from './QuickPicks'
 import { SettingsSheet } from './SettingsSheet'
-import { TabBar } from './TabBar'
 import { Toast, type ToastData } from './Toast'
-
-const DONE_VERB: Record<ListId, string> = {
-  grocery: 'Bought',
-  household: 'Restocked',
-  important: 'Sorted',
-}
 
 const byNewest = (a: Item, b: Item) => b.addedAt - a.addedAt
 const byDue = (a: Item, b: Item) =>
@@ -45,6 +37,7 @@ export function RoomShell({ uid, household, room, setRoom, theme }: Props) {
   const [settings, setSettings] = useState(false)
   const [toastData, setToastData] = useState<ToastData | null>(null)
   const [, setTick] = useState(0)
+  const direction = useRef<'forward' | 'back'>('forward')
 
   // Keep "2m ago" labels fresh.
   useEffect(() => {
@@ -88,6 +81,7 @@ export function RoomShell({ uid, household, room, setRoom, theme }: Props) {
 
   const goTo = useCallback(
     (r: RoomId) => {
+      direction.current = r === 'home' ? 'back' : 'forward'
       setRoom(r)
       window.scrollTo({ top: 0 })
     },
@@ -110,39 +104,42 @@ export function RoomShell({ uid, household, room, setRoom, theme }: Props) {
       }
       const parts: string[] = []
       if (added.length === 1) parts.push(`Added ${added[0]}`)
-      else if (added.length > 1) parts.push(`Added ${added.length} things`)
+      else if (added.length > 1) parts.push(`Added ${added.length} items`)
       if (already.length)
         parts.push(`${already.join(', ')} ${already.length === 1 ? 'is' : 'are'} already on the list`)
       if (parts.length) toast(parts.join('. '))
     }
     const done = (item: Item) => {
       markDone(hid, uid, item)
-      toast(`${DONE_VERB[item.list]} ${item.name}`, () => undoDone(hid, item))
+      toast(`${LIST_INFO[item.list].doneVerb} ${item.name}`, () => undoDone(hid, item))
     }
     return { uid, household, items, byKey, add, done, openItem: setOpenId, goTo, toast }
   }, [hid, uid, household, items, byKey, goTo, toast])
 
   const openItem = openId ? items.find((i) => i.id === openId) : undefined
+  const roomRecent = room === 'home' ? recent : recent.filter((i) => i.list === room)
 
   return (
     <AppContext.Provider value={ctx}>
-      <Backdrop room={room} />
-      <main className="page" key={room}>
-        <RoomHeader room={room} count={counts[room]} onSettings={() => setSettings(true)} />
+      <main className="page" key={room} data-dir={direction.current}>
+        <Header room={room} count={counts[room]} onSettings={() => setSettings(true)} />
+
         {loaded === null ? null : room === 'home' ? (
           <>
-            <RoomTiles counts={counts} />
+            <ListCards counts={counts} />
             {counts.home === 0 ? (
-              <p className="empty">{ROOMS.home.empty}</p>
+              <p className="empty">
+                <strong>Nothing’s running low</strong>
+                Add something the moment it runs out.
+              </p>
             ) : (
               LISTS.filter((l) => needed[l].length).map((l) => (
-                <section key={l} className="group">
-                  <button className="group-head" data-palette={l} onClick={() => goTo(l)}>
-                    <i className="swatch" />
-                    {ROOMS[l].label}
-                    <span className="group-count">{needed[l].length}</span>
+                <section key={l} data-list={l}>
+                  <button className="section-head" onClick={() => goTo(l)}>
+                    {LIST_INFO[l].label}
+                    <ChevronRight />
                   </button>
-                  <div className="plain-list">
+                  <div className="group">
                     {needed[l].map((i) => (
                       <ItemRow key={i.id} item={i} />
                     ))}
@@ -150,21 +147,36 @@ export function RoomShell({ uid, household, room, setRoom, theme }: Props) {
                 </section>
               ))
             )}
-            <Recent items={recent} title={ROOMS.home.recent} />
           </>
         ) : (
-          <>
-            <FrequentItems list={room} />
-            <ListBody list={room} items={needed[room]} />
-            <Recent items={recent.filter((i) => i.list === room)} title={ROOMS[room].recent} />
-          </>
+          <div data-list={room}>
+            <QuickPicks list={room} />
+            <h2 className="group-label">On the list</h2>
+            {needed[room].length ? (
+              <div className="group">
+                {needed[room].map((i) => (
+                  <ItemRow key={i.id} item={i} />
+                ))}
+              </div>
+            ) : (
+              <p className="empty">
+                <strong>All stocked up</strong>
+                {LIST_INFO[room].empty}
+              </p>
+            )}
+          </div>
+        )}
+
+        {loaded !== null && (
+          <Recent items={roomRecent} title={room === 'home' ? 'Recently bought' : LIST_INFO[room].recent} />
         )}
       </main>
 
       <div className="dock">
         <Toast toast={toastData} onDone={clearToast} />
-        <QuickAdd room={room} />
-        <TabBar room={room} counts={counts} onChange={goTo} />
+        <div className="toolbar">
+          <QuickAdd room={room} />
+        </div>
       </div>
 
       {openItem && <ItemSheet key={openItem.id} item={openItem} onClose={() => setOpenId(null)} />}
@@ -173,33 +185,21 @@ export function RoomShell({ uid, household, room, setRoom, theme }: Props) {
   )
 }
 
-function ListBody({ list, items }: { list: ListId; items: Item[] }) {
-  const rows = items.map((i) => <ItemRow key={i.id} item={i} variant={list === 'important' ? 'card' : 'row'} />)
-  const empty = <p className="empty">{ROOMS[list].empty}</p>
-
-  if (list === 'grocery') {
-    return (
-      <div className="notepad">
-        <span className="notepad-magnet" aria-hidden />
-        {items.length ? rows : empty}
-      </div>
-    )
-  }
-  return <div className={`list list--${list}`}>{items.length ? rows : empty}</div>
-}
-
 function Recent({ items, title }: { items: Item[]; title: string }) {
   const [open, setOpen] = useState(false)
   if (!items.length) return null
   return (
-    <section className="recent">
-      <button className="recent-head" onClick={() => setOpen((o) => !o)} aria-expanded={open}>
-        {title}
-        <span className="recent-count">{items.length}</span>
-        <ChevronIcon open={open} />
-      </button>
+    <section>
+      <h2 className="group-label">
+        <span>
+          {title} · {items.length}
+        </span>
+        <button className="recent-head" onClick={() => setOpen((o) => !o)} aria-expanded={open}>
+          {open ? 'Hide' : 'Show'}
+        </button>
+      </h2>
       {open && (
-        <div className="recent-list">
+        <div className="group">
           {items.map((i) => (
             <RecentRow key={i.id} item={i} />
           ))}

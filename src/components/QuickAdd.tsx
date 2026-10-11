@@ -1,17 +1,10 @@
-import { useMemo, useRef, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useApp, type AddOptions } from '../app-context'
 import { compressImage } from '../data/photos'
 import { cleanName, normalizeKey, splitEntry } from '../lib/parse'
-import { LISTS, ROOMS } from '../rooms'
+import { LIST_INFO, LISTS } from '../rooms'
 import type { Item, ListId, RoomId } from '../types'
-import { CameraIcon, CloseIcon, PlusIcon } from './Icons'
-
-const PLACEHOLDER: Record<RoomId, string> = {
-  home: 'We’re out of…',
-  grocery: 'We’re out of…',
-  household: 'We’re running low on…',
-  important: 'Something to sort out…',
-}
+import { ArrowUp, CameraIcon, CloseIcon, PlusCircle } from './Icons'
 
 export function QuickAdd({ room }: { room: RoomId }) {
   const { items, byKey, add, toast } = useApp()
@@ -21,10 +14,9 @@ export function QuickAdd({ room }: { room: RoomId }) {
   const [focused, setFocused] = useState(false)
   const [picked, setPicked] = useState<ListId>('grocery')
   const [chipTouched, setChipTouched] = useState(false)
-  const input = useRef<HTMLInputElement>(null)
   const known = useMemo(() => new Set(byKey.keys()), [byKey])
 
-  // On Home, guess the room from history as you type, until the chip is tapped.
+  // On the home screen, guess the list from history as you type, until the chip is tapped.
   const chip: ListId = chipTouched ? picked : (byKey.get(normalizeKey(text))?.list ?? picked)
 
   const suggestions = useMemo(() => {
@@ -84,41 +76,45 @@ export function QuickAdd({ room }: { room: RoomId }) {
   }
 
   const canAdd = Boolean(text.trim() || photo)
+  const placeholder = photo ? 'What is it? (optional)' : room === 'home' ? 'New item' : `Add to ${LIST_INFO[room].label}`
 
   return (
-    <div className="quick-add-wrap">
+    <div className="toolbar-inner">
       {focused && suggestions.length > 0 && (
-        <ul className="suggest" role="listbox" aria-label="Suggestions">
+        <ul className="suggest" aria-label="Suggestions">
           {suggestions.map((s) => (
-            <li key={s.id}>
+            <li key={s.id} data-list={s.list}>
               <button
                 type="button"
-                data-palette={s.list}
                 // Keep the keyboard up while tapping a suggestion.
                 onPointerDown={(e) => e.preventDefault()}
                 onClick={() => pick(s)}
               >
-                <i className="swatch" />
+                <i />
                 {s.name}
-                <span className="suggest-room">{ROOMS[s.list].title}</span>
+                <span className="suggest-list">{LIST_INFO[s.list].label}</span>
               </button>
             </li>
           ))}
         </ul>
       )}
       <form className="quick-add" onSubmit={submit}>
-        {room === 'home' && (
+        {room === 'home' ? (
           <button
             type="button"
-            className="room-chip"
-            data-palette={chip}
+            className="list-chip"
+            data-list={chip}
             onPointerDown={(e) => e.preventDefault()}
             onClick={cycleChip}
-            aria-label={`Adding to ${ROOMS[chip].label}. Tap to change.`}
+            aria-label={`Adding to ${LIST_INFO[chip].label}. Tap to change.`}
           >
-            <i className="swatch" />
-            {ROOMS[chip].title}
+            <i />
+            {LIST_INFO[chip].label}
           </button>
+        ) : (
+          <span className="quick-plus">
+            <PlusCircle />
+          </span>
         )}
         {photo && (
           <span className="pending-photo">
@@ -129,13 +125,12 @@ export function QuickAdd({ room }: { room: RoomId }) {
           </span>
         )}
         <input
-          ref={input}
           className="quick-input"
           value={text}
           onChange={(e) => setText(e.target.value)}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
-          placeholder={photo ? 'What is it? (optional)' : PLACEHOLDER[room]}
+          placeholder={placeholder}
           aria-label="Add something"
           autoComplete="off"
           autoCapitalize="sentences"
@@ -143,8 +138,8 @@ export function QuickAdd({ room }: { room: RoomId }) {
           maxLength={300}
         />
         {canAdd ? (
-          <button type="submit" className="quick-btn quick-btn--add" aria-label="Add">
-            <PlusIcon />
+          <button type="submit" className="quick-btn quick-send" aria-label="Add">
+            <ArrowUp />
           </button>
         ) : (
           <label className="quick-btn" aria-label="Add with a photo" data-busy={busy || undefined}>

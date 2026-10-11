@@ -4,7 +4,7 @@ import { deleteItem, moveItem, setDue, setItemPhoto } from '../data/items'
 import { compressImage } from '../data/photos'
 import { usePhoto } from '../hooks/usePhoto'
 import { ago } from '../lib/time'
-import { LISTS, ROOMS } from '../rooms'
+import { LIST_INFO, LISTS } from '../rooms'
 import type { Item } from '../types'
 import { CameraIcon } from './Icons'
 import { PhotoViewer } from './PhotoViewer'
@@ -36,91 +36,85 @@ export function ItemSheet({ item, onClose }: { item: Item; onClose: () => void }
   const fileInput = <input type="file" accept="image/*" hidden onChange={onFile} />
 
   return (
-    <Sheet label={item.name} onClose={onClose} palette={item.list}>
-      <h2 className="sheet-title">{item.name}</h2>
+    <Sheet title={item.name} onClose={onClose} list={item.list}>
       <p className="sheet-meta">
         <i className="who-dot" data-p={who.idx} />
         Added by {who.name === 'You' ? 'you' : who.name} · {ago(item.addedAt)}
         {item.count > 1 && ` · ${item.count} times so far`}
       </p>
 
-      <div className="photo-block">
+      <h3 className="group-label">Photo</h3>
+      <div className="group">
         {photo ? (
           <>
-            <button className="photo-frame" onClick={() => setViewing(true)}>
+            <button className="photo-frame" onClick={() => setViewing(true)} aria-label="View photo">
               <img src={photo} alt={`Photo of ${item.name}`} />
             </button>
-            <div className="photo-actions">
-              <label className="btn btn--quiet">
-                Replace
-                {fileInput}
-              </label>
-              <button className="btn btn--quiet" onClick={() => setItemPhoto(hid, item, null)}>
-                Remove photo
-              </button>
-            </div>
+            <label className="row row--action">
+              Replace photo
+              {fileInput}
+            </label>
+            <button className="row row--danger" onClick={() => setItemPhoto(hid, item, null)}>
+              Remove photo
+            </button>
           </>
         ) : (
-          <label className="photo-empty" data-busy={busy || undefined}>
+          <label className="row row--action">
             <CameraIcon />
-            <span>
-              {busy ? 'Shrinking photo…' : 'Add a photo'}
-              <small>So you grab the right brand</small>
-            </span>
+            {busy ? 'Shrinking photo…' : 'Add a photo'}
             {fileInput}
           </label>
         )}
       </div>
+      {!photo && <p className="group-footer">Handy for remembering the exact brand.</p>}
 
-      <div className="field">
-        <span className="field-label">Room</span>
-        <div className="segmented">
-          {LISTS.map((l) => (
-            <button
-              key={l}
-              data-palette={l}
-              aria-pressed={item.list === l}
-              onClick={() => item.list !== l && moveItem(hid, item, l)}
-            >
-              {ROOMS[l].label}
-            </button>
-          ))}
+      <h3 className="group-label">List</h3>
+      <div className="group">
+        <div className="row row--segmented">
+          <div className="segmented">
+            {LISTS.map((l) => (
+              <button
+                key={l}
+                aria-pressed={item.list === l}
+                onClick={() => item.list !== l && moveItem(hid, item, l)}
+              >
+                {LIST_INFO[l].label}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
-
-      {item.list === 'important' && (
-        <label className="field">
-          <span className="field-label">Due date</span>
-          <span className="due-row">
+        {item.list === 'important' && (
+          <label className="row">
+            <span className="row-label">Due date</span>
             <input
               type="date"
-              className="input"
+              className="row-date"
               value={item.due ?? ''}
               onChange={(e) => setDue(hid, item, e.target.value || null)}
             />
-            {item.due && (
-              <button type="button" className="btn btn--quiet" onClick={() => setDue(hid, item, null)}>
-                Clear
-              </button>
-            )}
-          </span>
-        </label>
-      )}
+          </label>
+        )}
+        {item.list === 'important' && item.due && (
+          <button className="row row--action" onClick={() => setDue(hid, item, null)}>
+            Clear due date
+          </button>
+        )}
+      </div>
 
-      <div className="sheet-actions">
+      <div className="group" style={{ marginTop: 28 }}>
         {item.status === 'needed' ? (
           <button
-            className="btn btn--primary"
+            className="row row--action"
             onClick={() => {
               done(item)
               onClose()
             }}
           >
-            Got it
+            Mark as got
           </button>
         ) : (
           <button
-            className="btn btn--primary"
+            className="row row--action"
             onClick={() => {
               add([item.name], { list: item.list })
               onClose()
@@ -130,7 +124,7 @@ export function ItemSheet({ item, onClose }: { item: Item; onClose: () => void }
           </button>
         )}
         <button
-          className="btn btn--danger"
+          className="row row--danger"
           onClick={() => {
             if (!confirmDelete) return setConfirmDelete(true)
             deleteItem(hid, item)

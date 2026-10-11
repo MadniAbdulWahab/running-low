@@ -2,7 +2,7 @@
 
 A shared "we're running low" list for two people. It's an installable PWA for iPhone that syncs live between both phones and works offline. It runs entirely on Firebase's free **Spark** plan, so no card is needed.
 
-There are four rooms: **Kitchen** (an overview of everything), **Fridge** (groceries), **Pantry** (household) and **Desk** (important things, with due dates).
+It looks and feels like a native iOS app. There are three lists, **Grocery**, **Household** and **Important** (with due dates), plus a home screen showing everything at once.
 
 ## One-time Firebase setup (~10 minutes)
 
@@ -51,4 +51,4 @@ npm run dev:emu     # Vite against the emulators; no Firebase project needed
 - **Photos:** compressed in the browser to roughly 640px JPEG (about 40–80 KB) and stored as data URLs in Firestore, because Firebase Storage needs the paid plan.
 - **Security:** [firestore.rules](firestore.rules). Only members can read or write. Joining is allowed only with the code and only while there is room for a second person. Each member can rename only themselves.
 - **Free-tier headroom:** 50k reads and 20k writes a day, 1 GB of Firestore storage, and 10 GB a month of Hosting transfer. Two people won't come close.
-- **Design:** every colour is a CSS token per room and mode in [src/styles/tokens.css](src/styles/tokens.css). The room details (tiles, magnets, jars, cards) are in [src/styles/rooms.css](src/styles/rooms.css).
+- **Design:** native iOS style using the iPhone's system font and iOS system colours, in light and true-black dark mode. All colours are CSS tokens in [src/styles/tokens.css](src/styles/tokens.css), and each list has its own colour (orange, blue, red).

@@ -67,47 +67,50 @@ export function SignIn() {
 
   return (
     <main className="intro">
-      <p className="eyebrow">Shared list</p>
-      <h1 className="intro-title">
-        Running <em>low</em>
-      </h1>
+      <img className="intro-icon" src="/pwa-192x192.png" alt="" />
+      <h1 className="large-title">Running Low</h1>
       <p className="intro-lede">Add what’s running low. It updates instantly for everyone you share it with.</p>
 
       {needsInstall() && (
-        <p className="install-tip">
-          <strong>First, install it:</strong> tap Share, then “Add to Home Screen”, and open it from there.
-          Sign in inside the installed app, because it keeps its own login, separate from Safari.
+        <p className="notice">
+          <strong>Install it first:</strong> tap Share, then “Add to Home Screen”, and open it from there.
+          The installed app keeps its own sign-in, separate from Safari.
         </p>
       )}
 
-      <form className="card form" onSubmit={submit}>
-        <label className="field">
-          <span className="field-label">Email</span>
-          <input
-            className="input"
-            type="email"
-            autoComplete="email"
-            inputMode="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-        </label>
-        <label className="field">
-          <span className="field-label">Password</span>
-          <input
-            className="input"
-            type="password"
-            autoComplete={mode === 'up' ? 'new-password' : 'current-password'}
-            minLength={6}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </label>
+      <form onSubmit={submit}>
+        <h2 className="group-label">{mode === 'up' ? 'Create an account' : 'Sign in'}</h2>
+        <div className="group">
+          <label className="row">
+            <span className="row-key">Email</span>
+            <input
+              className="row-input"
+              type="email"
+              autoComplete="email"
+              inputMode="email"
+              placeholder="name@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </label>
+          <label className="row">
+            <span className="row-key">Password</span>
+            <input
+              className="row-input"
+              type="password"
+              autoComplete={mode === 'up' ? 'new-password' : 'current-password'}
+              placeholder={mode === 'up' ? 'At least 6 characters' : 'Required'}
+              minLength={6}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </label>
+        </div>
         {error && <p className="form-error" role="alert">{error}</p>}
         {note && <p className="form-note">{note}</p>}
-        <button className="btn btn--primary btn--block" disabled={busy}>
+        <button className="btn" disabled={busy}>
           {busy ? 'One moment…' : mode === 'up' ? 'Create account' : 'Sign in'}
         </button>
         <div className="form-links">

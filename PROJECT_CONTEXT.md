@@ -17,6 +17,18 @@ Saved 2026-10-11 so work can resume after a restart. To continue, tell Claude:
   - First-time users see starter suggestions as magnets, jars and tabs until real history replaces them.
   - Room state lives in the `SignedIn` component in App.tsx; the theme preference comes from `useThemePref`.
 
+## Redesign (2026-10-11)
+- The user rejected the "rooms of the house" look (cream, Fraunces serif, terracotta, tiles) as looking AI-made and not nice on mobile.
+- From four mockups (Signal, Stamp, Label maker, Native), they chose **Native**: an iOS Reminders-style app with the system font, the #F2F2F7 grouped background and white cards, and true-black dark mode.
+- **List colours:** Grocery orange, Household blue, Important red.
+- **Navigation:** the home screen has three list cards and the lists grouped below; tapping one opens that list (back button "Lists"). There is no tab bar.
+- **On a list screen:** "Quick add" pills, then "On the list", then a collapsible "Recently bought".
+- **Adding:** a bottom toolbar with an iOS search-field-style input, a camera button, and a blue send button.
+- **Fonts:** the fontsource packages were removed.
+- **Icon:** a white, nearly empty glass on iOS orange.
+- **Live:** https://running-low.web.app (Firebase project 'running-low'). Repo: github.com/MadniAbdulWahab/running-low.
+- The "rooms" section below is kept for history only.
+
 ## Goal
 A shared list for two partners (**both on iPhone**) to quickly note that something is finished: groceries, household things, important items.
 - Must be **completely free**: no App Store fee, no paid backend, no credit card.
@@ -43,7 +55,7 @@ A shared list for two partners (**both on iPhone**) to quickly note that somethi
   - **The photo stays attached to the item** (it reminds you which brand to buy). It is deleted only when you remove it or delete the item.
 - **Design can change later.** All styling uses CSS variables (tokens) set per room.
 
-## Design: "Rooms of the house" (elegant, not gimmicky; light by default, full dark mode)
+## Design (REPLACED 2026-10-11, see the note below): "Rooms of the house" (elegant, not gimmicky; light by default, full dark mode)
 - **Feel:** soft color, subtle low-opacity texture, one signature detail per room, no cartoon drawings.
 - **Avoid:** purple gradients, frosted glass, stock component libraries, heavy shadows.
 - **Theme:** follows the iPhone light/dark setting, with a manual switch (System / Light / Dark).

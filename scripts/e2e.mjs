@@ -52,7 +52,12 @@ const gone = (page, text, timeout = 8000) =>
     .then(() => true)
     .catch(() => false)
 
-const tab = (page, label) => page.locator('.tab', { hasText: label }).click()
+async function tab(page, label) {
+  const back = page.locator('.back-btn')
+  if (await back.count()) await back.click()
+  if (label !== 'Home') await page.locator('.list-card', { hasText: label }).click()
+  await page.locator('.large-title').first().waitFor()
+}
 
 async function add(page, text) {
   const input = page.getByLabel('Add something')
@@ -68,7 +73,7 @@ try {
   await A.page.getByLabel('Your name').fill('Sara')
   await A.page.screenshot({ path: `${OUT}/0-setup.png` })
   await A.page.getByRole('button', { name: 'Start our list' }).click()
-  await A.page.locator('.room-title').waitFor()
+  await A.page.locator('.large-title').waitFor()
   check(true, 'A signs up and creates the household')
 
   await A.page.locator('.members-btn').click()
@@ -82,7 +87,7 @@ try {
   await B.page.getByLabel('Your name').fill('Omar')
   await B.page.getByLabel('Code').fill(code.toLowerCase())
   await B.page.getByRole('button', { name: 'Join with a code' }).click()
-  await B.page.locator('.room-title').waitFor({ timeout: 15000 })
+  await B.page.locator('.large-title').waitFor({ timeout: 15000 })
   check(true, 'B joins with the code')
 
   // ── Live sync A → B ──
@@ -148,8 +153,8 @@ try {
 
   // Home on B: guess room from history (Dish soap → Pantry)
   await B.page.getByLabel('Add something').fill('dish soap')
-  const chip = await B.page.locator('.room-chip').textContent()
-  check(chip.includes('Pantry'), `Home chip guesses the room from history (${chip.trim()})`)
+  const chip = await B.page.locator('.list-chip').textContent()
+  check(chip.includes('Household'), `Home chip guesses the room from history (${chip.trim()})`)
   await B.page.getByLabel('Add something').fill('')
 
   // ── Screenshots of every room, light and dark ──
@@ -163,13 +168,17 @@ try {
   }
   await A.page.emulateMedia({ colorScheme: 'light' })
   await tab(A.page, 'Grocery')
+  await A.page.waitForTimeout(400)
+  const wide = await A.page.evaluate(() => document.documentElement.scrollWidth - innerWidth)
+  check(wide <= 0, `no sideways scrolling on a list screen (${wide}px extra)`)
   await A.page.locator('.recent-head').click()
   await A.page.screenshot({ path: `${OUT}/grocery-recent.png`, fullPage: true })
+  await tab(A.page, 'Home')
   await A.page.locator('.members-btn').click()
   await A.page.waitForTimeout(400)
   await A.page.screenshot({ path: `${OUT}/settings.png` })
   await A.page.keyboard.press('Escape')
-  await A.page.locator('.item-body', { hasText: 'Oat milk' }).click()
+  await A.page.locator('.item-body', { hasText: 'Oat milk' }).first().click()
   await A.page.waitForTimeout(400)
   await A.page.screenshot({ path: `${OUT}/sheet-photo.png` })
 } catch (e) {

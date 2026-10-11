@@ -24,7 +24,7 @@ export function HouseholdSetup({ user }: { user: User }) {
       if (kind === 'join' && e instanceof FirebaseError) {
         setError(
           e.code === 'not-found' || e.code === 'permission-denied'
-            ? 'That code didn’t work. Check it, or the list may already have two people.'
+            ? 'That code didn’t work. Check it, or the list may already be full.'
             : friendlyError(e),
         )
       } else setError(friendlyError(e))
@@ -40,16 +40,15 @@ export function HouseholdSetup({ user }: { user: User }) {
 
   return (
     <main className="intro">
-      <p className="eyebrow">Almost there</p>
-      <h1 className="intro-title">
-        Set up <em>your list</em>
-      </h1>
+      <h1 className="large-title">Set up your list</h1>
+      <p className="intro-lede">Start a new list, or join one with a code.</p>
 
-      <div className="card form">
-        <label className="field">
-          <span className="field-label">Your name</span>
+      <h2 className="group-label">About you</h2>
+      <div className="group">
+        <label className="row">
+          <span className="row-key">Your name</span>
           <input
-            className="input"
+            className="row-input"
             value={name}
             maxLength={60}
             autoComplete="given-name"
@@ -58,30 +57,36 @@ export function HouseholdSetup({ user }: { user: User }) {
           />
         </label>
       </div>
+      <p className="group-footer">Shown next to the things you add.</p>
 
-      <section className="card form">
-        <h2 className="card-title">Start a new list</h2>
-        <p className="hint">You’ll get a code to share with the people you want on it.</p>
-        <label className="field">
-          <span className="field-label">Call it</span>
-          <input className="input" value={homeName} maxLength={60} onChange={(e) => setHomeName(e.target.value)} />
-        </label>
-        <button
-          className="btn btn--primary btn--block"
-          disabled={busy !== null}
-          onClick={() => run('create', () => createHousehold(user.uid, me, homeName.trim().slice(0, 60) || 'Our home'))}
-        >
-          {busy === 'create' ? 'Creating…' : 'Start our list'}
-        </button>
-      </section>
-
-      <section className="card form">
-        <h2 className="card-title">Join a shared list</h2>
-        <p className="hint">Enter the code you were sent.</p>
-        <label className="field">
-          <span className="field-label">Code</span>
+      <h2 className="group-label">Start a new list</h2>
+      <div className="group">
+        <label className="row">
+          <span className="row-key">List name</span>
           <input
-            className="input input--code"
+            className="row-input"
+            value={homeName}
+            maxLength={60}
+            onChange={(e) => setHomeName(e.target.value)}
+          />
+        </label>
+      </div>
+      <button
+        className="btn"
+        disabled={busy !== null}
+        onClick={() => run('create', () => createHousehold(user.uid, me, homeName.trim().slice(0, 60) || 'Our home'))}
+      >
+        {busy === 'create' ? 'Creating…' : 'Start our list'}
+      </button>
+
+      <h2 className="group-label" style={{ marginTop: 36 }}>
+        Join a shared list
+      </h2>
+      <div className="group">
+        <label className="row">
+          <span className="row-key">Code</span>
+          <input
+            className="row-input row-input--code"
             value={parsed.length > 4 ? formatCode(parsed) : parsed}
             onChange={(e) => setCode(e.target.value)}
             placeholder="XXXX-XXXX"
@@ -91,16 +96,20 @@ export function HouseholdSetup({ user }: { user: User }) {
             spellCheck={false}
           />
         </label>
-        <button
-          className="btn btn--block"
-          disabled={busy !== null || !CODE_RE.test(parsed)}
-          onClick={() => run('join', () => joinHousehold(user.uid, me, parsed))}
-        >
-          {busy === 'join' ? 'Joining…' : 'Join with a code'}
-        </button>
-      </section>
+      </div>
+      <button
+        className="btn btn--plain"
+        disabled={busy !== null || !CODE_RE.test(parsed)}
+        onClick={() => run('join', () => joinHousehold(user.uid, me, parsed))}
+      >
+        {busy === 'join' ? 'Joining…' : 'Join with a code'}
+      </button>
 
-      {error && <p className="form-error" role="alert">{error}</p>}
+      {error && (
+        <p className="form-error" role="alert">
+          {error}
+        </p>
+      )}
       {slow && <p className="form-note">Waiting for a connection…</p>}
 
       <p className="intro-foot">

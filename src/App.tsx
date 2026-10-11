@@ -1,6 +1,5 @@
 import type { User } from 'firebase/auth'
 import { useCallback, useState } from 'react'
-import { Backdrop } from './components/Backdrop'
 import { HouseholdSetup } from './components/HouseholdSetup'
 import { RoomShell } from './components/RoomShell'
 import { SignIn } from './components/SignIn'
@@ -22,15 +21,10 @@ function readRoom(): RoomId {
   return 'home'
 }
 
-/** Sign-in, setup and loading screens all live in the Kitchen. */
-function Kitchen({ theme, children }: { theme: ThemeState; children?: React.ReactNode }) {
+/** Sign-in, setup and loading screens use the home colours. */
+function Plain({ theme, children }: { theme: ThemeState; children?: React.ReactNode }) {
   useRoomTheme('home', theme.mode)
-  return (
-    <>
-      <Backdrop room="home" />
-      {children}
-    </>
-  )
+  return <>{children}</>
 }
 
 export default function App() {
@@ -40,23 +34,23 @@ export default function App() {
 
   if (!configured) {
     return (
-      <Kitchen theme={theme}>
+      <Plain theme={theme}>
         <main className="intro">
-          <h1 className="intro-title">Almost ready</h1>
+          <h1 className="large-title">Almost ready</h1>
           <p className="intro-lede">
             Add your Firebase web config to <code>.env.local</code> (see <code>.env.example</code>), or set{' '}
             <code>VITE_USE_EMULATORS=true</code> to run against the local emulators.
           </p>
         </main>
-      </Kitchen>
+      </Plain>
     )
   }
-  if (loading) return <Kitchen theme={theme} />
+  if (loading) return <Plain theme={theme} />
   if (!user)
     return (
-      <Kitchen theme={theme}>
+      <Plain theme={theme}>
         <SignIn />
-      </Kitchen>
+      </Plain>
     )
   return <SignedIn key={user.uid} user={user} theme={theme} />
 }
@@ -71,12 +65,12 @@ function SignedIn({ user, theme }: { user: User; theme: ThemeState }) {
     } catch {}
   }, [])
 
-  if (loading) return <Kitchen theme={theme} />
+  if (loading) return <Plain theme={theme} />
   if (!household)
     return (
-      <Kitchen theme={theme}>
+      <Plain theme={theme}>
         <HouseholdSetup user={user} />
-      </Kitchen>
+      </Plain>
     )
   return <RoomShell uid={user.uid} household={household} room={room} setRoom={setRoom} theme={theme} />
 }
