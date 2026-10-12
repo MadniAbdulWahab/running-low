@@ -12,3 +12,6 @@ output/playwright
 worker/.dev.vars
 worker/node_modules
 worker/.wrangler
+
+# Local working notes
+PROJECT_CONTEXT.md

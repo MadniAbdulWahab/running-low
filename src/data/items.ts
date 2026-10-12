@@ -21,7 +21,7 @@ const itemRef = (hid: string, id: string) => doc(db, 'households', hid, 'items',
 /**
  * One doc per item name: adding something we've had before flips it back to
  * "needed" and bumps its count, which is what powers the frequent items.
- * Never awaited — offline writes only resolve once the server confirms.
+ * Never awaited: offline writes only resolve once the server confirms.
  */
 export function addItem(
   hid: string,
