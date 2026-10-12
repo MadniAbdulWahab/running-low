@@ -1,10 +1,20 @@
 # Running Low
 
+[![ci](https://github.com/MadniAbdulWahab/running-low/actions/workflows/ci.yml/badge.svg)](https://github.com/MadniAbdulWahab/running-low/actions/workflows/ci.yml)
+
 A shared "we're running low" list for two people. It's an installable PWA for iPhone that syncs live between both phones and works offline. It runs entirely on Firebase's free **Spark** plan, so no card is needed.
 
 It looks and feels like a native iOS app. There are two lists, **Groceries** (food and household things) and **Important** (with due dates). The tab bar is **Home** · **Groceries** · **Important** · **Meals** (the week's plan) · **Us**.
 
 **Live:** https://running-low.web.app (Firebase project `running-low`).
+
+<p>
+  <img src="docs/images/groceries.png" alt="Groceries list" width="250">
+  <img src="docs/images/important.png" alt="Important list" width="250">
+  <img src="docs/images/meals.png" alt="Meal plan for the week" width="250">
+</p>
+
+*Screenshots use demo data from the local emulators.*
 
 ## One-time Firebase setup (~10 minutes)
 
