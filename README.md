@@ -16,22 +16,6 @@ It looks and feels like a native iOS app. There are two lists, **Groceries** (fo
 
 *Screenshots use demo data from the local emulators.*
 
-## One-time Firebase setup (~10 minutes)
-
-1. Go to [console.firebase.google.com](https://console.firebase.google.com), choose **Create a project**, and skip Analytics. New projects start on the free Spark plan.
-2. **Build → Authentication → Get started → Email/Password → Enable.**
-3. **Build → Firestore Database → Create database.** Choose *production mode* and the region closest to you.
-4. **Project settings → Your apps → Web (`</>`).** Register an app (no Hosting checkbox needed), then copy `apiKey`, `authDomain`, `projectId` and `appId` into a new `.env.local`, using [.env.example](.env.example) as the template.
-5. Log the CLI in. This repo's `.firebaserc` already points at the `running-low` project; for a different project, run `npx firebase use --add` too.
-   ```sh
-   npx firebase login
-   ```
-6. Deploy the app, security rules and indexes:
-   ```sh
-   npm run deploy
-   ```
-   The app is then live at `https://<project-id>.web.app`.
-
 ## Updating the live app
 
 After changing the code, deploy again from a computer that has `.env.local`:
