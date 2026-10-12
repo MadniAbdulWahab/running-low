@@ -27,17 +27,6 @@ npx firebase deploy --only hosting     # app only, when the rules didn't change
 
 Both phones pick up the new version the next time the app is opened. (The app reopens on the tab you were on while it stays open in the background; after closing it fully from the app switcher, it opens on Home.) If one still shows the old version, swipe it away in the app switcher and open it again.
 
-## Notifications (free Cloudflare Worker)
-
-Push notifications (things added, new notes, hearts) are sent by a tiny Cloudflare Worker in [worker/](worker/). The free plan is plenty.
-
-- **Deployed at:** `https://running-low-push.madniabdulwahab.workers.dev`. The app finds it through `VITE_PUSH_URL` and `VITE_VAPID_PUBLIC_KEY` in `.env.local`.
-- **Who can send:** the Worker checks the sender's Firebase sign-in, then reads the list's subscriptions *as that person* through the Firestore REST API. So the normal security rules decide who can send to whom, and there's no service account.
-- **Keys:** the VAPID public key is in `worker/wrangler.jsonc` and `.env.local`. The private key is a Worker secret, and a local copy is in `worker/.dev.vars` (git-ignored, keep it safe).
-- **Redeploying after changes:** `npm --prefix worker install` once, then `npm run deploy:worker`. To replace the private key: `npm --prefix worker exec wrangler secret put VAPID_PRIVATE_KEY`. If you generate new keys, both phones must turn notifications off and on again.
-- **Tests:** `npm run test:worker`.
-- **On the iPhone:** open the app from the Home Screen → Settings → Notifications → **Turn on notifications** (iOS 16.4 or later).
-
 ## Installing on both iPhones
 
 1. Open the `.web.app` URL in **Safari**, tap **Share → Add to Home Screen**, then open the app **from the Home Screen**. The installed app keeps its login separate from Safari, so sign in inside it.
