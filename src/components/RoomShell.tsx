@@ -6,6 +6,8 @@ import { countdownsCol, toCountdown } from '../data/countdowns'
 import { ideasCol, toIdea } from '../data/ideas'
 import { mealsCol, toMeal } from '../data/meals'
 import { byUse, recipesCol, toRecipe } from '../data/recipes'
+import { shopsSince, toShop } from '../data/shops'
+import { createTemplate, entryLine, templatesByUse, templatesCol, toTemplate } from '../data/templates'
 import { pingDaysSince, readPingSeen, recentPings, toPing, toPingDay, writePingSeen } from '../data/pings'
 import { profilesCol, toProfile } from '../data/profiles'
 import { useCollection } from '../hooks/useCollection'
@@ -15,20 +17,25 @@ import { useMyPush } from '../data/push'
 import { useRoomTheme, type ThemeState } from '../hooks/useTheme'
 import { LIST_EMOJI } from '../lib/emoji'
 import type { Entry } from '../lib/parse'
+import { pastShops, shopsStart } from '../lib/shops'
 import { toISO, WEEK, weekDays } from '../lib/time'
 import { isListRoom, LIST_INFO, LISTS, pingInfo } from '../rooms'
 import type { Household, Item, ListId, Note, Ping, RoomId } from '../types'
 import { ActionSheet } from './ActionSheet'
 import { Alert, type AlertAction } from './Alert'
 import { Header } from './Header'
+import { GroceryTemplates } from './GroceryTemplates'
 import { ChevronRight } from './Icons'
 import { ItemRow, RecentRow } from './ItemRow'
 import { ItemSheet } from './ItemSheet'
 import { ListCards } from './ListCards'
+import { PastShops } from './PastShops'
+import { PastShopSheet } from './PastShopSheet'
 import { QuickAdd } from './QuickAdd'
 import { QuickPicks } from './QuickPicks'
 import { SettingsSheet } from './SettingsSheet'
 import { TabBar } from './TabBar'
+import { TemplateSheet } from './TemplateSheet'
 import { Toast, type ToastData } from './Toast'
 import { CountdownSheet } from './us/Countdowns'
 import { HeartRain } from './us/HeartRain'
@@ -117,6 +124,14 @@ export function RoomShell({ uid, household, room, setRoom, theme }: Props) {
   const recipes = useMemo(() => (recipesLive ? [...recipesLive].sort(byUse) : null), [recipesLive])
   const [recipeId, setRecipeId] = useState<string | null>(null)
   const openRecipe = recipeId ? recipes?.find((r) => r.id === recipeId) : undefined
+  // Groceries: templates, and past shops (what was ticked off each day).
+  const templatesLive = useCollection(`templates/${hid}`, () => templatesCol(hid), toTemplate)
+  const templates = useMemo(() => (templatesLive ? [...templatesLive].sort(templatesByUse) : null), [templatesLive])
+  const [template, setTemplate] = useState<{ id: string; fresh: boolean } | null>(null)
+  const openTemplate = template ? templates?.find((t) => t.id === template.id) : undefined
+  const shopsFrom = shopsStart()
+  const shopLogs = useCollection(`shops/${hid}/${shopsFrom}`, () => shopsSince(hid, shopsFrom), toShop)
+  const [shopDay, setShopDay] = useState<string | null>(null)
   const myPush = useMyPush(hid, uid)
   const pushChecked = useRef(false)
   useEffect(() => {
@@ -182,6 +197,16 @@ export function RoomShell({ uid, household, room, setRoom, theme }: Props) {
     }
     return { needed, rows, recent, counts }
   }, [items, minute])
+  const shops = useMemo(() => pastShops(shopLogs ?? [], items, minute * 60_000), [shopLogs, items, minute])
+  const openShop = shopDay ? shops.find((s) => s.day === shopDay) : undefined
+
+  const newTemplate = () => setTemplate({ id: createTemplate(hid, uid, 'New template'), fresh: true })
+  const saveListAsTemplate = () => {
+    const name = `Our list, ${new Date().toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}`
+    const id = createTemplate(hid, uid, name, needed.grocery.map((i) => entryLine({ name: i.name, qty: i.qty ?? undefined })))
+    toast(`Saved ${name} as a template`)
+    setTemplate({ id, fresh: false })
+  }
 
   // Everything shown in the list on this screen can be selected.
   const visible = useMemo(
@@ -447,6 +472,18 @@ export function RoomShell({ uid, household, room, setRoom, theme }: Props) {
                 text={LIST_INFO[room].empty}
               />
             )}
+            {room === 'grocery' && loaded !== null && !selecting && (
+              <>
+                <GroceryTemplates
+                  templates={templates}
+                  canSaveList={needed.grocery.length > 0}
+                  onOpen={(id) => setTemplate({ id, fresh: false })}
+                  onNew={newTemplate}
+                  onSaveList={saveListAsTemplate}
+                />
+                <PastShops shops={shops} onOpen={setShopDay} />
+              </>
+            )}
           </div>
         )}
 
@@ -525,6 +562,25 @@ export function RoomShell({ uid, household, room, setRoom, theme }: Props) {
       )}
       {openRecipe && (
         <RecipeSheet key={openRecipe.id} recipe={openRecipe} meals={meals} onClose={() => setRecipeId(null)} />
+      )}
+      {openTemplate && template && (
+        <TemplateSheet
+          key={openTemplate.id}
+          template={openTemplate}
+          fresh={template.fresh}
+          onClose={() => setTemplate(null)}
+        />
+      )}
+      {openShop && (
+        <PastShopSheet
+          key={openShop.day}
+          shop={openShop}
+          onClose={() => setShopDay(null)}
+          onSaved={(id) => {
+            setShopDay(null)
+            setTemplate({ id, fresh: false })
+          }}
+        />
       )}
       {countdownId && (
         <CountdownSheet

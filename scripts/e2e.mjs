@@ -234,7 +234,7 @@ try {
   await add(A.page, 'Light bulbs')
   check(
     (await visible(A.page, 'Light bulbs')) && (await visible(A.page, 'Dish soap')) &&
-      (await A.page.locator('.group').count()) === 1,
+      (await A.page.locator('.group', { has: A.page.locator('.item') }).count()) === 1,
     'household things land in the one Groceries list',
   )
   await A.page.screenshot({ path: `${OUT}/groceries-list.png`, fullPage: true })
@@ -635,6 +635,94 @@ try {
   check(await A.page.locator('.meal-row[data-today] .meal-thumb img').waitFor({ timeout: WAIT }).then(() => true).catch(() => false), 'planned from a meal with a photo, the day shows the photo too')
   await A.page.screenshot({ path: `${OUT}/our-meals.png`, fullPage: true })
 
+  // ── Groceries: past shops and templates ──
+  await tab(A.page, 'Groceries')
+  await tab(B.page, 'Groceries')
+  const shopsA = A.page.locator('section[aria-label="Past shops"]')
+  const todayShop = (page) => page.locator('section[aria-label="Past shops"] .shop-row', { hasText: 'Today' })
+  await add(A.page, 'Flour, Sugar, Yeast, Cinnamon')
+  for (const n of ['Flour', 'Sugar', 'Yeast', 'Cinnamon']) {
+    check(await visible(A.page, n), `${n} is on the list`)
+    await A.page.getByRole('button', { name: `Got ${n}`, exact: true }).click()
+  }
+  await shopsA.locator('.recent-head').click()
+  check(
+    await todayShop(A.page).filter({ hasText: 'Flour' }).filter({ hasText: 'Cinnamon' }).waitFor({ timeout: WAIT }).then(() => true).catch(() => false),
+    'groceries ticked off today show as Today’s shop in Past shops',
+  )
+  await B.page.locator('section[aria-label="Past shops"] .recent-head').click()
+  check(
+    await todayShop(B.page).filter({ hasText: 'Yeast' }).waitFor({ timeout: WAIT }).then(() => true).catch(() => false),
+    'B sees the same shop',
+  )
+  // Putting something back takes it out of the shop.
+  await A.page.getByRole('button', { name: 'Put Cinnamon back' }).click()
+  await A.page.locator('.alert').getByRole('button', { name: 'Put back' }).click()
+  check(
+    await todayShop(A.page).filter({ hasText: 'Cinnamon' }).waitFor({ state: 'detached', timeout: WAIT }).then(() => true).catch(() => false),
+    'putting an item back takes it out of today’s shop',
+  )
+  // Save today's shop as a template, and rename it.
+  await todayShop(A.page).click()
+  await A.page.locator('.sheet').screenshot({ path: `${OUT}/past-shop-sheet.png` })
+  check(await A.page.locator('.sheet .pick-row', { hasText: 'Flour' }).isVisible(), 'the shop’s sheet lists what was bought')
+  await A.page.locator('.sheet').getByRole('button', { name: 'Save as a template' }).click()
+  const tplName = A.page.getByLabel('Template name')
+  check(await tplName.waitFor({ timeout: 5000 }).then(() => true).catch(() => false), 'saving a shop as a template opens the template')
+  await tplName.fill('Baking')
+  await A.page.locator('.sheet-done').click()
+  const bakingB = B.page.locator('.template-row', { hasText: 'Baking' })
+  check(await bakingB.waitFor({ timeout: WAIT }).then(() => true).catch(() => false), 'the template saved on A shows in Templates on B')
+
+  // B edits it, then adds part of it; something already on the list is greyed out.
+  await add(A.page, 'Sugar')
+  check(await ticked(B.page, 'Sugar', false), 'Sugar is back on the list')
+  await bakingB.click()
+  await B.page.locator('#template-items').fill('Flour, Sugar, 2 yeast')
+  await B.page.locator('.sheet .pick-row', { hasText: 'Flour' }).click() // blurs the items (saves) and unticks Flour
+  await B.page.locator('.sheet .pick-row', { hasText: 'Flour' }).click() // and ticks it again
+  check(await B.page.locator('.sheet .pick-row', { hasText: 'Sugar' }).isDisabled(), 'an item already on the list can’t be ticked')
+  check(await B.page.locator('.sheet .pick-row', { hasText: 'Sugar' }).getByText('On the list').isVisible(), '…and says it’s on the list')
+  await B.page.locator('.sheet .pick-row', { hasText: 'Yeast' }).click()
+  const addBtn = B.page.locator('.sheet .pick-add')
+  check((await addBtn.textContent()) === 'Add 1 item to Groceries', `unticking leaves one to add (${await addBtn.textContent()})`)
+  await B.page.locator('.sheet').screenshot({ path: `${OUT}/template-sheet.png` })
+  await addBtn.click()
+  check(await ticked(A.page, 'Flour', false), 'adding from the template puts Flour on A’s list')
+  check(await ticked(A.page, 'Yeast'), 'the unticked Yeast stays off the list')
+  await B.page.locator('.sheet-done').click()
+  check(
+    await A.page.locator('.template-row', { hasText: 'Baking' }).locator('.meal-ingredients', { hasText: '3 items · Flour, Sugar, 2 yeast' })
+      .waitFor({ timeout: WAIT }).then(() => true).catch(() => false),
+    'items edited on B show on A',
+  )
+
+  // A new template left empty is discarded; the list can be saved as one.
+  await A.page.locator('section[aria-label="Templates"]').getByRole('button', { name: 'New template' }).click()
+  await A.page.locator('.sheet-done').click()
+  check(
+    await A.page.locator('.template-row', { hasText: 'New template' }).waitFor({ state: 'detached', timeout: WAIT }).then(() => true).catch(() => false),
+    'a new template left empty is discarded',
+  )
+  await A.page.getByRole('button', { name: 'Save the list as a template' }).click()
+  check(await A.page.getByLabel('Template name').inputValue().then((v) => v.startsWith('Our list')), 'Save the list as a template names it after today')
+  await A.page.locator('.sheet-done').click()
+  const ourList = B.page.locator('.template-row', { hasText: 'Our list' })
+  check(await ourList.waitFor({ timeout: WAIT }).then(() => true).catch(() => false), 'the saved list shows as a template on B')
+  await A.page.screenshot({ path: `${OUT}/groceries-templates.png`, fullPage: true })
+  await ourList.click()
+  await B.page.locator('.sheet').getByRole('button', { name: 'Delete template' }).click()
+  const delTpl = B.page.locator('.alert', { hasText: 'Delete Our list' })
+  check(await delTpl.waitFor({ timeout: 5000 }).then(() => true).catch(() => false), 'deleting a template asks first')
+  await delTpl.getByRole('button', { name: 'Cancel' }).click()
+  check(await B.page.locator('.sheet').isVisible(), 'Cancel keeps it')
+  await B.page.locator('.sheet').getByRole('button', { name: 'Delete template' }).click()
+  await B.page.locator('.alert').getByRole('button', { name: 'Delete' }).click()
+  check(
+    await A.page.locator('.template-row', { hasText: 'Our list' }).waitFor({ state: 'detached', timeout: WAIT }).then(() => true).catch(() => false),
+    'a deleted template goes on A too',
+  )
+
   await tab(A.page, 'Us')
   check((await A.page.locator('.meal-row').count()) === 0, 'Us no longer shows meals')
 
@@ -698,7 +786,8 @@ try {
   await A.page.waitForTimeout(400)
   const wide = await A.page.evaluate(() => document.documentElement.scrollWidth - innerWidth)
   check(wide <= 0, `no sideways scrolling on a list screen (${wide}px extra)`)
-  if (await A.page.locator('.recent-head').count()) await A.page.locator('.recent-head').click()
+  const earlier = A.page.locator('.group-label', { hasText: 'Earlier this week' }).locator('.recent-head')
+  if (await earlier.count()) await earlier.click()
   await A.page.screenshot({ path: `${OUT}/groceries-recent.png`, fullPage: true })
   await tab(A.page, 'Home')
   await A.page.locator('.members-btn').click()

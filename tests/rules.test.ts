@@ -267,6 +267,45 @@ describe('saved meals (Our meals)', () => {
   })
 })
 
+describe('grocery templates', () => {
+  it('members save, edit and delete templates; bad ones and outsiders are refused', async () => {
+    await seed(['alice', 'bob'])
+    const path = `households/${CODE}/templates/t1`
+    const t = { name: 'Weekly shop', items: ['2 milk', 'eggs'], uses: 0, createdBy: 'alice' }
+    await assertSucceeds(setDoc(doc(as('alice'), path), t))
+    await assertSucceeds(updateDoc(doc(as('bob'), path), { uses: increment(1), photoId: 'p1' }))
+    await assertSucceeds(updateDoc(doc(as('bob'), path), { photoId: null }))
+    await assertSucceeds(getDoc(doc(as('bob'), path)))
+    await assertFails(setDoc(doc(as('alice'), path), { ...t, name: '' }))
+    await assertFails(setDoc(doc(as('alice'), path), { ...t, name: 'x'.repeat(61) }))
+    await assertFails(setDoc(doc(as('alice'), path), { ...t, items: Array(61).fill('x') }))
+    await assertFails(setDoc(doc(as('alice'), path), { ...t, uses: 'lots' }))
+    await assertFails(getDoc(doc(as('carol'), path)))
+    await assertFails(setDoc(doc(as('carol'), `households/${CODE}/templates/t2`), t))
+    await assertSucceeds(deleteDoc(doc(as('bob'), path)))
+  })
+})
+
+describe('past shops', () => {
+  it('members log groceries per day; bad days, shapes and outsiders are refused', async () => {
+    await seed(['alice', 'bob'])
+    const path = `households/${CODE}/shops/2026-10-16`
+    const milk = { items: { milk: { name: 'Milk', qty: 2 } } }
+    await assertSucceeds(setDoc(doc(as('alice'), path), milk, { merge: true }))
+    await assertSucceeds(setDoc(doc(as('bob'), path), { items: { eggs: { name: 'Eggs', qty: null } } }, { merge: true }))
+    await assertSucceeds(setDoc(doc(as('bob'), path), { items: { milk: deleteField() } }, { merge: true }))
+    const snap = await getDoc(doc(as('alice'), path))
+    expect(Object.keys(snap.data()!.items)).toEqual(['eggs'])
+    await assertFails(setDoc(doc(as('alice'), `households/${CODE}/shops/today`), milk))
+    await assertFails(setDoc(doc(as('alice'), `households/${CODE}/shops/2026-10-15`), { ...milk, extra: 1 }))
+    await assertFails(setDoc(doc(as('alice'), `households/${CODE}/shops/2026-10-15`), { items: ['milk'] }))
+    const many = Object.fromEntries(Array.from({ length: 301 }, (_, i) => [`k${i}`, { name: 'x', qty: null }]))
+    await assertFails(setDoc(doc(as('alice'), `households/${CODE}/shops/2026-10-15`), { items: many }))
+    await assertFails(getDoc(doc(as('carol'), path)))
+    await assertFails(setDoc(doc(as('carol'), path), milk, { merge: true }))
+  })
+})
+
 describe('heart counts per day', () => {
   it('each person bumps only their own counts; outsiders see nothing', async () => {
     await seed(['alice', 'bob'])

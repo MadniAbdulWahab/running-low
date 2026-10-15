@@ -3252,3 +3252,59 @@ section[aria-label='Our meals'] {
   height: 32px;
   border-radius: 10px;
 }
+
+/* ══ Grocery templates and past shops (Groceries tab) ═══════ */
+section[aria-label='Templates'],
+section[aria-label='Past shops'] {
+  margin-top: 8px;
+}
+.recipe-emoji--grocery {
+  background: color-mix(in srgb, var(--grocery) 30%, var(--card));
+}
+/* The first action row under the templates gets the same hairline as rows between them. */
+.template-row + .template-action::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 16px;
+  right: 0;
+  height: 0.5px;
+  background: var(--sep);
+}
+/* Past shops lead with a day tile, like the week planner, so the hairline starts after it. */
+.shop-row + .shop-row::before {
+  left: 70px;
+}
+
+/* Ticks for adding a template or past shop */
+.pick-row {
+  gap: 12px;
+  min-height: 52px;
+}
+.pick-row .item-emoji {
+  width: 32px;
+  height: 32px;
+  font-size: 19px;
+}
+.pick-row-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--label);
+}
+.pick-row-qty {
+  color: var(--label-2);
+}
+.pick-row[aria-checked='false'] .pick-row-name {
+  color: var(--label-2);
+}
+.pick-row-state {
+  flex: none;
+  font-size: 13px;
+  color: var(--label-2);
+}
+.pick-add {
+  font-weight: 600;
+}

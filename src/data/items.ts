@@ -13,6 +13,7 @@ import { db } from '../firebase'
 import { report } from '../lib/report'
 import type { Item, ListId } from '../types'
 import { newPhotoDoc, photoRef } from './photos'
+import { logBought, unlogBought } from './shops'
 
 export const itemsCol = (hid: string) => collection(db, 'households', hid, 'items')
 export const itemId = (key: string) => 'i_' + encodeURIComponent(key)
@@ -62,10 +63,12 @@ export function markDone(hid: string, uid: string, item: Item) {
     doneBy: uid,
     doneAt: serverTimestamp(),
   }).catch(report)
+  logBought(hid, [item])
 }
 
 export function undoDone(hid: string, item: Item) {
   updateDoc(itemRef(hid, item.id), { status: 'needed', doneBy: null, doneAt: null }).catch(report)
+  unlogBought(hid, [item])
 }
 
 export function moveItem(hid: string, item: Item, list: ListId) {
@@ -99,12 +102,14 @@ export function markDoneMany(hid: string, uid: string, items: Item[]) {
   const b = writeBatch(db)
   for (const i of items) b.update(itemRef(hid, i.id), { status: 'done', doneBy: uid, doneAt: serverTimestamp() })
   b.commit().catch(report)
+  logBought(hid, items)
 }
 
 export function undoDoneMany(hid: string, items: Item[]) {
   const b = writeBatch(db)
   for (const i of items) b.update(itemRef(hid, i.id), { status: 'needed', doneBy: null, doneAt: null })
   b.commit().catch(report)
+  unlogBought(hid, items)
 }
 
 export function moveMany(hid: string, items: Item[], list: ListId) {

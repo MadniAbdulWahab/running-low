@@ -175,6 +175,28 @@ service cloud.firestore {
               || request.resource.data.photoId is string);
       }
 
+      // Grocery templates: groceries bought together, added to the list in one go.
+      match /templates/{id} {
+        allow read, delete: if isMember(hid);
+        allow create, update: if isMember(hid)
+          && request.resource.data.name is string
+          && request.resource.data.name.size() > 0 && request.resource.data.name.size() <= 60
+          && request.resource.data.items is list && request.resource.data.items.size() <= 60
+          && (!('uses' in request.resource.data) || request.resource.data.uses is int)
+          && (!('photoId' in request.resource.data) || request.resource.data.photoId == null
+              || request.resource.data.photoId is string);
+      }
+
+      // Past shops: the groceries ticked off each day, { items: { [key]: { name, qty } } }.
+      match /shops/{day} {
+        allow read, delete: if isMember(hid);
+        allow create, update: if isMember(hid)
+          && day.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+          && request.resource.data.keys().hasOnly(['items', 'updatedAt'])
+          && request.resource.data.items is map
+          && request.resource.data.items.size() <= 300;
+      }
+
       // One planned meal per day; the doc id is the date.
       match /meals/{day} {
         allow read, delete: if isMember(hid);

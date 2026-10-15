@@ -30,12 +30,12 @@ export function toMeal(id: string, d: DocumentData): Meal {
 }
 
 /** "pasta, 2 tomatoes\nbasil" → ['pasta', '2 tomatoes', 'basil'] */
-export function splitIngredients(text: string): string[] {
+export function splitIngredients(text: string, max = 20): string[] {
   return text
     .split(/[,;\n]/)
     .map((s) => s.trim())
     .filter(Boolean)
-    .slice(0, 20)
+    .slice(0, max)
 }
 
 export function saveMeal(
