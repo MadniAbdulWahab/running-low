@@ -1627,6 +1627,16 @@ label.row:active {
   color: #fff;
 }
 
+/* Pop-ups that can open under a finger still pressing (press and hold → delete / reactions):
+   without this, iOS carries on the long press and selects the pop-up's text. */
+.alert-layer,
+.action-layer,
+.reaction-bubble {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
 /* ── iOS-style alert ────────────────────────────────────────── */
 .alert-layer {
   position: fixed;
