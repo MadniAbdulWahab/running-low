@@ -54,16 +54,29 @@ export function GroceryTemplates({
   if (templates === null) return null
   return (
     <section aria-label="Templates">
-      <h2 className="group-label list-label">
-        <button className="fold-head" aria-expanded={!folded} onClick={toggle}>
-          Templates{templates.length ? ` · ${templates.length}` : ''}
-          <ChevronRight />
-        </button>
-        <button className="select-toggle heading-add" aria-label="New template" onClick={onNew}>
-          <PlusIcon />
-          Template
-        </button>
-      </h2>
+      {folded ? (
+        // Folded, the whole heading opens it (like Quick add), so it's in reach one-handed.
+        <h2 className="group-label">
+          <button className="fold-toggle" aria-expanded="false" onClick={toggle}>
+            <span>Templates{templates.length ? ` · ${templates.length}` : ''}</span>
+            <span className="fold-toggle-action">
+              Show
+              <ChevronRight />
+            </span>
+          </button>
+        </h2>
+      ) : (
+        <h2 className="group-label list-label">
+          <button className="fold-head" aria-expanded="true" onClick={toggle}>
+            Templates{templates.length ? ` · ${templates.length}` : ''}
+            <ChevronRight />
+          </button>
+          <button className="select-toggle heading-add" aria-label="New template" onClick={onNew}>
+            <PlusIcon />
+            Template
+          </button>
+        </h2>
+      )}
       {!folded &&
         (templates.length ? (
           <div className="group">

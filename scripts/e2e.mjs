@@ -711,10 +711,14 @@ try {
   const ourList = B.page.locator('.template-row', { hasText: 'Our list' })
   check(await ourList.waitFor({ timeout: WAIT }).then(() => true).catch(() => false), 'the saved list shows as a template on B')
   await A.page.screenshot({ path: `${OUT}/groceries-templates.png`, fullPage: true })
-  const foldHead = A.page.locator('section[aria-label="Templates"] .fold-head')
-  await foldHead.click()
-  check((await A.page.locator('.template-row').count()) === 0 && (await foldHead.getAttribute('aria-expanded')) === 'false', 'tapping Templates folds it')
-  await foldHead.click()
+  const tplSection = A.page.locator('section[aria-label="Templates"]')
+  await tplSection.locator('.fold-head').click()
+  const foldedHead = tplSection.locator('.fold-toggle', { hasText: 'Show' })
+  check(
+    (await A.page.locator('.template-row').count()) === 0 && (await foldedHead.isVisible()) && (await tplSection.locator('.heading-add').count()) === 0,
+    'tapping Templates folds it; folded, the whole heading (Show) opens it and + Template is hidden',
+  )
+  await foldedHead.locator('.fold-toggle-action').click()
   check((await A.page.locator('.template-row').count()) === 2, 'tapping again unfolds it')
   await ourList.click()
   await B.page.locator('.sheet').getByRole('button', { name: 'Delete template' }).click()
