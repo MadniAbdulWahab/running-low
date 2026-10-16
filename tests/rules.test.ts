@@ -204,10 +204,28 @@ describe('notes and pings', () => {
     const path = `households/${CODE}/notes/n1`
     await assertSucceeds(setDoc(doc(as('alice'), path), note))
     await assertSucceeds(getDoc(doc(as('bob'), path)))
-    await assertSucceeds(updateDoc(doc(as('bob'), path), { pinned: true, updatedBy: 'bob' }))
     await assertFails(getDoc(doc(as('carol'), path)))
     await assertFails(setDoc(doc(as('carol'), `households/${CODE}/notes/n2`), { ...note, createdBy: 'carol', updatedBy: 'carol' }))
-    await assertSucceeds(deleteDoc(doc(as('bob'), path)))
+    await assertSucceeds(deleteDoc(doc(as('alice'), path)))
+  })
+
+  it('a note belongs to its writer; the other person can only tick its checklist', async () => {
+    await seed(['alice', 'bob'])
+    const path = `households/${CODE}/notes/n1`
+    await assertSucceeds(setDoc(doc(as('alice'), path), note))
+    // bob ticks an item: allowed
+    await assertSucceeds(updateDoc(doc(as('bob'), path), { checklist: [{ t: 'Shirts', done: true }], updatedBy: 'bob' }))
+    // …but can't pin, recolour, rewrite, add items or delete
+    await assertFails(updateDoc(doc(as('bob'), path), { pinned: true, updatedBy: 'bob' }))
+    await assertFails(updateDoc(doc(as('bob'), path), { color: 'sky', updatedBy: 'bob' }))
+    await assertFails(updateDoc(doc(as('bob'), path), { text: 'Changed', updatedBy: 'bob' }))
+    await assertFails(
+      updateDoc(doc(as('bob'), path), { checklist: [{ t: 'Shirts', done: true }, { t: 'Socks', done: false }], updatedBy: 'bob' }),
+    )
+    await assertFails(deleteDoc(doc(as('bob'), path)))
+    // alice still can do everything
+    await assertSucceeds(updateDoc(doc(as('alice'), path), { text: 'New text', pinned: true, color: 'sky', updatedBy: 'alice' }))
+    await assertSucceeds(deleteDoc(doc(as('alice'), path)))
   })
 
   it('rejects malformed notes and impersonation', async () => {

@@ -50,7 +50,8 @@ function NoteCard({ note, onOpen, onAskDelete }: { note: Note; onOpen: () => voi
   const { household, uid } = useApp()
   const [title, ...rest] = note.text.trim().split('\n')
   const body = rest.join('\n').trim()
-  const who = memberOf(household, note.updatedBy, uid)
+  // The writer: a note is theirs, even after someone else ticks its checklist.
+  const who = memberOf(household, note.createdBy, uid)
   const checks = note.checklist.filter((c) => c.t.trim())
 
   // Press and hold a note to delete it (same feel as list items).

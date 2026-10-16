@@ -384,26 +384,47 @@ try {
   await A.page.getByLabel('New note').press('Enter')
   const noteOnB = B.page.locator('.note', { hasText: 'Dinner at 8' })
   check(await noteOnB.waitFor({ timeout: 8000 }).then(() => true).catch(() => false), 'note written on A shows on B')
-  // B adds a checklist item in the note sheet
-  await noteOnB.locator('.note-open').click()
-  await B.page.locator('.sheet').getByRole('button', { name: '+ Add item' }).click()
-  await B.page.getByLabel('Checklist item 1').fill('Wine')
-  await B.page.locator('.sheet .select-toggle', { hasText: 'Pin' }).click()
-  await B.page.locator('.sheet').screenshot({ path: `${OUT}/note-sheet.png` })
-  await B.page.locator('.sheet-done').click()
+  // A (the writer) adds a checklist item and pins it in the note sheet
   const noteOnA = A.page.locator('.note', { hasText: 'Dinner at 8' })
+  await noteOnA.locator('.note-open').click()
+  await A.page.locator('.sheet').getByRole('button', { name: '+ Add item' }).click()
+  await A.page.getByLabel('Checklist item 1').fill('Wine')
+  await A.page.locator('.sheet .select-toggle', { hasText: 'Pin' }).click()
+  await A.page.locator('.sheet').screenshot({ path: `${OUT}/note-sheet.png` })
+  await A.page.locator('.sheet-done').click()
   check(
-    await noteOnA.locator('.note-check', { hasText: 'Wine' }).waitFor({ timeout: 8000 }).then(() => true).catch(() => false),
-    'checklist item added on B shows on A',
+    await noteOnB.locator('.note-check', { hasText: 'Wine' }).waitFor({ timeout: 8000 }).then(() => true).catch(() => false),
+    'checklist item added on A shows on B',
   )
   check(
-    await noteOnA.locator('.note-pin').waitFor({ timeout: 8000 }).then(() => true).catch(() => false),
-    'pin from B shows on A',
+    await noteOnB.locator('.note-pin').waitFor({ timeout: 8000 }).then(() => true).catch(() => false),
+    'pin from A shows on B',
   )
-  await noteOnA.locator('.note-check', { hasText: 'Wine' }).click()
+  // B sees A's note read-only: no pin, colours, add item or delete; the text can't be edited
+  await noteOnB.locator('.note-open').click()
+  const sheetB = B.page.locator('.sheet')
   check(
-    await noteOnB.locator('.note-check[data-done]', { hasText: 'Wine' }).waitFor({ timeout: 8000 }).then(() => true).catch(() => false),
-    'ticking a checklist item on the card syncs',
+    (await sheetB.locator('.note-tools').count()) === 0 &&
+      (await sheetB.getByRole('button', { name: '+ Add item' }).count()) === 0 &&
+      (await sheetB.getByRole('button', { name: 'Delete note' }).count()) === 0 &&
+      (await sheetB.locator('#note-text').getAttribute('readonly')) !== null,
+    'someone else’s note opens read-only',
+  )
+  check(await sheetB.getByText('Only Sara can change this note').isVisible(), '…and says whose it is')
+  await B.page.locator('.sheet').screenshot({ path: `${OUT}/note-sheet-readonly.png` })
+  await B.page.locator('.sheet-done').click()
+  // …but B can still tick its checklist, on the card
+  await noteOnB.locator('.note-check', { hasText: 'Wine' }).click()
+  check(
+    await noteOnA.locator('.note-check[data-done]', { hasText: 'Wine' }).waitFor({ timeout: 8000 }).then(() => true).catch(() => false),
+    'the other person can tick the checklist, and it syncs',
+  )
+  check((await noteOnA.locator('.note-meta').textContent()).startsWith('You'), 'the card still shows the writer after the other person ticks')
+  // Press and hold someone else's note: it says only the writer can delete it
+  await noteOnB.locator('.note-title').dispatchEvent('contextmenu')
+  check(
+    await B.page.locator('.toast', { hasText: 'Only Sara can delete this note' }).waitFor({ timeout: 4000 }).then(() => true).catch(() => false),
+    'only the writer can delete a note',
   )
   // A blank "New note" that is closed empty is thrown away
   const notesBefore = await A.page.locator('.note').count()
@@ -746,6 +767,14 @@ try {
   const cdOnB = B.page.locator('.cd-card', { hasText: 'Paris trip' })
   check(await cdOnB.waitFor({ timeout: 8000 }).then(() => true).catch(() => false), 'countdown added on A shows on B')
   check((await cdOnB.locator('.cd-days').textContent()) === '7', 'it counts 7 days to the default date (a week ahead)')
+  await tab(B.page, 'Home')
+  const strip = B.page.locator('.cd-strip', { hasText: 'Paris trip' })
+  check(await strip.waitFor({ timeout: 8000 }).then(() => true).catch(() => false), 'a countdown within two weeks shows on Home')
+  check((await strip.getAttribute('data-level')) === 'near' && (await strip.locator('.cd-strip-big').textContent()) === '7', 'it shows 7 days, in its full colour')
+  await strip.click()
+  check((await B.page.getByPlaceholder('Paris trip, anniversary…').inputValue()) === 'Paris trip', 'tapping it opens the countdown')
+  await B.page.locator('.sheet-done').click()
+  await tab(B.page, 'Us')
 
   // ── Date jar ──
   for (const idea of ['Picnic in the park', 'Movie night']) {

@@ -11,10 +11,12 @@ import { Sheet } from '../Sheet'
 /**
  * Editing one note. Text and checklist save as you type (debounced) and when
  * the sheet closes; a note left completely empty is removed on close.
+ * A note belongs to its writer: anyone else sees it read-only and can only tick its checklist.
  */
 export function NoteSheet({ note, onClose, onAskDelete }: { note: Note; onClose: () => void; onAskDelete: () => void }) {
   const { household, uid } = useApp()
   const hid = household.id
+  const mine = note.createdBy === uid
   const [text, setText] = useState(note.text)
   const [checklist, setChecklist] = useState<ChecklistEntry[]>(note.checklist)
   const editing = useRef(false)
@@ -33,7 +35,8 @@ export function NoteSheet({ note, onClose, onAskDelete }: { note: Note; onClose:
     const cj = JSON.stringify(c)
     if (t === saved.current.text && cj === saved.current.checklist) return
     saved.current = { text: t, checklist: cj }
-    updateNote(hid, uid, note.id, { text: t.slice(0, 5000), checklist: c.slice(0, 30) })
+    if (mine) updateNote(hid, uid, note.id, { text: t.slice(0, 5000), checklist: c.slice(0, 30) })
+    else updateNote(hid, uid, note.id, { checklist: c })
   }
   useEffect(() => {
     if (!editing.current) return
@@ -49,6 +52,11 @@ export function NoteSheet({ note, onClose, onAskDelete }: { note: Note; onClose:
   // Closing: save, or throw the note away if nothing was written in it.
   const finish = () => {
     const { text: t, checklist: c } = latest.current
+    if (!mine) {
+      save(note.text, c)
+      onClose()
+      return
+    }
     if (!t.trim() && !c.some((e) => e.t.trim())) {
       saved.current = { text: t, checklist: JSON.stringify(c) }
       deleteNote(hid, note.id)
@@ -72,28 +80,30 @@ export function NoteSheet({ note, onClose, onAskDelete }: { note: Note; onClose:
 
   return (
     <Sheet title={firstLine || 'Note'} onClose={finish}>
-      <div className="note-tools">
-        <div className="note-swatches" role="radiogroup" aria-label="Colour">
-          {NOTE_COLORS.map((c) => (
-            <button
-              key={c}
-              className="note-swatch"
-              data-color={c}
-              role="radio"
-              aria-checked={note.color === c}
-              aria-label={c}
-              onClick={() => updateNote(hid, uid, note.id, { color: c })}
-            />
-          ))}
+      {mine && (
+        <div className="note-tools">
+          <div className="note-swatches" role="radiogroup" aria-label="Colour">
+            {NOTE_COLORS.map((c) => (
+              <button
+                key={c}
+                className="note-swatch"
+                data-color={c}
+                role="radio"
+                aria-checked={note.color === c}
+                aria-label={c}
+                onClick={() => updateNote(hid, uid, note.id, { color: c })}
+              />
+            ))}
+          </div>
+          <button
+            className="select-toggle"
+            aria-pressed={note.pinned}
+            onClick={() => updateNote(hid, uid, note.id, { pinned: !note.pinned })}
+          >
+            {note.pinned ? 'Pinned' : 'Pin'}
+          </button>
         </div>
-        <button
-          className="select-toggle"
-          aria-pressed={note.pinned}
-          onClick={() => updateNote(hid, uid, note.id, { pinned: !note.pinned })}
-        >
-          {note.pinned ? 'Pinned' : 'Pin'}
-        </button>
-      </div>
+      )}
 
       <div className="note-paper" data-color={note.color}>
         <label className="visually-hidden" htmlFor="note-text">
@@ -105,7 +115,8 @@ export function NoteSheet({ note, onClose, onAskDelete }: { note: Note; onClose:
           rows={6}
           maxLength={5000}
           value={text}
-          placeholder="Write something…"
+          readOnly={!mine}
+          placeholder={mine ? 'Write something…' : ''}
           onFocus={() => (editing.current = true)}
           onChange={(e) => setText(e.target.value)}
           onBlur={() => {
@@ -115,58 +126,71 @@ export function NoteSheet({ note, onClose, onAskDelete }: { note: Note; onClose:
         />
       </div>
 
-      <h3 className="group-label">Checklist</h3>
-      <div className="group">
-        {checklist.map((c, i) => (
-          <div key={i} className="row note-row">
-            <button
-              className="note-check"
-              data-done={c.done || undefined}
-              aria-pressed={c.done}
-              aria-label={c.done ? 'Mark not done' : 'Mark done'}
-              onClick={() => editList(checklist.map((e, j) => (j === i ? { ...e, done: !e.done } : e)))}
-            >
-              <span className="note-box" aria-hidden="true" />
+      {(mine || checklist.length > 0) && <h3 className="group-label">Checklist</h3>}
+      {(mine || checklist.length > 0) && (
+        <div className="group">
+          {checklist.map((c, i) => (
+            <div key={i} className="row note-row">
+              <button
+                className="note-check"
+                data-done={c.done || undefined}
+                aria-pressed={c.done}
+                aria-label={c.done ? 'Mark not done' : 'Mark done'}
+                onClick={() => editList(checklist.map((e, j) => (j === i ? { ...e, done: !e.done } : e)))}
+              >
+                <span className="note-box" aria-hidden="true" />
+              </button>
+              <input
+                className="row-input"
+                value={c.t}
+                readOnly={!mine}
+                maxLength={200}
+                placeholder="Item"
+                aria-label={`Checklist item ${i + 1}`}
+                onFocus={() => (editing.current = true)}
+                onChange={(e) => editList(checklist.map((x, j) => (j === i ? { ...x, t: e.target.value } : x)))}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && checklist.length < 30) editList([...checklist.slice(0, i + 1), { t: '', done: false }, ...checklist.slice(i + 1)])
+                }}
+                onBlur={() => {
+                  editing.current = false
+                  save(text, checklist)
+                }}
+              />
+              {mine && (
+                <button className="note-row-remove" aria-label="Remove item" onClick={() => editList(checklist.filter((_, j) => j !== i))}>
+                  <CloseIcon />
+                </button>
+              )}
+            </div>
+          ))}
+          {mine && checklist.length < 30 && (
+            <button className="row row--action" onClick={() => editList([...checklist, { t: '', done: false }])}>
+              + Add item
             </button>
-            <input
-              className="row-input"
-              value={c.t}
-              maxLength={200}
-              placeholder="Item"
-              aria-label={`Checklist item ${i + 1}`}
-              onFocus={() => (editing.current = true)}
-              onChange={(e) => editList(checklist.map((x, j) => (j === i ? { ...x, t: e.target.value } : x)))}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && checklist.length < 30) editList([...checklist.slice(0, i + 1), { t: '', done: false }, ...checklist.slice(i + 1)])
-              }}
-              onBlur={() => {
-                editing.current = false
-                save(text, checklist)
-              }}
-            />
-            <button className="note-row-remove" aria-label="Remove item" onClick={() => editList(checklist.filter((_, j) => j !== i))}>
-              <CloseIcon />
-            </button>
-          </div>
-        ))}
-        {checklist.length < 30 && (
-          <button className="row row--action" onClick={() => editList([...checklist, { t: '', done: false }])}>
-            + Add item
-          </button>
-        )}
-      </div>
+          )}
+        </div>
+      )}
 
       <p className="group-footer">
         Created by {created.name === 'You' ? 'you' : created.name} · {ago(note.createdAt)}
         {note.updatedAt - note.createdAt > 60_000 &&
           ` · edited by ${edited.name === 'You' ? 'you' : edited.name} ${ago(note.updatedAt)}`}
+        {!mine && (
+          <>
+            <br />
+            Only {created.name} can change this note.{checklist.length > 0 && ' You can tick its checklist.'}
+          </>
+        )}
       </p>
 
-      <div className="group" style={{ marginTop: 24 }}>
-        <button className="row row--danger" onClick={onAskDelete}>
-          Delete note
-        </button>
-      </div>
+      {mine && (
+        <div className="group" style={{ marginTop: 24 }}>
+          <button className="row row--danger" onClick={onAskDelete}>
+            Delete note
+          </button>
+        </div>
+      )}
     </Sheet>
   )
 }

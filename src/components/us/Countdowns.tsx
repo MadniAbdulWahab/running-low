@@ -13,7 +13,8 @@ import { Sheet } from '../Sheet'
 
 const EMOJI = ['🎉', '✈️', '🎂', '💍', '🏖️', '🎄', '🏠', '❤️', '🎁', '🎟️']
 
-const colorFor = (id: string) => {
+/** Each countdown keeps one pastel, on the Us tab and on Home. */
+export const colorFor = (id: string) => {
   let h = 0
   for (const ch of id) h = (h * 31 + ch.charCodeAt(0)) >>> 0
   return NOTE_COLORS[h % NOTE_COLORS.length]

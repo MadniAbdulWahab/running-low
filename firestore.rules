@@ -91,11 +91,18 @@ service cloud.firestore {
           && d.createdBy is string && d.updatedBy == me();
       }
 
+      // A note belongs to its writer: only they change or delete it. Anyone else on the list
+      // may only tick its checklist (same items, same count).
       match /notes/{noteId} {
-        allow read, delete: if isMember(hid);
+        allow read: if isMember(hid);
+        allow delete: if isMember(hid) && resource.data.createdBy == me();
         allow create: if isMember(hid) && validNote() && request.resource.data.createdBy == me();
         allow update: if isMember(hid) && validNote()
-          && request.resource.data.createdBy == resource.data.createdBy;
+          && request.resource.data.createdBy == resource.data.createdBy
+          && (resource.data.createdBy == me()
+              || (request.resource.data.diff(resource.data).affectedKeys()
+                    .hasOnly(['checklist', 'updatedBy', 'updatedAt'])
+                  && request.resource.data.checklist.size() == resource.data.checklist.size()));
       }
 
       // Hearts, hugs…: anyone on the list can send (as themselves) and tidy up; never edited.

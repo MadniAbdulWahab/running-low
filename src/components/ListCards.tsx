@@ -57,7 +57,8 @@ export function ListCards({
   const today = todayISO()
   const upcoming = (meals ?? []).filter((m) => m.name && m.day >= today).sort((a, b) => a.day.localeCompare(b.day))
   const tonight = upcoming.find((m) => m.day === today)
-  const next = [...(countdowns ?? [])].sort(bySoonest)[0]
+  // Upcoming only: a one-off that has passed isn't "next".
+  const next = (countdowns ?? []).filter((c) => daysTo(c) >= 0).sort(bySoonest)[0]
   const nextDays = next ? daysTo(next) : 0
 
   return (

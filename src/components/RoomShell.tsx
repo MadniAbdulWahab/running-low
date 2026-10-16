@@ -38,6 +38,7 @@ import { TabBar } from './TabBar'
 import { TemplateSheet } from './TemplateSheet'
 import { Toast, type ToastData } from './Toast'
 import { CountdownSheet } from './us/Countdowns'
+import { CountdownStrip } from './us/CountdownStrip'
 import { HeartRain } from './us/HeartRain'
 import { HeartsBar } from './us/HeartsBar'
 import { HeartsSheet } from './us/HeartsSheet'
@@ -336,7 +337,11 @@ export function RoomShell({ uid, household, room, setRoom, theme }: Props) {
     setArrival(incoming)
   }, [pings, uid])
 
-  const askDeleteNote = (note: Note) =>
+  const askDeleteNote = (note: Note) => {
+    if (note.createdBy !== uid) {
+      toast(`Only ${household.memberNames[note.createdBy] ?? 'whoever wrote it'} can delete this note`)
+      return
+    }
     setAlert({
       title: 'Delete this note?',
       message: 'It’ll be removed for everyone on the list.',
@@ -353,6 +358,7 @@ export function RoomShell({ uid, household, room, setRoom, theme }: Props) {
         },
       ],
     })
+  }
   const newNote = () => setOpenNoteId(createNote(hid, uid, { color: nextColor(notes ?? []) }))
   const openNote = openNoteId && notes ? notes.find((n) => n.id === openNoteId) : undefined
 
@@ -419,6 +425,7 @@ export function RoomShell({ uid, household, room, setRoom, theme }: Props) {
         ) : room === 'home' ? (
           <>
             <ListCards needed={needed} meals={meals} notes={notes} countdowns={countdowns} />
+            {!selecting && <CountdownStrip countdowns={countdowns} onOpen={setCountdownId} />}
             {!selecting && <HeartsBar pings={pings} days={pingDays} onOpen={() => setHeartsOpen(true)} />}
             {loaded === null ? null : visible.length === 0 ? (
               <EmptyArt
