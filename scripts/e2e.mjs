@@ -434,9 +434,16 @@ try {
   await B.page.screenshot({ path: `${OUT}/note-react-bubble.png` })
   await bubble.getByRole('button', { name: 'Love' }).click()
   check(
-    await noteOnA.locator('.note-reactions', { hasText: '❤️' }).waitFor({ timeout: 8000 }).then(() => true).catch(() => false),
-    'a ❤️ from B shows on A’s note',
+    await noteOnA.locator('.note-sticker', { hasText: '❤️' }).waitFor({ timeout: 8000 }).then(() => true).catch(() => false),
+    'a ❤️ from B shows on A’s note, as a sticker',
   )
+  await A.page.waitForTimeout(600)
+  for (const scheme of ['light', 'dark']) {
+    await A.page.emulateMedia({ colorScheme: scheme })
+    await A.page.waitForTimeout(300)
+    await A.page.locator('section[aria-label=Notes]').screenshot({ path: `${OUT}/note-reacted-${scheme}.png` })
+  }
+  await A.page.emulateMedia({ colorScheme: 'light' })
   // In the note, B's ❤️ is pressed; tapping it again takes it back
   await noteOnB.locator('.note-open').click()
   const love = B.page.locator('.sheet .reaction-pill', { hasText: 'Love' })
@@ -444,7 +451,7 @@ try {
   await love.click()
   await B.page.locator('.sheet-done').click()
   check(
-    await noteOnA.locator('.note-reactions').waitFor({ state: 'detached', timeout: 8000 }).then(() => true).catch(() => false),
+    await noteOnA.locator('.note-sticker').waitFor({ state: 'detached', timeout: 8000 }).then(() => true).catch(() => false),
     'taking the reaction back removes it on A',
   )
   // A blank "New note" that is closed empty is thrown away

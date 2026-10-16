@@ -2549,12 +2549,40 @@ body {
 .note-meta > span:first-child {
   opacity: 0.65;
 }
-/* Reactions sit at the right of the footer, at full strength. */
-.note-reactions {
-  margin-left: auto;
-  font-size: 14px;
-  letter-spacing: 1px;
+/* A reaction is a sticker stuck half over the note's bottom-right corner. */
+.note[data-reacted] .note-meta {
+  padding-right: 24px;
+}
+.note-sticker {
+  position: absolute;
+  right: -6px;
+  bottom: -8px;
+  font-size: 30px;
   line-height: 1;
+  transform: rotate(12deg);
+  pointer-events: none;
+  /* Die-cut edge: a thin outline all round, then a soft shadow. */
+  filter: drop-shadow(0 1.5px 0 var(--sticker-edge)) drop-shadow(0 -1.5px 0 var(--sticker-edge))
+    drop-shadow(1.5px 0 0 var(--sticker-edge)) drop-shadow(-1.5px 0 0 var(--sticker-edge))
+    drop-shadow(0 2px 3px rgb(0 0 0 / 0.18));
+  --sticker-edge: #fff;
+}
+:root[data-mode='dark'] .note-sticker {
+  --sticker-edge: var(--card);
+}
+.note-sticker[data-new] {
+  animation: sticker-pop 450ms cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+@keyframes sticker-pop {
+  0% {
+    transform: rotate(-20deg) scale(0);
+  }
+  70% {
+    transform: rotate(16deg) scale(1.2);
+  }
+  100% {
+    transform: rotate(12deg) scale(1);
+  }
 }
 
 /* Note editor */

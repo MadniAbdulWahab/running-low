@@ -55,7 +55,9 @@ function NoteCard({ note, onOpen, onAskDelete }: { note: Note; onOpen: () => voi
   const who = memberOf(household, note.createdBy, uid)
   const checks = note.checklist.filter((c) => c.t.trim())
   const mine = note.createdBy === uid
-  const reactions = Object.values(note.reactions)
+  const reactions = Object.entries(note.reactions)
+  // Stickers pop on only when a reaction arrives, not every time the board shows.
+  const firstSeen = useRef(note.reactions)
 
   // Press and hold: your own note asks to delete it (same feel as list items);
   // someone else's pops up the reactions, like reacting to a post.
@@ -93,6 +95,7 @@ function NoteCard({ note, onOpen, onAskDelete }: { note: Note; onOpen: () => voi
     <article
       ref={card}
       className="note"
+      data-reacted={reactions.length > 0 || undefined}
       data-color={note.color}
       onPointerDown={start}
       onPointerUp={cancel}
@@ -137,12 +140,19 @@ function NoteCard({ note, onOpen, onAskDelete }: { note: Note; onOpen: () => voi
         <span>
           {who.name} · {ago(note.updatedAt)}
         </span>
-        {reactions.length > 0 && (
-          <span className="note-reactions" aria-label={`Reactions: ${reactions.map(reactionEmoji).join(' ')}`}>
-            {reactions.map(reactionEmoji).join('')}
-          </span>
-        )}
       </span>
+      {reactions.map(([who, kind], i) => (
+        <span
+          key={who}
+          className="note-sticker"
+          data-new={firstSeen.current[who] !== kind || undefined}
+          style={i ? { right: 14 + i * 22 } : undefined}
+          role="img"
+          aria-label={`${memberOf(household, who, uid).name} reacted ${reactionEmoji(kind)}`}
+        >
+          {reactionEmoji(kind)}
+        </span>
+      ))}
       {bubble && (
         <ReactionBubble
           anchor={bubble}
