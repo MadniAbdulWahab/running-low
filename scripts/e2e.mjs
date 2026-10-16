@@ -434,8 +434,8 @@ try {
   await B.page.screenshot({ path: `${OUT}/note-react-bubble.png` })
   await bubble.getByRole('button', { name: 'Love' }).click()
   check(
-    await noteOnA.locator('.note-sticker', { hasText: '❤️' }).waitFor({ timeout: 8000 }).then(() => true).catch(() => false),
-    'a ❤️ from B shows on A’s note, as a sticker',
+    await noteOnA.locator('.note-reaction', { hasText: '❤️' }).waitFor({ timeout: 8000 }).then(() => true).catch(() => false),
+    'a ❤️ from B shows on A’s note, with who reacted',
   )
   await A.page.waitForTimeout(600)
   for (const scheme of ['light', 'dark']) {
@@ -451,7 +451,7 @@ try {
   await love.click()
   await B.page.locator('.sheet-done').click()
   check(
-    await noteOnA.locator('.note-sticker').waitFor({ state: 'detached', timeout: 8000 }).then(() => true).catch(() => false),
+    await noteOnA.locator('.note-reaction').waitFor({ state: 'detached', timeout: 8000 }).then(() => true).catch(() => false),
     'taking the reaction back removes it on A',
   )
   // A blank "New note" that is closed empty is thrown away
