@@ -161,12 +161,6 @@
   border-radius: 50%;
   background: var(--list);
 }
-.section-head svg {
-  width: 16px;
-  height: 16px;
-  margin-left: auto;
-  color: var(--label-2);
-}
 
 .group-label {
   display: flex;
@@ -1887,13 +1881,6 @@ label.row:active {
 .section-peek + svg {
   margin-left: 8px;
 }
-.section-head svg {
-  transform: rotate(90deg);
-  transition: transform 200ms ease;
-}
-.section-head[aria-expanded='false'] svg {
-  transform: none;
-}
 
 /* ── Quantity: just the number, no pill ─────────────────────── */
 .qty,
@@ -1965,11 +1952,6 @@ body {
 .folded-more {
   color: var(--label-2);
 }
-.folded-show {
-  flex: none;
-  font-size: 15px;
-  color: var(--tint);
-}
 
 /* Folded Home section: the same heading as an open section, item names underneath. */
 .folded-head {
@@ -2000,17 +1982,10 @@ body {
   font-weight: 600;
   color: var(--label);
 }
-.folded-show {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
+/* Home sections: Show all / Hide on the right of the heading. */
+.section-fold {
+  flex: none;
   margin-left: auto;
-  font-size: 15px;
-  color: var(--tint);
-}
-.folded-show svg {
-  width: 14px;
-  height: 14px;
 }
 .folded-head .folded-names {
   padding-left: 15px;
@@ -2041,26 +2016,31 @@ body {
   letter-spacing: inherit;
   color: inherit;
 }
-.fold-toggle-action {
+/* The one fold control everywhere (FoldAction): "Show ⌄" folded, "Hide ⌃" open. */
+.fold-action {
   display: inline-flex;
   align-items: center;
   gap: 2px;
   font-size: 15px;
   font-weight: 400;
+  line-height: 1.2;
   text-transform: none;
   letter-spacing: 0;
+  white-space: nowrap;
   color: var(--tint);
 }
-.fold-toggle-action svg {
+.fold-action svg {
   width: 14px;
   height: 14px;
+  transform: rotate(90deg);
   transition: transform 200ms ease;
 }
-.fold-toggle[aria-expanded='true'] .fold-toggle-action svg {
+.fold-action[data-open] svg {
   transform: rotate(-90deg);
 }
-.fold-toggle[aria-expanded='false'] .fold-toggle-action svg {
-  transform: rotate(90deg);
+/* In a row (date jar ideas), just the chevron, at the far right. */
+.row-fold {
+  margin-left: auto;
 }
 
 /* ── Colour system: pastel fills always carry their own ink (not white) ── */

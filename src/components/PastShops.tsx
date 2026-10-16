@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { shopDayLabel, type PastShop } from '../lib/shops'
 import { parseISO } from '../lib/time'
+import { FoldAction } from './FoldAction'
 import { ChevronRight } from './Icons'
 
 /** "Past shops": groceries ticked off, one row per day. Tap one to add it again or save it as a template. */
@@ -12,7 +13,7 @@ export function PastShops({ shops, onOpen }: { shops: PastShop[]; onOpen: (day: 
       <h2 className="group-label">
         <span>Past shops · {shops.length}</span>
         <button className="recent-head" onClick={() => setOpen((o) => !o)} aria-expanded={open}>
-          {open ? 'Hide' : 'Show'}
+          <FoldAction open={open} />
         </button>
       </h2>
       {open && (

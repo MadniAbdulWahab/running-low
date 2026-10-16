@@ -3,6 +3,7 @@ import { useApp } from '../app-context'
 import type { Template } from '../data/templates'
 import { usePhoto } from '../hooks/usePhoto'
 import { emojiFor } from '../lib/emoji'
+import { FoldAction } from './FoldAction'
 import { ChevronRight, PlusIcon } from './Icons'
 
 /** A template's photo, or its first item's emoji. */
@@ -63,7 +64,7 @@ export function GroceryTemplates({
             Template
           </button>
           <button className="recent-head" aria-expanded={!folded} onClick={toggle}>
-            {folded ? 'Show' : 'Hide'}
+            <FoldAction open={!folded} />
           </button>
         </span>
       </h2>

@@ -25,7 +25,7 @@ import { ActionSheet } from './ActionSheet'
 import { Alert, type AlertAction } from './Alert'
 import { Header } from './Header'
 import { GroceryTemplates } from './GroceryTemplates'
-import { ChevronRight } from './Icons'
+import { FoldAction } from './FoldAction'
 import { ItemRow, RecentRow } from './ItemRow'
 import { ItemSheet } from './ItemSheet'
 import { ListCards } from './ListCards'
@@ -445,7 +445,7 @@ export function RoomShell({ uid, household, room, setRoom, theme }: Props) {
                           <button className="section-head" aria-expanded="true" onClick={() => toggleFold(l)}>
                             {LIST_INFO[l].label}
                             <span className="section-count">{needed[l].length}</span>
-                            <ChevronRight />
+                            <FoldAction open className="section-fold" />
                           </button>
                           <div className="group">
                             {rows[l].map((i) => (
@@ -624,10 +624,7 @@ function FoldedCard({
       <span className="folded-row">
         <span className="folded-title">{label}</span>
         <span className="section-count">{items.length}</span>
-        <span className="folded-show">
-          Show all
-          <ChevronRight />
-        </span>
+        <FoldAction open={false} show="Show all" className="section-fold" />
       </span>
       <span className="folded-names">
         {names.length ? (
@@ -667,7 +664,7 @@ function Recent({ items }: { items: Item[] }) {
       <h2 className="group-label">
         <span>Earlier this week · {items.length}</span>
         <button className="recent-head" onClick={() => setOpen((o) => !o)} aria-expanded={open}>
-          {open ? 'Hide' : 'Show'}
+          <FoldAction open={open} />
         </button>
       </h2>
       {open && (

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useApp } from '../../app-context'
 import { addIdea, deleteIdea, markIdeaDone, type Idea } from '../../data/ideas'
 import { CloseIcon } from '../Icons'
+import { FoldAction } from '../FoldAction'
 
 const SHUFFLE_MS = 1100
 
@@ -112,6 +113,7 @@ export function DateJar({ ideas }: { ideas: Idea[] | null }) {
         {ideas.length > 0 && (
           <button className="row row--action" aria-expanded={showAll} onClick={() => setShowAll((s) => !s)}>
             {showAll ? 'Hide ideas' : `See all ideas (${ideas.length})`}
+            <FoldAction open={showAll} show="" hide="" className="row-fold" />
           </button>
         )}
         {showAll &&

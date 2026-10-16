@@ -4,7 +4,8 @@ import { emojiFor } from '../lib/emoji'
 import { LISTS } from '../rooms'
 import { frequentFor, type Frequent } from '../starters'
 import type { ListId, ListRoom } from '../types'
-import { CheckCircle, ChevronRight } from './Icons'
+import { FoldAction } from './FoldAction'
+import { CheckCircle } from './Icons'
 
 type Pick = Frequent & { list: ListId }
 
@@ -50,10 +51,7 @@ export function QuickPicks({ room, neededCount = 0 }: { room: ListRoom; neededCo
         <h2 className="group-label">
           <button className="fold-toggle" aria-expanded={open} onClick={() => setManual(!open)}>
             <span>Quick add</span>
-            <span className="fold-toggle-action">
-              {open ? 'Hide' : 'Show'}
-              <ChevronRight />
-            </span>
+            <FoldAction open={open} />
           </button>
         </h2>
       ) : (
