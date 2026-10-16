@@ -1,8 +1,9 @@
+import { useState } from 'react'
 import { useApp } from '../app-context'
 import type { Template } from '../data/templates'
 import { usePhoto } from '../hooks/usePhoto'
 import { emojiFor } from '../lib/emoji'
-import { ChevronRight } from './Icons'
+import { ChevronRight, PlusIcon } from './Icons'
 
 /** A template's photo, or its first item's emoji. */
 function TemplateThumb({ template }: { template: Template }) {
@@ -21,56 +22,76 @@ function TemplateThumb({ template }: { template: Template }) {
 
 const count = (n: number) => (n === 1 ? '1 item' : `${n} items`)
 
+// Folding is remembered on this phone; open until folded.
+const FOLD_KEY = 'outof.templatesFolded'
+function readFolded() {
+  try {
+    return localStorage.getItem(FOLD_KEY) === '1'
+  } catch {
+    return false
+  }
+}
+
 /** "Templates" on the Groceries tab: groceries bought together, added in one go. */
 export function GroceryTemplates({
   templates,
-  canSaveList,
   onOpen,
   onNew,
-  onSaveList,
 }: {
   templates: Template[] | null
-  /** Groceries has something on it to save. */
-  canSaveList: boolean
   onOpen: (id: string) => void
   onNew: () => void
-  onSaveList: () => void
 }) {
+  const [folded, setFolded] = useState(readFolded)
+  const toggle = () =>
+    setFolded((f) => {
+      try {
+        localStorage.setItem(FOLD_KEY, f ? '0' : '1')
+      } catch {}
+      return !f
+    })
+
   if (templates === null) return null
   return (
     <section aria-label="Templates">
-      <h2 className="group-label">
-        <span>Templates{templates.length ? ` · ${templates.length}` : ''}</span>
+      <h2 className="group-label list-label">
+        <button className="fold-head" aria-expanded={!folded} onClick={toggle}>
+          Templates{templates.length ? ` · ${templates.length}` : ''}
+          <ChevronRight />
+        </button>
+        <button className="select-toggle heading-add" aria-label="New template" onClick={onNew}>
+          <PlusIcon />
+        </button>
       </h2>
-      <div className="group">
-        {templates.map((t) => (
-          <button key={t.id} className="meal-row recipe-row template-row" onClick={() => onOpen(t.id)}>
-            <TemplateThumb template={t} />
-            <span className="meal-text">
-              <span className="meal-name">{t.name}</span>
-              {t.items.length ? (
-                <span className="meal-ingredients">
-                  {count(t.items.length)} · {t.items.join(', ')}
+      {!folded &&
+        (templates.length ? (
+          <div className="group">
+            {templates.map((t) => (
+              <button key={t.id} className="meal-row recipe-row template-row" onClick={() => onOpen(t.id)}>
+                <TemplateThumb template={t} />
+                <span className="meal-text">
+                  <span className="meal-name">{t.name}</span>
+                  {t.items.length ? (
+                    <span className="meal-ingredients">
+                      {count(t.items.length)} · {t.items.join(', ')}
+                    </span>
+                  ) : (
+                    <span className="meal-ingredients recipe-hint">Tap to add items</span>
+                  )}
                 </span>
-              ) : (
-                <span className="meal-ingredients recipe-hint">Tap to add items</span>
-              )}
+                <ChevronRight />
+              </button>
+            ))}
+          </div>
+        ) : (
+          <button className="dashed-add" onClick={onNew}>
+            <PlusIcon />
+            <span>
+              Make a template
+              <span className="dashed-add-hint">Groceries you buy together, added in one go</span>
             </span>
-            <ChevronRight />
           </button>
         ))}
-        <button className="row row--action template-action" onClick={onNew}>
-          New template
-        </button>
-        {canSaveList && (
-          <button className="row row--action template-action" onClick={onSaveList}>
-            Save the list as a template
-          </button>
-        )}
-      </div>
-      {!templates.length && (
-        <p className="group-footer">Save groceries you buy together, then add them all in one go next time.</p>
-      )}
     </section>
   )
 }

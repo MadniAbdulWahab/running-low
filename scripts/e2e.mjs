@@ -288,8 +288,8 @@ try {
 
   // ── Multi-select: tick two, Got it ──
   await tab(A.page, 'Groceries')
-  await A.page.locator('.select-toggle').click()
-  check((await A.page.locator('.select-toggle').textContent()) === 'Unselect', 'Select toggles to Unselect')
+  await A.page.locator('.select-toggle[aria-pressed]').click()
+  check((await A.page.locator('.select-toggle[aria-pressed]').textContent()) === 'Unselect', 'Select toggles to Unselect')
   await A.page.locator('.item-body', { hasText: 'Olive oil' }).first().click()
   await A.page.locator('.item-body', { hasText: 'Coffee' }).first().click()
   await A.page.screenshot({ path: `${OUT}/multi-select.png` })
@@ -639,6 +639,7 @@ try {
   await tab(A.page, 'Groceries')
   await tab(B.page, 'Groceries')
   const shopsA = A.page.locator('section[aria-label="Past shops"]')
+  check(await A.page.locator('.dashed-add', { hasText: 'Make a template' }).isVisible(), 'with no templates, a dashed row offers to make one')
   const todayShop = (page) => page.locator('section[aria-label="Past shops"] .shop-row', { hasText: 'Today' })
   await add(A.page, 'Flour, Sugar, Yeast, Cinnamon')
   for (const n of ['Flour', 'Sugar', 'Yeast', 'Cinnamon']) {
@@ -704,12 +705,17 @@ try {
     await A.page.locator('.template-row', { hasText: 'New template' }).waitFor({ state: 'detached', timeout: WAIT }).then(() => true).catch(() => false),
     'a new template left empty is discarded',
   )
-  await A.page.getByRole('button', { name: 'Save the list as a template' }).click()
+  await A.page.locator('.list-label').getByRole('button', { name: 'Save as template' }).click()
   check(await A.page.getByLabel('Template name').inputValue().then((v) => v.startsWith('Our list')), 'Save the list as a template names it after today')
   await A.page.locator('.sheet-done').click()
   const ourList = B.page.locator('.template-row', { hasText: 'Our list' })
   check(await ourList.waitFor({ timeout: WAIT }).then(() => true).catch(() => false), 'the saved list shows as a template on B')
   await A.page.screenshot({ path: `${OUT}/groceries-templates.png`, fullPage: true })
+  const foldHead = A.page.locator('section[aria-label="Templates"] .fold-head')
+  await foldHead.click()
+  check((await A.page.locator('.template-row').count()) === 0 && (await foldHead.getAttribute('aria-expanded')) === 'false', 'tapping Templates folds it')
+  await foldHead.click()
+  check((await A.page.locator('.template-row').count()) === 2, 'tapping again unfolds it')
   await ourList.click()
   await B.page.locator('.sheet').getByRole('button', { name: 'Delete template' }).click()
   const delTpl = B.page.locator('.alert', { hasText: 'Delete Our list' })

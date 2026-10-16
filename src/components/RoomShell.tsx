@@ -377,15 +377,22 @@ export function RoomShell({ uid, household, room, setRoom, theme }: Props) {
   const listLabel = (
     <h2 className="group-label list-label">
       <span>On the list</span>
-      {visible.length > 0 && (
-        <button
-          className="select-toggle"
-          aria-pressed={selecting}
-          onClick={() => (selecting ? stopSelect() : setSelecting(true))}
-        >
-          {selecting ? 'Unselect' : 'Select'}
-        </button>
-      )}
+      <span className="label-actions">
+        {room === 'grocery' && !selecting && needed.grocery.length > 0 && (
+          <button className="select-toggle" onClick={saveListAsTemplate}>
+            Save as template
+          </button>
+        )}
+        {visible.length > 0 && (
+          <button
+            className="select-toggle"
+            aria-pressed={selecting}
+            onClick={() => (selecting ? stopSelect() : setSelecting(true))}
+          >
+            {selecting ? 'Unselect' : 'Select'}
+          </button>
+        )}
+      </span>
     </h2>
   )
 
@@ -476,10 +483,8 @@ export function RoomShell({ uid, household, room, setRoom, theme }: Props) {
               <>
                 <GroceryTemplates
                   templates={templates}
-                  canSaveList={needed.grocery.length > 0}
                   onOpen={(id) => setTemplate({ id, fresh: false })}
                   onNew={newTemplate}
-                  onSaveList={saveListAsTemplate}
                 />
                 <PastShops shops={shops} onOpen={setShopDay} />
               </>

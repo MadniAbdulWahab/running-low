@@ -64,6 +64,13 @@ export const PlusCircle = () => (
   </svg>
 )
 
+/** A plain +, for "add" buttons in section headings. */
+export const PlusIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden>
+    <path d="M12 5v14M5 12h14" />
+  </svg>
+)
+
 export const CheckCircle = () => (
   <svg viewBox="0 0 24 24" aria-hidden>
     <circle cx="12" cy="12" r="11" fill="currentColor" />
