@@ -1,8 +1,9 @@
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import { memberOf, useApp } from '../../app-context'
-import { updateNote } from '../../data/notes'
+import { reactionEmoji, updateNote } from '../../data/notes'
 import { ago } from '../../lib/time'
 import type { Note } from '../../types'
+import { ReactionBubble, reactToNote } from './ReactionBubble'
 
 const HOLD_MS = 450
 const CARD_CHECKS = 5
@@ -53,8 +54,17 @@ function NoteCard({ note, onOpen, onAskDelete }: { note: Note; onOpen: () => voi
   // The writer: a note is theirs, even after someone else ticks its checklist.
   const who = memberOf(household, note.createdBy, uid)
   const checks = note.checklist.filter((c) => c.t.trim())
+  const mine = note.createdBy === uid
+  const reactions = Object.values(note.reactions)
 
-  // Press and hold a note to delete it (same feel as list items).
+  // Press and hold: your own note asks to delete it (same feel as list items);
+  // someone else's pops up the reactions, like reacting to a post.
+  const card = useRef<HTMLElement>(null)
+  const [bubble, setBubble] = useState<DOMRect | null>(null)
+  const hold = () => {
+    if (mine) onAskDelete()
+    else if (card.current) setBubble(card.current.getBoundingClientRect())
+  }
   const timer = useRef(0)
   const held = useRef(false)
   const start = (e: React.PointerEvent) => {
@@ -62,7 +72,7 @@ function NoteCard({ note, onOpen, onAskDelete }: { note: Note; onOpen: () => voi
     held.current = false
     timer.current = window.setTimeout(() => {
       held.current = true
-      onAskDelete()
+      hold()
     }, HOLD_MS)
   }
   const cancel = () => window.clearTimeout(timer.current)
@@ -81,6 +91,7 @@ function NoteCard({ note, onOpen, onAskDelete }: { note: Note; onOpen: () => voi
 
   return (
     <article
+      ref={card}
       className="note"
       data-color={note.color}
       onPointerDown={start}
@@ -89,7 +100,7 @@ function NoteCard({ note, onOpen, onAskDelete }: { note: Note; onOpen: () => voi
       onPointerMove={(e) => (Math.abs(e.movementY) > 3 || Math.abs(e.movementX) > 3) && cancel()}
       onContextMenu={(e) => {
         e.preventDefault()
-        onAskDelete()
+        hold()
       }}
     >
       {note.pinned && (
@@ -123,8 +134,26 @@ function NoteCard({ note, onOpen, onAskDelete }: { note: Note; onOpen: () => voi
         </ul>
       )}
       <span className="note-meta">
-        {who.name} · {ago(note.updatedAt)}
+        <span>
+          {who.name} · {ago(note.updatedAt)}
+        </span>
+        {reactions.length > 0 && (
+          <span className="note-reactions" aria-label={`Reactions: ${reactions.map(reactionEmoji).join(' ')}`}>
+            {reactions.map(reactionEmoji).join('')}
+          </span>
+        )}
       </span>
+      {bubble && (
+        <ReactionBubble
+          anchor={bubble}
+          current={note.reactions[uid] ?? null}
+          onPick={(k) => {
+            reactToNote(household, uid, note, k)
+            setBubble(null)
+          }}
+          onClose={() => setBubble(null)}
+        />
+      )}
     </article>
   )
 }

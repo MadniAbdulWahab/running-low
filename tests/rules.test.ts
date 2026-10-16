@@ -228,6 +228,23 @@ describe('notes and pings', () => {
     await assertSucceeds(deleteDoc(doc(as('alice'), path)))
   })
 
+  it('each person reacts only for themselves, and reacting changes nothing else', async () => {
+    await seed(['alice', 'bob'])
+    const path = `households/${CODE}/notes/n1`
+    await assertSucceeds(setDoc(doc(as('alice'), path), note))
+    await assertSucceeds(updateDoc(doc(as('bob'), path), { 'reactions.bob': 'love' }))
+    await assertSucceeds(updateDoc(doc(as('bob'), path), { 'reactions.bob': 'like' }))
+    await assertFails(updateDoc(doc(as('bob'), path), { 'reactions.alice': 'love' }))
+    await assertFails(updateDoc(doc(as('bob'), path), { 'reactions.bob': 'angry' }))
+    await assertFails(updateDoc(doc(as('bob'), path), { 'reactions.bob': 'love', text: 'Changed' }))
+    // the writer's edits leave bob's reaction alone
+    await assertFails(updateDoc(doc(as('alice'), path), { 'reactions.bob': deleteField(), updatedBy: 'alice' }))
+    await assertSucceeds(updateDoc(doc(as('alice'), path), { text: 'Edited', updatedBy: 'alice' }))
+    expect((await getDoc(doc(as('alice'), path))).data()!.reactions).toEqual({ bob: 'like' })
+    await assertSucceeds(updateDoc(doc(as('bob'), path), { 'reactions.bob': deleteField() }))
+    expect((await getDoc(doc(as('alice'), path))).data()!.reactions).toEqual({})
+  })
+
   it('rejects malformed notes and impersonation', async () => {
     await seed(['alice', 'bob'])
     const path = `households/${CODE}/notes/n1`

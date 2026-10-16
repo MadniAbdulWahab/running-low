@@ -1,6 +1,7 @@
 import {
   collection,
   deleteDoc,
+  deleteField,
   doc,
   serverTimestamp,
   setDoc,
@@ -11,7 +12,7 @@ import { db } from '../firebase'
 import { toMs } from '../hooks/useCollection'
 import { report } from '../lib/report'
 import { NOTE_COLORS } from '../rooms'
-import type { ChecklistEntry, Note, NoteColor } from '../types'
+import type { ChecklistEntry, Note, NoteColor, ReactionKind } from '../types'
 
 export const notesCol = (hid: string) => collection(db, 'households', hid, 'notes')
 const noteRef = (hid: string, id: string) => doc(db, 'households', hid, 'notes', id)
@@ -27,7 +28,31 @@ export function toNote(id: string, d: DocumentData): Note {
     createdAt: toMs(d.createdAt) ?? Date.now(),
     updatedBy: d.updatedBy ?? d.createdBy,
     updatedAt: toMs(d.updatedAt) ?? toMs(d.createdAt) ?? Date.now(),
+    reactions: toReactions(d.reactions),
   }
+}
+
+/** The reactions, in the order they're offered. */
+export const REACTIONS: { kind: ReactionKind; emoji: string; label: string }[] = [
+  { kind: 'love', emoji: '❤️', label: 'Love' },
+  { kind: 'like', emoji: '👍', label: 'Like' },
+  { kind: 'dislike', emoji: '👎', label: 'Dislike' },
+]
+export const reactionEmoji = (k: ReactionKind) => REACTIONS.find((r) => r.kind === k)?.emoji ?? ''
+
+function toReactions(r: unknown): Record<string, ReactionKind> {
+  const out: Record<string, ReactionKind> = {}
+  if (r && typeof r === 'object')
+    for (const [uid, k] of Object.entries(r)) if (REACTIONS.some((x) => x.kind === k)) out[uid] = k as ReactionKind
+  return out
+}
+
+/**
+ * Sets (or with null, takes back) your reaction to a note. Leaves updatedAt alone, so
+ * reacting doesn't move the note on the board or count as an edit.
+ */
+export function setReaction(hid: string, uid: string, noteId: string, kind: ReactionKind | null) {
+  updateDoc(noteRef(hid, noteId), { [`reactions.${uid}`]: kind ?? deleteField() }).catch(report)
 }
 
 /** Pinned first, then most recently changed. */

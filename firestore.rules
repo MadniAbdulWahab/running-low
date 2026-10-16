@@ -97,12 +97,22 @@ service cloud.firestore {
         allow read: if isMember(hid);
         allow delete: if isMember(hid) && resource.data.createdBy == me();
         allow create: if isMember(hid) && validNote() && request.resource.data.createdBy == me();
-        allow update: if isMember(hid) && validNote()
-          && request.resource.data.createdBy == resource.data.createdBy
-          && (resource.data.createdBy == me()
-              || (request.resource.data.diff(resource.data).affectedKeys()
-                    .hasOnly(['checklist', 'updatedBy', 'updatedAt'])
-                  && request.resource.data.checklist.size() == resource.data.checklist.size()));
+        allow update: if isMember(hid) && (
+          // Editing (the writer) or ticking the checklist (anyone else); reactions untouched.
+          (validNote()
+            && request.resource.data.createdBy == resource.data.createdBy
+            && request.resource.data.get('reactions', {}) == resource.data.get('reactions', {})
+            && (resource.data.createdBy == me()
+                || (request.resource.data.diff(resource.data).affectedKeys()
+                      .hasOnly(['checklist', 'updatedBy', 'updatedAt'])
+                    && request.resource.data.checklist.size() == resource.data.checklist.size())))
+          ||
+          // Reacting: only your own reaction changes, and nothing else.
+          (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reactions'])
+            && request.resource.data.reactions.diff(resource.data.get('reactions', {})).affectedKeys().hasOnly([me()])
+            && (!(me() in request.resource.data.reactions)
+                || request.resource.data.reactions[me()] in ['love', 'like', 'dislike']))
+        );
       }
 
       // Hearts, hugs…: anyone on the list can send (as themselves) and tidy up; never edited.

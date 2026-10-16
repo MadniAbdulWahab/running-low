@@ -39,6 +39,9 @@ export interface ChecklistEntry {
   done: boolean
 }
 
+/** A reaction to someone's note, like on a post. */
+export type ReactionKind = 'love' | 'like' | 'dislike'
+
 export interface Note {
   id: string
   text: string
@@ -49,6 +52,8 @@ export interface Note {
   createdAt: number
   updatedBy: string
   updatedAt: number
+  /** One reaction per person, by uid. */
+  reactions: Record<string, ReactionKind>
 }
 
 export type PingKind =

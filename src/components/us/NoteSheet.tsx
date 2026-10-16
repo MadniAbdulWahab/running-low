@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
 import { memberOf, useApp } from '../../app-context'
-import { deleteNote, updateNote } from '../../data/notes'
+import { deleteNote, reactionEmoji, REACTIONS, updateNote } from '../../data/notes'
 import { notify } from '../../lib/push'
 import { ago } from '../../lib/time'
 import { NOTE_COLORS } from '../../rooms'
 import type { ChecklistEntry, Note } from '../../types'
 import { CloseIcon } from '../Icons'
 import { Sheet } from '../Sheet'
+import { reactToNote } from './ReactionBubble'
 
 /**
  * Editing one note. Text and checklist save as you type (debounced) and when
@@ -126,6 +127,27 @@ export function NoteSheet({ note, onClose, onAskDelete }: { note: Note; onClose:
         />
       </div>
 
+      {!mine && (
+        <>
+          <h3 className="group-label">React</h3>
+          <div className="reaction-row" role="group" aria-label="React">
+            {REACTIONS.map((r) => {
+              const on = note.reactions[uid] === r.kind
+              return (
+                <button
+                  key={r.kind}
+                  className="select-toggle reaction-pill"
+                  aria-pressed={on}
+                  onClick={() => reactToNote(household, uid, note, on ? null : r.kind)}
+                >
+                  <span aria-hidden="true">{r.emoji}</span> {r.label}
+                </button>
+              )
+            })}
+          </div>
+        </>
+      )}
+
       {(mine || checklist.length > 0) && <h3 className="group-label">Checklist</h3>}
       {(mine || checklist.length > 0) && (
         <div className="group">
@@ -176,6 +198,15 @@ export function NoteSheet({ note, onClose, onAskDelete }: { note: Note; onClose:
         Created by {created.name === 'You' ? 'you' : created.name} · {ago(note.createdAt)}
         {note.updatedAt - note.createdAt > 60_000 &&
           ` · edited by ${edited.name === 'You' ? 'you' : edited.name} ${ago(note.updatedAt)}`}
+        {mine &&
+          Object.entries(note.reactions)
+            .filter(([who]) => who !== uid)
+            .map(([who, k]) => (
+              <span key={who}>
+                <br />
+                {memberOf(household, who, uid).name} reacted {reactionEmoji(k)}
+              </span>
+            ))}
         {!mine && (
           <>
             <br />

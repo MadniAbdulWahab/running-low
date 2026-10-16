@@ -420,11 +420,32 @@ try {
     'the other person can tick the checklist, and it syncs',
   )
   check((await noteOnA.locator('.note-meta').textContent()).startsWith('You'), 'the card still shows the writer after the other person ticks')
-  // Press and hold someone else's note: it says only the writer can delete it
-  await noteOnB.locator('.note-title').dispatchEvent('contextmenu')
+  // Press and hold someone else's note: reactions pop up (no delete), like reacting to a post
+  {
+    const box = await noteOnB.locator('.note-title').boundingBox()
+    await B.page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
+    await B.page.mouse.down()
+    await B.page.waitForTimeout(650)
+    await B.page.mouse.up()
+  }
+  const bubble = B.page.locator('.reaction-bubble')
+  check(await bubble.waitFor({ timeout: 4000 }).then(() => true).catch(() => false), 'holding someone else’s note pops up the reactions')
+  check((await B.page.locator('.alert').count()) === 0, '…and doesn’t offer to delete it')
+  await B.page.screenshot({ path: `${OUT}/note-react-bubble.png` })
+  await bubble.getByRole('button', { name: 'Love' }).click()
   check(
-    await B.page.locator('.toast', { hasText: 'Only Sara can delete this note' }).waitFor({ timeout: 4000 }).then(() => true).catch(() => false),
-    'only the writer can delete a note',
+    await noteOnA.locator('.note-reactions', { hasText: '❤️' }).waitFor({ timeout: 8000 }).then(() => true).catch(() => false),
+    'a ❤️ from B shows on A’s note',
+  )
+  // In the note, B's ❤️ is pressed; tapping it again takes it back
+  await noteOnB.locator('.note-open').click()
+  const love = B.page.locator('.sheet .reaction-pill', { hasText: 'Love' })
+  check((await love.getAttribute('aria-pressed')) === 'true', 'the note shows B’s reaction as chosen')
+  await love.click()
+  await B.page.locator('.sheet-done').click()
+  check(
+    await noteOnA.locator('.note-reactions').waitFor({ state: 'detached', timeout: 8000 }).then(() => true).catch(() => false),
+    'taking the reaction back removes it on A',
   )
   // A blank "New note" that is closed empty is thrown away
   const notesBefore = await A.page.locator('.note').count()
@@ -440,6 +461,7 @@ try {
   // ── Hearts (on Home) ──
   check((await A.page.locator('.hearts').count()) === 0, 'hearts are no longer on Us')
   await tab(A.page, 'Home')
+  check((await A.page.locator('.list-label').count()) === 0, 'Home has no “On the list · Select” heading')
   await tab(B.page, 'Groceries')
   check((await A.page.locator('.hearts .heart-quick').count()) === 12, 'twelve things to send, in one row')
   {

@@ -435,7 +435,7 @@ export function RoomShell({ uid, household, room, setRoom, theme }: Props) {
               />
             ) : (
               <>
-                {listLabel}
+                {/* No "On the list · Select" here: Home's section headings say it; the list tabs have Select. */}
                 {LISTS.filter((l) => rows[l].length).map((l) => {
                   const isFolded = !!folded[l] && !selecting
                   return (
