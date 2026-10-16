@@ -61,6 +61,7 @@ export function GroceryTemplates({
         </button>
         <button className="select-toggle heading-add" aria-label="New template" onClick={onNew}>
           <PlusIcon />
+          Template
         </button>
       </h2>
       {!folded &&

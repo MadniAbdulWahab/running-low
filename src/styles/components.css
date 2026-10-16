@@ -3288,14 +3288,14 @@ section[aria-label='Past shops'] {
   transform: rotate(90deg);
 }
 .group-label .heading-add {
-  width: 30px;
-  padding: 0;
-  display: grid;
-  place-items: center;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 13px 0 10px;
 }
 .heading-add svg {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
 }
 /* No templates yet: a dashed row to make the first one. */
 .dashed-add {
